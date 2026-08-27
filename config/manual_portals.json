@@ -1,0 +1,32 @@
+[
+  {
+    "name": "LinkedIn Jobs",
+    "mode": "manual_or_official_alerts",
+    "reason": "No automated scraping/login. Use official job alerts as a complement.",
+    "url": "https://www.linkedin.com/jobs/"
+  },
+  {
+    "name": "Indeed",
+    "mode": "manual",
+    "reason": "Not scraped by this project; prefer employer ATS/career pages and permitted public feeds.",
+    "url": "https://www.indeed.com/"
+  },
+  {
+    "name": "EURES",
+    "mode": "manual_official_portal",
+    "reason": "Official EU/EEA/Swiss source, updated daily; no stable unauthenticated public vacancy API is assumed by this package.",
+    "url": "https://eures.europa.eu/"
+  },
+  {
+    "name": "Welcome to the Jungle",
+    "mode": "manual",
+    "reason": "Useful European portal, but no unauthenticated public feed is relied upon here.",
+    "url": "https://www.welcometothejungle.com/"
+  },
+  {
+    "name": "eFinancialCareers",
+    "mode": "manual_or_alerts",
+    "reason": "High-signal finance/compliance portal; this project does not rely on unauthenticated scraping of it.",
+    "url": "https://www.efinancialcareers.com/jobs/search"
+  }
+]

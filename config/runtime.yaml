@@ -1,0 +1,20 @@
+concurrency: 28
+timeout_seconds: 20
+company_timeout_seconds: 240
+
+aggregators:
+  jobicy: true
+  remotive: true
+  arbeitnow: true
+  remoteok: true
+  himalayas: true
+  weworkremotely: true
+
+# Respect source update cadence / fair-use while the overall radar still runs hourly.
+aggregator_cadence_hours:
+  Jobicy: 1
+  Arbeitnow: 1
+  We Work Remotely: 1
+  Remote OK: 2
+  Remotive: 6
+  Himalayas: 24

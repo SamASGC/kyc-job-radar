@@ -1,0 +1,53 @@
+name: Hourly KYC job radar
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Intentionally not at :00 to reduce scheduler congestion.
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kyc-job-radar-hourly
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Scan jobs and rebuild dashboard
+        run: python radar.py scan
+
+      - name: Commit only meaningful dataset changes
+        shell: bash
+        run: |
+          git config user.name "kyc-radar-bot"
+          git config user.email "kyc-radar-bot@users.noreply.github.com"
+
+          # health.json can vary with temporary source failures. It is committed only
+          # when the persistent dataset/dashboard actually changed, avoiding hourly
+          # no-op commits and unnecessary hosting builds.
+          git add data/state.json public/index.html
+          if git diff --cached --quiet; then
+            echo "No new/removed/materially changed jobs. Nothing to commit."
+            exit 0
+          fi
+
+          git add data/health.json
+          git commit -m "radar: refresh jobs [skip ci]"
+          git push
