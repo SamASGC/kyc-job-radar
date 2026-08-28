@@ -1,9 +1,10 @@
-﻿name: Hourly KYC job radar
+name: Hourly KYC job radar
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
+    - cron: "47 * * * *"
 
 permissions:
   contents: write
