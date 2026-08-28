@@ -328,15 +328,34 @@ def score_job(job: Job, profile: dict, known_company: bool = False) -> tuple[Job
         exp_pts = 15
         reasons.append(f"experiencia requerida {years}a")
     elif years == 4:
-        exp_pts = 11
-        reasons.append("4 años: estiramiento razonable")
-    elif years == 5:
         exp_pts = 6
-        reasons.append("5 años: penalización")
+        reasons.append("4 años: estiramiento")
+    elif years == 5:
+        exp_pts = -8
+        reasons.append("5 años: gap relevante")
     else:
-        exp_pts = 1
-        reasons.append(f"{years}+ años: penalización fuerte")
+        exp_pts = -18
+        reasons.append(f"{years}+ años: gap fuerte")
     score += exp_pts
+
+    # Hard jurisdiction-specific experience requirements are materially different from
+    # transferable KYC/KYB knowledge. Penalise them instead of letting keyword overlap
+    # create an unrealistically high match score.
+    req = norm_text(job.description)
+    regulatory_penalty = 0
+    regulatory_reason = ""
+    hard_patterns = [
+        (r"(?:previous|prior|proven|hands on|required|must have).{0,120}(?:uk aml|fca regulated|fca environment|uk regulatory)", -15, "experiencia UK/FCA exigida"),
+        (r"(?:previous|prior|proven|hands on|required|must have).{0,120}(?:finma|swiss aml|swiss regulatory)", -12, "experiencia FINMA/Suiza exigida"),
+        (r"(?:previous|prior|proven|hands on|required|must have).{0,120}(?:cssf|luxembourg aml|luxembourg regulatory)", -12, "experiencia CSSF/Luxemburgo exigida"),
+    ]
+    for pattern, penalty, label in hard_patterns:
+        if re.search(pattern, req):
+            regulatory_penalty = min(regulatory_penalty, penalty)
+            regulatory_reason = label
+    if regulatory_penalty:
+        score += regulatory_penalty
+        reasons.append(f"{regulatory_reason} {regulatory_penalty}")
 
     sector = infer_sector(job, known_company=known_company)
     job.sector = sector

@@ -195,12 +195,27 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
     raw_count = len(raw_jobs)
     semantic_changed = False
 
-    # Remove false positives saved by older generic-crawler versions immediately,
-    # rather than waiting for the normal stale timeout. Also remove them from seen.
+    # Revalidate every currently visible vacancy against today's rules before processing
+    # fresh fetches. This makes preference/scoring fixes take effect immediately instead
+    # of leaving old out-of-scope rows visible for the stale timeout (e.g. London hybrid).
     for fp, rec in list(current.items()):
         if obvious_non_job_content(rec.get("source_kind", ""), rec.get("title", ""), rec.get("apply_url", "")):
             current.pop(fp, None)
             seen.pop(fp, None)
+            semantic_changed = True
+            continue
+        try:
+            job_data = {k: v for k, v in rec.items() if k in Job.__dataclass_fields__}
+            old_job = Job.from_dict(job_data).finalize()
+            known = find_known_company(old_job, lookup)
+            _, still_allowed = score_job(old_job, profile, known_company=bool(known))
+        except Exception:
+            # Do not destroy a record merely because an old state schema cannot be parsed.
+            still_allowed = True
+        if not still_allowed:
+            current.pop(fp, None)
+            # Keep `seen`: a vacancy filtered out by current preferences must not reappear
+            # as a "new" job on the next pass.
             semantic_changed = True
 
     # Cross-source dedupe before scoring, preferring official sources.

@@ -122,6 +122,45 @@ class RadarTests(unittest.TestCase):
         self.assertEqual(len(links), 1)
         self.assertIn("compliance-analyst", links[0]["url"])
 
+
+    def test_london_hybrid_payabl_like_role_is_rejected(self):
+        j = Job(
+            source="Workable:payabl", source_kind="official ATS", company="payabl.", sector="Payments",
+            title="AML Officer (Maternity Cover)", location="London, United Kingdom",
+            description=("Hybrid role. 5+ years relevant AML Financial Crime experience. Client onboarding KYC CDD EDD, "
+                         "transaction monitoring, sanctions screening and SAR preparation. Previous experience working "
+                         "within a UK AML and FCA-regulated environment is required."),
+            apply_url="https://example.com/payabl-aml", remote_hint="Hybrid",
+        ).finalize()
+        scored, ok = score_job(j, PROFILE, known_company=True)
+        self.assertFalse(ok)
+        self.assertLess(scored.score, 80)
+
+    def test_old_out_of_scope_job_is_purged_immediately(self):
+        base = {"version": 1, "seen": {}, "jobs": {}, "discovery": {}, "stats": {}, "last_scan": ""}
+        j = Job(
+            source="Workable:payabl", source_kind="official ATS", company="TestPay", sector="Payments",
+            title="AML Officer", location="London, United Kingdom - Hybrid",
+            description="5+ years AML KYC CDD EDD transaction monitoring sanctions SAR. FCA regulated experience required.",
+            apply_url="https://example.com/payabl-old", remote_hint="Hybrid",
+        ).finalize()
+        d = j.to_dict(); d["first_seen"] = "2026-08-27T00:00:00+00:00"
+        base["jobs"][j.fingerprint] = d
+        base["seen"][j.fingerprint] = {"first_seen": d["first_seen"], "company": j.company, "title": j.title, "location": j.location}
+        state, stats = update_state_with_jobs(copy.deepcopy(base), [], COMPANIES, PROFILE)
+        self.assertNotIn(j.fingerprint, state["jobs"])
+        self.assertIn(j.fingerprint, state["seen"])
+        self.assertTrue(stats["semantic_changed"])
+
+    def test_five_year_requirement_is_materially_penalized(self):
+        j = strong_job("Madrid, Spain - Hybrid", "KYC KYB Analyst")
+        j.description = ("Corporate KYB CDD onboarding UBO beneficial ownership complex ownership merchant high risk EDD "
+                         "sanctions PEP adverse media. 5+ years experience required. Transaction monitoring exposure.")
+        j.fingerprint = ""; j.finalize()
+        scored, ok = score_job(j, PROFILE, known_company=True)
+        self.assertTrue(ok)
+        self.assertLessEqual(scored.score, 80)
+
     def test_same_offer_does_not_change_state_on_second_scan(self):
         base = {"version": 1, "seen": {}, "jobs": {}, "discovery": {}, "stats": {}, "last_scan": ""}
         j1 = strong_job("Luxembourg", "KYB Analyst")
