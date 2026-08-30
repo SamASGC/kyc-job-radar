@@ -4,14 +4,17 @@ minimum_score: 62
 max_post_age_days: 14
 stale_after_hours: 72
 
-# Onsite/hybrid: ONLY these countries.
+# Onsite/hybrid: ONLY these countries. Barcelona is explicitly in scope as part of Spain.
 onsite_hybrid_countries:
   - Spain
   - Luxembourg
   - Switzerland
+  - Estonia
+  - Czechia
+  - Malta
 
-# Remote: any European country, plus Europe/EMEA/global postings that are not explicitly restricted elsewhere.
-remote_scope: Europe
+# Remote: any country/region worldwide, including country-only remote roles.
+remote_scope: Global
 
 profile_summary:
   years_relevant: 3
