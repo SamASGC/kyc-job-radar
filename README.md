@@ -19,9 +19,8 @@ Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Busca en ca
 
 ## Geografía v1.1
 
-- **Presencial o híbrido:** solo **España, Luxemburgo o Suiza**.
-- **Remoto:** cualquier país europeo, y ofertas explícitamente `Europe`, `EU`, `EMEA`, `Worldwide` o `Global` siempre que no indiquen una restricción incompatible.
-- Un remoto explícitamente limitado a India/Canadá/EE. UU./Sudáfrica/etc. se descarta.
+- **Presencial o híbrido:** España (incluida Barcelona), Luxemburgo, Suiza, Estonia, Chequia y Malta.
+- **Remoto:** se mantiene el criterio amplio del radar; las restricciones territoriales se muestran en el dashboard para valoración manual.
 
 ## Privacidad
 
