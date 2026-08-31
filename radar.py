@@ -9,12 +9,14 @@ from pathlib import Path
 from job_radar.config import ROOT
 import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
+from job_radar.fit_adjustments import apply_fit_adjustments
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
 
 
 _BASE_LOAD_JSON = scanner_module.load_json
 _BASE_LOCATION_RULE = matching_module.location_score_and_allowed
+_BASE_SCORE_JOB = scanner_module.score_job
 
 
 def _load_json_with_expansions(path):
@@ -31,7 +33,7 @@ def _load_json_with_expansions(path):
 
 
 def _location_rule_with_global_remote(job, preliminary_score, skills, profile):
-    # The user explicitly wants country-only remote jobs worldwide to remain eligible.
+    # Country-only remote jobs worldwide remain eligible when the profile says Global.
     if str(profile.get("remote_scope", "")).casefold() == "global" and matching_module.detect_mode(job) == "Remoto":
         country = matching_module.detect_country(job.location)
         if country:
@@ -44,10 +46,16 @@ def _location_rule_with_global_remote(job, preliminary_score, skills, profile):
     return _BASE_LOCATION_RULE(job, preliminary_score, skills, profile)
 
 
+def _score_job_with_must_have_gaps(job, profile, known_company=False):
+    scored, ok = _BASE_SCORE_JOB(job, profile, known_company=known_company)
+    return apply_fit_adjustments(scored, profile, ok)
+
+
 # Keep expansion targets separate from the large original company file while making
 # every normal scan (local and GitHub Actions) consume both lists transparently.
 scanner_module.load_json = _load_json_with_expansions
 matching_module.location_score_and_allowed = _location_rule_with_global_remote
+scanner_module.score_job = _score_job_with_must_have_gaps
 
 
 def cmd_scan(args):
