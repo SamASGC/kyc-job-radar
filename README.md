@@ -1,11 +1,11 @@
-# KYC / KYB / AML Job Radar v1.1
+# KYC / KYB / AML Job Radar v1.2
 
 Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Busca en career pages oficiales y ATS públicos, añade agregadores con feed/API pública, puntúa cada vacante contra un perfil profesional sin datos personales, deduplica de forma persistente y genera un dashboard HTML interactivo.
 
 ## Qué incluye
 
-- **164 targets de empresas** en `config/companies.json`: las **81 entradas del PDF original** más **83 targets de ampliación web**.
-- Nuevos targets v1.1 de alto valor: **Peratera, BVNK, Nium, Unlimit, PayDo, Copper.co, Upvest, Griffin, payabl., Monavate, Railsr, PaySet, BCB Group, Form3, Fireblocks y Chainalysis**.
+- **173 targets de empresas**: las **81 entradas del PDF original**, **83 targets de ampliación web** y **9 targets adicionales** en `config/extra_companies.json` para ampliar Malta, Estonia y Chequia.
+- Nuevos targets de expansión geográfica: **Ballinger Group, Corpay, Moneybase, Shift4, amnis, ESTO Group, Saxo, OKX y Payfuture**.
 - ATS soportados: Greenhouse, Lever (global/EU), Ashby, SmartRecruiters, Workable, Personio, Workday, Recruitee y Breezy; además de fallback sobre career pages oficiales.
 - **Personio reforzado**: intenta XML y, si la empresa no lo ha habilitado, recorre la career page pública y las páginas de las vacantes. Esto cubre casos como Peratera.
 - Fallback de career pages mejorado: en enlaces claramente KYC/AML/Compliance/Risk intenta leer la página de detalle y su `JobPosting` JSON-LD para recuperar descripción, ubicación y fecha.
@@ -17,10 +17,10 @@ Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Busca en ca
 - Registro `seen` persistente: una oferta ya presentada no vuelve a aparecer aunque desaparezca y reaparezca.
 - Preferencia fuerte por ofertas de **0–7 días**; se admiten hasta **14 días** para no perder oportunidades buenas.
 
-## Geografía v1.1
+## Geografía v1.2
 
 - **Presencial o híbrido:** España (incluida Barcelona), Luxemburgo, Suiza, Estonia, Chequia y Malta.
-- **Remoto:** se mantiene el criterio amplio del radar; las restricciones territoriales se muestran en el dashboard para valoración manual.
+- **Remoto:** cualquier país del mundo, incluido remoto limitado a un país concreto, siempre sujeto al resto del scoring y requisitos del puesto.
 
 ## Privacidad
 
@@ -52,7 +52,7 @@ O:
 
 ## Automatización horaria
 
-El workflow `.github/workflows/hourly.yml` ejecuta el radar cada hora en el minuto `:17`. Las careers/ATS se revisan cada hora; algunos agregadores tienen una cadencia interna más baja según sus propias recomendaciones.
+El workflow `.github/workflows/hourly.yml` ejecuta el radar en `:17` y `:47`; Cloudflare puede lanzar `workflow_dispatch` como respaldo cuando GitHub se retrasa. Las careers/ATS se revisan en cada pasada; algunos agregadores tienen una cadencia interna más baja según sus propias recomendaciones.
 
 Consulta `DEPLOYMENT.md` para el despliegue.
 
