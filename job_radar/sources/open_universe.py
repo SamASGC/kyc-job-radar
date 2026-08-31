@@ -6,35 +6,31 @@ from datetime import datetime, timedelta, timezone
 from job_radar.models import Job
 
 
-# This source deliberately searches an open employer universe instead of a fixed company list.
-# Job Opportunities API reports millions of live employer/government-direct listings across
-# 200k+ employers; Remote Landers adds ATS-direct remote jobs from several major ATS families.
-
-TITLE_QUERIES = [
+# Open-employer discovery is JD-first. We search the advert body, not just the title,
+# because a generic role name can still have KYC/AML/EDD/SoF/SoW as its daily work.
+JD_QUERIES = [
     "kyc",
     "kyb",
     "aml",
-    "cdd",
-    "edd",
-    "financial crime",
-    "fincrime",
-    "compliance",
-    "sanctions",
-    "due diligence",
-    "transaction monitoring",
-    "screening",
-    "onboarding",
-]
-
-DESCRIPTION_QUERIES = [
-    "know your customer",
-    "know your business",
+    "customer due diligence",
+    "client due diligence",
+    "enhanced due diligence",
     "source of funds",
     "source of wealth",
     "beneficial ownership",
-    "adverse media",
     "pep screening",
+    "adverse media",
+    "sanctions screening",
+    "transaction monitoring",
+    "financial crime",
+    "periodic review",
+    "remediation",
+    "customer risk assessment",
+    "screening",
 ]
+
+# Tiny fallback for the minority of jobs whose source does not expose a description.
+TITLE_FALLBACK_QUERIES = ["kyc", "aml"]
 
 ONSITE_COUNTRIES = "ES,LU,CH,EE,CZ,MT"
 
@@ -86,9 +82,9 @@ def _jobopportunities_row(x: dict) -> Job:
 
 async def _get_jobopportunities(http, params: dict) -> list[Job]:
     url = "https://api.jobopportunitiesapi.org/public/jobs"
-    # Keyless traffic is documented at roughly 2 req/s sustained and ~40/min/IP.
-    # We intentionally serialize requests and leave headroom below that ceiling.
-    await asyncio.sleep(0.70)
+    # Keyless traffic is documented around 40 requests/minute. The plan below uses
+    # 36 body-search slices + 4 small title fallbacks and serializes them deliberately.
+    await asyncio.sleep(0.78)
     r = await http.get(url, params=params, headers={"Accept": "application/json"})
     if r.status_code == 429:
         try:
@@ -103,15 +99,10 @@ async def _get_jobopportunities(http, params: dict) -> list[Job]:
 
 
 async def fetch_jobopportunities_open_universe(http) -> list[Job]:
-    """Search the live employer universe for the user's KYC/AML domain.
+    """Search full JDs across an open employer universe.
 
-    Two slices are queried for every term:
-      * remote=remote globally, because remote is allowed worldwide;
-      * ES/LU/CH/EE/CZ/MT, which are the allowed onsite/hybrid countries.
-
-    We query both titles and a smaller set of high-signal description phrases so a role
-    called simply 'Risk Analyst' or 'Client Review Analyst' can still be discovered when
-    the advert contains SoF/SoW/KYC/KYB/beneficial-ownership language.
+    For every signal we search remote roles globally and onsite/hybrid roles in the
+    allowed countries. Titles are not the main discovery gate anymore.
     """
     posted_after = (datetime.now(timezone.utc) - timedelta(days=14)).date().isoformat()
     scopes = [
@@ -120,10 +111,11 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
     ]
     jobs: list[Job] = []
 
-    for term in TITLE_QUERIES:
+    # Primary discovery: full advert body.
+    for term in JD_QUERIES:
         for scope in scopes:
             params = {
-                "title": term,
+                "description_contains": term,
                 "limit": 50,
                 "include_description": "true",
                 "posted_after": posted_after,
@@ -132,13 +124,14 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
             try:
                 jobs.extend(await _get_jobopportunities(http, params))
             except Exception:
-                # One expensive/full-text slice timing out must not kill the whole source.
+                # One expensive full-text slice timing out must not kill the scan.
                 continue
 
-    for term in DESCRIPTION_QUERIES:
+    # Minimal fallback for postings without an advert body.
+    for term in TITLE_FALLBACK_QUERIES:
         for scope in scopes:
             params = {
-                "description_contains": term,
+                "title": term,
                 "limit": 50,
                 "include_description": "true",
                 "posted_after": posted_after,
