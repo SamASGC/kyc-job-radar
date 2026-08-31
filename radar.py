@@ -10,6 +10,7 @@ from job_radar.config import ROOT
 import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
 from job_radar.fit_adjustments import apply_fit_adjustments
+from job_radar.sources.oracle_hcm import fetch_oracle_hcm
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
 
@@ -17,6 +18,7 @@ from job_radar.dashboard import build_dashboard
 _BASE_LOAD_JSON = scanner_module.load_json
 _BASE_LOCATION_RULE = matching_module.location_score_and_allowed
 _BASE_SCORE_JOB = scanner_module.score_job
+_BASE_FETCH_TARGET = scanner_module.fetch_target
 
 
 def _load_json_with_expansions(path):
@@ -51,11 +53,18 @@ def _score_job_with_must_have_gaps(job, profile, known_company=False):
     return apply_fit_adjustments(scored, profile, ok)
 
 
+async def _fetch_target_with_oracle(http, company, target):
+    if target.get("kind") == "oracle_hcm":
+        return await fetch_oracle_hcm(http, company, target)
+    return await _BASE_FETCH_TARGET(http, company, target)
+
+
 # Keep expansion targets separate from the large original company file while making
 # every normal scan (local and GitHub Actions) consume both lists transparently.
 scanner_module.load_json = _load_json_with_expansions
 matching_module.location_score_and_allowed = _location_rule_with_global_remote
 scanner_module.score_job = _score_job_with_must_have_gaps
+scanner_module.fetch_target = _fetch_target_with_oracle
 
 
 def cmd_scan(args):
