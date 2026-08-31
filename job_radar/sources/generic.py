@@ -48,12 +48,23 @@ def _location(data: dict, visible: str) -> tuple[str, str]:
     for x in reqs:
         if isinstance(x,dict) and x.get("name"):
             parts.append(str(x["name"]))
-    if not parts:
-        m=re.search(r"\b(Remote\s+(?:Global|Europe|EMEA)|Fully\s+Remote|Remote|Hybrid|On-site|Onsite)\b", visible, re.I)
-        if m:
-            value=m.group(1)
-            return value, ("Remote" if "remote" in value.lower() else remote_hint)
-    return ", ".join(dict.fromkeys(parts)), remote_hint
+
+    # Many career sites expose the city/country in JobPosting JSON-LD but keep the
+    # work model (Hybrid / On-site / Remote) only in visible page text. Preserve both.
+    mode_match=re.search(r"\b(Remote\s+(?:Global|Europe|EMEA)|Fully\s+Remote|Remote|Hybrid|On-site|Onsite)\b", visible, re.I)
+    mode=mode_match.group(1) if mode_match else ""
+    if mode and "remote" in mode.lower():
+        remote_hint = "Remote"
+
+    if parts:
+        location=", ".join(dict.fromkeys(parts))
+        if mode and mode.lower() not in location.lower():
+            location=f"{location} - {mode}"
+        return location, remote_hint
+
+    if mode:
+        return mode, remote_hint
+    return "", remote_hint
 
 
 def parse_generic_job_page(html: str, url: str, company: dict, fallback_title: str) -> Job:
