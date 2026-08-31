@@ -33,6 +33,7 @@ DESCRIPTION_QUERIES = [
     "source of wealth",
     "beneficial ownership",
     "adverse media",
+    "pep screening",
 ]
 
 ONSITE_COUNTRIES = "ES,LU,CH,EE,CZ,MT"
@@ -67,7 +68,7 @@ def _jobopportunities_row(x: dict) -> Job:
 
     salary = str(x.get("salary_text") or x.get("salary") or "").strip()
     return Job(
-        source=f"Job Opportunities API:{x.get('source') or 'employer-direct'}",
+        source="Job Opportunities API",
         source_kind="aggregator",
         company=str(x.get("company") or "Unknown"),
         sector="Fintech",
