@@ -14,6 +14,8 @@ TITLE_QUERIES = [
     "kyc",
     "kyb",
     "aml",
+    "cdd",
+    "edd",
     "financial crime",
     "fincrime",
     "compliance",
@@ -22,8 +24,6 @@ TITLE_QUERIES = [
     "transaction monitoring",
     "screening",
     "onboarding",
-    "financial integrity",
-    "customer verification",
 ]
 
 DESCRIPTION_QUERIES = [
