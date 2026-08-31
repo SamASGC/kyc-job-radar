@@ -11,6 +11,10 @@ import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
 from job_radar.fit_adjustments import apply_fit_adjustments
 from job_radar.sources.oracle_hcm import fetch_oracle_hcm
+from job_radar.sources.open_universe import (
+    fetch_jobopportunities_open_universe,
+    fetch_remote_landers,
+)
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
 
@@ -19,6 +23,7 @@ _BASE_LOAD_JSON = scanner_module.load_json
 _BASE_LOCATION_RULE = matching_module.location_score_and_allowed
 _BASE_SCORE_JOB = scanner_module.score_job
 _BASE_FETCH_TARGET = scanner_module.fetch_target
+_BASE_FETCH_AGGREGATORS = scanner_module.fetch_aggregators
 
 
 def _load_json_with_expansions(path):
@@ -59,12 +64,69 @@ async def _fetch_target_with_oracle(http, company, target):
     return await _BASE_FETCH_TARGET(http, company, target)
 
 
+async def _fetch_aggregators_with_open_universe(http, config):
+    """Keep the original feeds and add broad employer-direct discovery surfaces."""
+    jobs, health, skipped = await _BASE_FETCH_AGGREGATORS(http, config)
+
+    specs = [
+        ("Job Opportunities API", fetch_jobopportunities_open_universe),
+        ("Remote Landers", fetch_remote_landers),
+    ]
+    results = await asyncio.gather(*(func(http) for _, func in specs), return_exceptions=True)
+    for (name, _), result in zip(specs, results):
+        if isinstance(result, Exception):
+            health.append({
+                "company": name,
+                "ok": False,
+                "jobs": 0,
+                "targets": [{"kind": "open-universe aggregator"}],
+                "error": f"{type(result).__name__}: {result}",
+            })
+            skipped.add(name)
+        else:
+            jobs.extend(result)
+            health.append({
+                "company": name,
+                "ok": True,
+                "jobs": len(result),
+                "targets": [{"kind": "open-universe aggregator"}],
+                "error": "",
+            })
+    return jobs, health, skipped
+
+
+# Expand role discovery beyond conventional KYC/AML titles. These terms do NOT claim
+# experience; they only make relevant jobs discoverable and scorable.
+matching_module.ROLE_TERMS.update({
+    "source of funds": 22,
+    "source of wealth": 22,
+    "beneficial ownership": 22,
+    "pep": 18,
+    "adverse media": 18,
+    "financial integrity": 20,
+    "client review": 18,
+    "customer risk assessment": 20,
+})
+
+_existing_growth_labels = {str(label).casefold() for label, _ in matching_module.GROWTH_SKILLS}
+if "source of funds (sof)" not in _existing_growth_labels:
+    matching_module.GROWTH_SKILLS.append((
+        "Source of Funds (SoF)",
+        ["source of funds", "source-of-funds", "sof review", "sof assessment"],
+    ))
+if "source of wealth (sow)" not in _existing_growth_labels:
+    matching_module.GROWTH_SKILLS.append((
+        "Source of Wealth (SoW)",
+        ["source of wealth", "source-of-wealth", "sow review", "sow assessment"],
+    ))
+
 # Keep expansion targets separate from the large original company file while making
 # every normal scan (local and GitHub Actions) consume both lists transparently.
 scanner_module.load_json = _load_json_with_expansions
 matching_module.location_score_and_allowed = _location_rule_with_global_remote
 scanner_module.score_job = _score_job_with_must_have_gaps
 scanner_module.fetch_target = _fetch_target_with_oracle
+scanner_module.fetch_aggregators = _fetch_aggregators_with_open_universe
 
 
 def cmd_scan(args):
