@@ -13,6 +13,10 @@ STRONG_TITLE = re.compile(
     r"\b(kyc|kyb|aml|fincrime|financial crime|compliance|sanction|fraud|risk|onboarding|due diligence|cdd|edd|screening|investigat|transaction monitoring)\b",
     re.I,
 )
+JD_SIGNAL = re.compile(
+    r"\b(kyc|kyb|aml|customer due diligence|client due diligence|enhanced due diligence|source of funds|source of wealth|beneficial ownership|pep screening|adverse media|sanctions screening|transaction monitoring|financial crime|periodic review|remediation)\b",
+    re.I,
+)
 
 
 def _plain(value) -> str:
@@ -48,21 +52,22 @@ def _detail_object(data) -> dict:
 
 
 def _description(data: dict) -> str:
-    parts = [
-        data.get("ShortDescriptionStr"),
-        data.get("ExternalDescriptionStr"),
-        data.get("ExternalResponsibilitiesStr"),
-        data.get("ExternalQualificationsStr"),
-        data.get("CorporateDescriptionStr"),
+    """Preserve responsibility/qualification labels for section-aware fit scoring."""
+    labelled = [
+        ("SUMMARY", data.get("ShortDescriptionStr")),
+        ("DESCRIPTION", data.get("ExternalDescriptionStr")),
+        ("RESPONSIBILITIES", data.get("ExternalResponsibilitiesStr")),
+        ("REQUIREMENTS", data.get("ExternalQualificationsStr")),
+        ("COMPANY", data.get("CorporateDescriptionStr")),
     ]
     clean = []
     seen = set()
-    for part in parts:
+    for label, part in labelled:
         text = _plain(part)
         key = text.casefold()
         if text and key not in seen:
             seen.add(key)
-            clean.append(text)
+            clean.append(f"{label}: {text}")
     return " ".join(clean)
 
 
@@ -96,12 +101,7 @@ def _job_from_row(company: dict, origin: str, language: str, site: str, row: dic
 
 
 async def fetch_oracle_hcm(http, company: dict, target: dict) -> list[Job]:
-    """Fetch Oracle Fusion HCM Candidate Experience postings used by career sites such as Amex.
-
-    Oracle documents the recruitingCEJobRequisitions collection and the requisitionList
-    child used by Candidate Experience sites. We use the public career-site endpoint at a
-    low cadence and enrich only compliance/risk-like titles with the details endpoint.
-    """
+    """Fetch Oracle Fusion HCM Candidate Experience postings used by career sites such as Amex."""
     configured = target.get("url") or company.get("careers_url") or ""
     p = urlsplit(configured)
     if not p.scheme or not p.netloc:
@@ -129,7 +129,6 @@ async def fetch_oracle_hcm(http, company: dict, target: dict) -> list[Job]:
             rid = str(row.get("Id") or row.get("RequisitionId") or "").strip()
             if rid:
                 rows_by_id[rid] = row
-        # Stop when this page added fewer than a full page, or nothing new.
         added = len(rows_by_id) - before
         if added == 0 or len(batch) < page_size:
             break
@@ -139,12 +138,12 @@ async def fetch_oracle_hcm(http, company: dict, target: dict) -> list[Job]:
         for rid, row in rows_by_id.items()
     }
 
-    # Enrich only titles likely to survive the KYC/AML matcher. This avoids fetching
-    # hundreds of unrelated Amex details pages while preserving full JD text for scoring.
+    # Do not make title the only gate. Oracle list payloads can expose responsibility/
+    # qualification snippets, so generic titles with a KYC/AML JD are enriched too.
     relevant_ids = [
         rid for rid, job in jobs_by_id.items()
-        if STRONG_TITLE.search(job.title)
-    ][:40]
+        if STRONG_TITLE.search(job.title) or JD_SIGNAL.search(job.description)
+    ][:80]
 
     async def enrich(rid: str):
         endpoint = f"{origin}/hcmRestApi/resources/{api_version}/recruitingCEJobRequisitionDetails/{rid}"
