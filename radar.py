@@ -7,13 +7,34 @@ import json
 from pathlib import Path
 
 from job_radar.config import ROOT
-from job_radar.scanner import run_scan
+import job_radar.scanner as scanner_module
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
 
 
+_BASE_LOAD_JSON = scanner_module.load_json
+
+
+def _load_json_with_expansions(path):
+    data = _BASE_LOAD_JSON(path)
+    if str(path) == "config/companies.json":
+        try:
+            extra = _BASE_LOAD_JSON("config/extra_companies.json")
+        except FileNotFoundError:
+            extra = []
+        if extra:
+            existing = {str(x.get("name", "")).casefold() for x in data}
+            data = list(data) + [x for x in extra if str(x.get("name", "")).casefold() not in existing]
+    return data
+
+
+# Keep expansion targets separate from the large original company file while making
+# every normal scan (local and GitHub Actions) consume both lists transparently.
+scanner_module.load_json = _load_json_with_expansions
+
+
 def cmd_scan(args):
-    stats = asyncio.run(run_scan())
+    stats = asyncio.run(scanner_module.run_scan())
     print(json.dumps(stats, indent=2, ensure_ascii=False))
 
 
