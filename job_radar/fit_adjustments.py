@@ -11,6 +11,8 @@ GAP_ALIASES = {
     "SAR/STR drafting": ["sar", "str", "suspicious activity report", "suspicious transaction report"],
     "Regulatory reporting": ["regulatory reporting", "regulatory filing", "goaml"],
     "Sanctions investigations": ["sanctions investigations", "sanctions investigation"],
+    "Source of Funds (SoF)": ["source of funds", "source-of-funds", "sof review", "sof assessment"],
+    "Source of Wealth (SoW)": ["source of wealth", "source-of-wealth", "sow review", "sow assessment"],
 }
 
 REQUIREMENT_CUES = [
