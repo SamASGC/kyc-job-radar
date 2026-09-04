@@ -39,9 +39,49 @@ def _load_json_with_expansions(path):
     return data
 
 
-def _location_rule_with_global_remote(job, preliminary_score, skills, profile):
-    # Country-only remote jobs worldwide remain eligible when the profile says Global.
-    if str(profile.get("remote_scope", "")).casefold() == "global" and matching_module.detect_mode(job) == "Remoto":
+# ATS/API feeds often publish ISO country codes rather than full country names. Add the
+# codes we care about so the geography gate does not mistake "DE - Remote" for unknown.
+matching_module.COUNTRY_ALIASES.update({
+    "es": "Spain", "lu": "Luxembourg", "ch": "Switzerland", "ee": "Estonia", "cz": "Czechia", "mt": "Malta",
+    "al": "Albania", "at": "Austria", "be": "Belgium", "ba": "Bosnia and Herzegovina", "bg": "Bulgaria",
+    "hr": "Croatia", "cy": "Cyprus", "dk": "Denmark", "fi": "Finland", "fr": "France", "de": "Germany",
+    "gr": "Greece", "hu": "Hungary", "is": "Iceland", "ie": "Ireland", "it": "Italy", "lv": "Latvia",
+    "li": "Liechtenstein", "lt": "Lithuania", "me": "Montenegro", "nl": "Netherlands", "mk": "North Macedonia",
+    "no": "Norway", "pl": "Poland", "pt": "Portugal", "ro": "Romania", "rs": "Serbia", "sk": "Slovakia",
+    "si": "Slovenia", "se": "Sweden", "gb": "United Kingdom",
+    # Common non-European codes: explicit detection means they are hard-rejected for Europe-only remote.
+    "us": "United States", "mx": "Mexico", "ca": "Canada", "br": "Brazil", "ar": "Argentina",
+    "in": "India", "sg": "Singapore", "au": "Australia", "ae": "United Arab Emirates", "za": "South Africa",
+})
+
+
+def _location_rule_with_scope(job, preliminary_score, skills, profile):
+    mode = matching_module.detect_mode(job)
+    scope = str(profile.get("remote_scope", "Europe")).casefold()
+
+    if mode == "Remoto" and scope == "europe":
+        country = matching_module.detect_country(job.location)
+        low = matching_module.norm_text(job.location + " " + job.remote_hint)
+
+        # Explicit country wins over vague labels such as "global". This prevents a row
+        # like "Mexico - Remote / global team" from leaking into a Europe-only dashboard.
+        if country:
+            if country in matching_module.EUROPE_COUNTRIES:
+                return 15, True, f"remoto en {country}"
+            return -25, False, f"remoto fuera de Europa: {country}"
+
+        if any(matching_module.norm_text(x) in low for x in matching_module.BLOCKED_REMOTE_TERMS):
+            return -25, False, "remoto restringido fuera de Europa"
+
+        # Europe/EMEA and genuinely global/worldwide roles are usable from Europe.
+        if any(matching_module.norm_text(x) in low for x in matching_module.EUROPE_TERMS):
+            return 15, True, "remoto disponible desde Europa"
+
+        # Strict mode: a bare "Remote" with no eligibility geography is not enough.
+        return -12, False, "remoto sin elegibilidad europea verificable"
+
+    # Retain the old global behavior only if the profile is explicitly changed back to Global.
+    if mode == "Remoto" and scope == "global":
         country = matching_module.detect_country(job.location)
         if country:
             return 15, True, f"remoto en {country}"
@@ -50,6 +90,7 @@ def _location_rule_with_global_remote(job, preliminary_score, skills, profile):
             return 15, True, "remoto global/EMEA/Europa"
         allowed = preliminary_score >= 68
         return (10 if allowed else -3), allowed, "remoto global; país no indicado"
+
     return _BASE_LOCATION_RULE(job, preliminary_score, skills, profile)
 
 
@@ -123,7 +164,7 @@ if "source of wealth (sow)" not in _existing_growth_labels:
 # Keep expansion targets separate from the large original company file while making
 # every normal scan (local and GitHub Actions) consume both lists transparently.
 scanner_module.load_json = _load_json_with_expansions
-matching_module.location_score_and_allowed = _location_rule_with_global_remote
+matching_module.location_score_and_allowed = _location_rule_with_scope
 scanner_module.score_job = _score_job_with_must_have_gaps
 scanner_module.fetch_target = _fetch_target_with_oracle
 scanner_module.fetch_aggregators = _fetch_aggregators_with_open_universe
