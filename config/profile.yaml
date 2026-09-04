@@ -13,8 +13,9 @@ onsite_hybrid_countries:
   - Czechia
   - Malta
 
-# Remote: any country/region worldwide, including country-only remote roles.
-remote_scope: Global
+# Remote: Europe only. Europe/EMEA/global postings remain eligible when a European candidate is allowed,
+# but country-locked remote jobs outside Europe (US, Mexico, Canada, LATAM, etc.) are rejected.
+remote_scope: Europe
 
 profile_summary:
   years_relevant: 3
