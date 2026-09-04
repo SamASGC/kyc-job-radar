@@ -6,9 +6,9 @@ Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Combina tar
 
 - **174 targets directos de empresas**: las **81 entradas del PDF original**, **83 targets de ampliación web** y **10 targets adicionales** en `config/extra_companies.json`.
 - Entre las ampliaciones recientes: **Ballinger Group, Corpay, Moneybase, Shift4, amnis, ESTO Group, Saxo, OKX, Payfuture y American Express**.
-- **Open-universe discovery**: no depende sólo de esas 174 empresas. Consulta una fuente employer-direct con millones de vacantes y más de 200k empleadores, filtrando específicamente KYC/KYB/AML/CDD/EDD/FinCrime/Compliance/Sanctions/TM/Screening/Onboarding y frases de descripción como SoF, SoW, beneficial ownership, adverse media y PEP screening.
-- El open-universe se divide según la geografía real del perfil: **remoto mundial** + **presencial/híbrido ES/LU/CH/EE/CZ/MT**.
-- Fuente adicional **Remote Landers**, con vacantes remotas enlazadas directamente al ATS del empleador.
+- **Open-universe discovery**: no depende sólo de esas 174 empresas. Consulta una fuente employer-direct con millones de vacantes y más de 200k empleadores, buscando dentro de las JDs KYC/KYB/AML/CDD/EDD/FinCrime/Compliance/Sanctions/TM/Screening y señales como SoF, SoW, beneficial ownership, adverse media y PEP screening.
+- El open-universe aplica geografía desde origen: **remoto sólo con país europeo** + **presencial/híbrido ES/LU/CH/EE/CZ/MT**.
+- Fuente adicional **Remote Landers**, con vacantes remotas enlazadas directamente al ATS del empleador; el filtro central descarta las que no tengan elegibilidad europea verificable.
 - ATS soportados: Greenhouse, Lever (global/EU), Ashby, SmartRecruiters, Workable, Personio, Workday, Recruitee, Breezy y **Oracle HCM Candidate Experience**; además de fallback sobre career pages oficiales.
 - **Personio reforzado**: intenta XML y, si la empresa no lo ha habilitado, recorre la career page pública y las páginas de las vacantes.
 - Fallback de career pages: en enlaces claramente KYC/AML/Compliance/Risk intenta leer la página de detalle y su `JobPosting` JSON-LD para recuperar descripción, ubicación y fecha.
@@ -22,7 +22,7 @@ Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Combina tar
 ## Geografía v1.3
 
 - **Presencial o híbrido:** España (incluida Barcelona), Luxemburgo, Suiza, Estonia, Chequia y Malta.
-- **Remoto:** cualquier país del mundo, incluido remoto limitado a un país concreto, siempre sujeto al resto del scoring y requisitos del puesto.
+- **Remoto:** Europa. Se admiten vacantes marcadas Europe/EMEA/global/worldwide cuando permiten trabajar desde Europa, y vacantes country-only de países europeos. Se rechazan US, México, Canadá, LATAM y cualquier otro país no europeo. Un simple `Remote` sin región verificable se descarta.
 
 ## Privacidad
 
@@ -60,4 +60,4 @@ Consulta `DEPLOYMENT.md` para el despliegue.
 
 ## Limitaciones intencionadas
 
-No hace login ni automatiza LinkedIn/Indeed/EURES. No intenta saltarse CAPTCHA, paywalls ni controles anti-bot. Ningún sistema puede garantizar literalmente el 100% de todas las vacantes mundiales: una empresa puede ocultar su career site, bloquear acceso automatizado o usar un ATS no soportado. El diseño v1.3 reduce mucho el problema de la lista cerrada al añadir descubrimiento sobre un universo de empleadores muy superior a los targets manuales.
+No hace login ni automatiza LinkedIn/Indeed/EURES. No intenta saltarse CAPTCHA, paywalls ni controles anti-bot. Ningún sistema puede garantizar literalmente el 100% de todas las vacantes: una empresa puede ocultar su career site, bloquear acceso automatizado o usar un ATS no soportado. El diseño v1.3 reduce mucho el problema de la lista cerrada al añadir descubrimiento sobre un universo de empleadores muy superior a los targets manuales.
