@@ -32,7 +32,12 @@ JD_QUERIES = [
 # Tiny fallback for the minority of jobs whose source does not expose a description.
 TITLE_FALLBACK_QUERIES = ["kyc", "aml"]
 
+# Onsite/hybrid remains intentionally narrow. Remote discovery is Europe-only.
 ONSITE_COUNTRIES = "ES,LU,CH,EE,CZ,MT"
+EUROPE_REMOTE_COUNTRIES = (
+    "AL,AT,BE,BA,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IS,IE,IT,LV,LI,LT,LU,MT,ME,"
+    "NL,MK,NO,PL,PT,RO,RS,SK,SI,ES,SE,CH,GB"
+)
 
 
 def _dedupe(jobs: list[Job]) -> list[Job]:
@@ -55,10 +60,13 @@ def _mode_label(value: str) -> str:
 def _jobopportunities_row(x: dict) -> Job:
     mode = _mode_label(str(x.get("remote") or ""))
     location = str(x.get("location") or "").strip()
+    country = str(x.get("country") or "").strip()
     if not location:
         city = str(x.get("city") or "").strip()
-        country = str(x.get("country") or "").strip()
         location = ", ".join(v for v in (city, country) if v)
+    elif country and country.casefold() not in location.casefold():
+        # Preserve the API's explicit country code so the final Europe gate can verify it.
+        location = f"{location}, {country}"
     if mode and mode.casefold() not in location.casefold():
         location = f"{location} - {mode}" if location else mode
 
@@ -82,8 +90,7 @@ def _jobopportunities_row(x: dict) -> Job:
 
 async def _get_jobopportunities(http, params: dict) -> list[Job]:
     url = "https://api.jobopportunitiesapi.org/public/jobs"
-    # Keyless traffic is documented around 40 requests/minute. The plan below uses
-    # 36 body-search slices + 4 small title fallbacks and serializes them deliberately.
+    # Keyless traffic is documented around 40 requests/minute. We serialize deliberately.
     await asyncio.sleep(0.78)
     r = await http.get(url, params=params, headers={"Accept": "application/json"})
     if r.status_code == 429:
@@ -99,14 +106,15 @@ async def _get_jobopportunities(http, params: dict) -> list[Job]:
 
 
 async def fetch_jobopportunities_open_universe(http) -> list[Job]:
-    """Search full JDs across an open employer universe.
+    """Search full JDs across an open employer universe, restricted to Europe.
 
-    For every signal we search remote roles globally and onsite/hybrid roles in the
-    allowed countries. Titles are not the main discovery gate anymore.
+    For every signal we search remote jobs whose published country is European, plus
+    onsite/hybrid jobs in the specifically authorised countries. Titles are not the main
+    discovery gate.
     """
     posted_after = (datetime.now(timezone.utc) - timedelta(days=14)).date().isoformat()
     scopes = [
-        {"remote": "remote"},
+        {"remote": "remote", "country": EUROPE_REMOTE_COUNTRIES},
         {"country": ONSITE_COUNTRIES},
     ]
     jobs: list[Job] = []
@@ -167,7 +175,7 @@ def _remotelanders_row(x: dict) -> Job:
 
 
 async def fetch_remote_landers(http, max_pages: int = 10) -> list[Job]:
-    """Read ATS-direct remote jobs from Remote Landers' public API."""
+    """Read ATS-direct remote jobs; the central Europe gate filters eligibility afterwards."""
     jobs: list[Job] = []
     for page in range(1, max_pages + 1):
         r = await http.get(
