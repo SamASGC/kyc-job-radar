@@ -5,9 +5,9 @@ import re
 from job_radar.models import Job, norm_text
 
 
-# The matcher works on normalized text (letters/numbers/spaces only).  Padding with
-# spaces gives us cheap, reliable token/phrase boundaries: "aml" must be AML, not the
-# letters inside "seamless"; "edd" must be EDD, not the tail of "embedded".
+# The matcher works on normalized text (letters/numbers/spaces only). Padding with
+# spaces gives reliable token/phrase boundaries: "aml" must be AML, not the letters
+# inside "seamless"; "edd" must be EDD, not the tail of "embedded".
 def contains_term(text: str, term: str) -> bool:
     haystack = f" {norm_text(text)} "
     needle = norm_text(term)
@@ -32,11 +32,12 @@ def required_near(text: str, aliases: list[str], cues: list[str], before: int = 
     return False
 
 
-# Clear non-target professions.  JD-first discovery is intentionally broad, so a
-# payments company can expose lots of technical/commercial jobs whose descriptions
-# mention transactions, risk, compliance controls, etc.  Those are not the user's goal.
+# Clear non-target professions. JD-first discovery is intentionally broad, so a
+# payments company can expose technical/commercial jobs whose descriptions mention
+# transactions, risk, controls, etc. Those are not the user's target career family.
 HARD_NON_TARGET_TITLE_TERMS = {
     "engineer",
+    "engineering",
     "developer",
     "architect",
     "data scientist",
@@ -44,6 +45,10 @@ HARD_NON_TARGET_TITLE_TERMS = {
     "software engineer",
     "site reliability",
     "devops",
+    "technical support",
+    "production support",
+    "it support",
+    "customer support",
     "product designer",
     "account executive",
     "sales manager",
@@ -52,6 +57,31 @@ HARD_NON_TARGET_TITLE_TERMS = {
     "recruiter",
     "talent acquisition",
     "customer success manager",
+}
+
+# For a generic title to be admitted on JD content alone, require at least two genuinely
+# financial-crime/KYC signals. Broad words such as "onboarding", "screening" or
+# "investigations" are useful corroboration but are too generic to open the gate alone.
+STRONG_JD_TERMS = {
+    "kyc",
+    "kyb",
+    "aml",
+    "anti money laundering",
+    "financial crime",
+    "fincrime",
+    "customer due diligence",
+    "client due diligence",
+    "cdd",
+    "enhanced due diligence",
+    "edd",
+    "beneficial ownership",
+    "source of funds",
+    "source of wealth",
+    "pep",
+    "sanctions",
+    "transaction monitoring",
+    "customer verification",
+    "business verification",
 }
 
 
@@ -69,7 +99,8 @@ def safe_role_relevance(title: str, description: str, role_terms: dict[str, int]
 
     desc_hits = [term for term in role_terms if contains_term(description, term)]
     if best == 0:
-        if len(desc_hits) >= 2:
+        strong_hits = {term for term in STRONG_JD_TERMS if contains_term(description, term)}
+        if len(strong_hits) >= 2:
             best = min(20, 8 + len(desc_hits) * 2)
             hits.extend(desc_hits[:5])
     elif desc_hits:
