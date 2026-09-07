@@ -9,7 +9,17 @@ from pathlib import Path
 from job_radar.config import ROOT
 import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
+import job_radar.fit_adjustments as fit_adjustments_module
 from job_radar.fit_adjustments import apply_fit_adjustments
+from job_radar.precision import (
+    contains_any,
+    required_near,
+    irrelevant_profession_title,
+    safe_role_relevance,
+    safe_extract_growth_skills,
+    safe_financial_context,
+    safe_infer_sector,
+)
 from job_radar.sources.oracle_hcm import fetch_oracle_hcm
 from job_radar.sources.open_universe import (
     fetch_jobopportunities_open_universe,
@@ -95,6 +105,11 @@ def _location_rule_with_scope(job, preliminary_score, skills, profile):
 
 
 def _score_job_with_must_have_gaps(job, profile, known_company=False):
+    # JD-first discovery is broad on purpose, but obvious technical/commercial professions
+    # must never enter the KYC/AML dashboard merely because their company or JD mentions
+    # payments, risk, embedded finance, controls, etc.
+    if irrelevant_profession_title(job.title):
+        return job, False
     scored, ok = _BASE_SCORE_JOB(job, profile, known_company=known_company)
     return apply_fit_adjustments(scored, profile, ok)
 
@@ -160,6 +175,22 @@ if "source of wealth (sow)" not in _existing_growth_labels:
         "Source of Wealth (SoW)",
         ["source of wealth", "source-of-wealth", "sow review", "sow assessment"],
     ))
+
+# Precision layer: short AML acronyms must match whole tokens/phrases.  Without this,
+# "AML" was found inside "seamless", "EDD" inside "embedded", and "STR" inside ordinary
+# words, producing exactly the kind of false positive seen in Marqeta's Support Engineer JD.
+matching_module.role_relevance = lambda title, description: safe_role_relevance(
+    title, description, matching_module.ROLE_TERMS
+)
+matching_module.extract_growth_skills = lambda job: safe_extract_growth_skills(
+    job, matching_module.GROWTH_SKILLS, matching_module.CURRENT_SKILLS
+)
+matching_module.financial_context = lambda job, known_company=False: safe_financial_context(
+    job, known_company, matching_module.FINANCE_TERMS
+)
+matching_module.infer_sector = safe_infer_sector
+fit_adjustments_module._contains_any = contains_any
+fit_adjustments_module._required_near = required_near
 
 # Keep expansion targets separate from the large original company file while making
 # every normal scan (local and GitHub Actions) consume both lists transparently.
