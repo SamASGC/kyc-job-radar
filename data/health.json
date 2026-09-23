@@ -2,7 +2,14 @@
   "sources": [
     {
       "company": "C24 Bank",
-      "error": "career page: ConnectError: [Errno -5] No address associated with hostname",
+      "error": "career page: ConnectError: [Errno -2] Name or service not known",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Alma",
+      "error": "career page: HTTPStatusError: Client error '402 Payment Required' for url 'https://www.almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -15,10 +22,10 @@
       "targets": []
     },
     {
-      "company": "Alma",
-      "error": "career page: HTTPStatusError: Client error '402 Payment Required' for url 'https://www.almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402",
-      "jobs": 0,
-      "ok": false,
+      "company": "Crypto.com",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
       "targets": []
     },
     {
@@ -26,44 +33,6 @@
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": []
-    },
-    {
-      "company": "IDnow",
-      "error": "",
-      "jobs": 11,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "idnow"
-        }
-      ]
-    },
-    {
-      "company": "Alpian",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "MONEI",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "monei"
-        }
-      ]
-    },
-    {
-      "company": "Moneycorp",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://jobs.moneycorp.com/search/jobs'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
       "targets": []
     },
     {
@@ -79,15 +48,60 @@
       ]
     },
     {
-      "company": "Crypto.com",
+      "company": "IDnow",
       "error": "",
-      "jobs": 1,
+      "jobs": 11,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "idnow"
+        }
+      ]
+    },
+    {
+      "company": "emerchantpay",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Clear Junction",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "MONEI",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "monei"
+        }
+      ]
+    },
+    {
+      "company": "Alpian",
+      "error": "",
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
     {
       "company": "Lucinity",
       "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://lucinity.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Moneycorp",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://jobs.moneycorp.com/search/jobs'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -100,25 +114,6 @@
       "targets": []
     },
     {
-      "company": "PayPal",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.pypl.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Primer",
-      "error": "",
-      "jobs": 25,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "primer"
-        }
-      ]
-    },
-    {
       "company": "PPRO",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.ppro.com/about-us/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -126,10 +121,10 @@
       "targets": []
     },
     {
-      "company": "Featurespace",
-      "error": "",
+      "company": "PayPal",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.pypl.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
     },
     {
@@ -147,6 +142,13 @@
       "targets": []
     },
     {
+      "company": "neon Switzerland",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Raisin",
       "error": "",
       "jobs": 31,
@@ -157,13 +159,6 @@
           "slug": "raisin"
         }
       ]
-    },
-    {
-      "company": "LemFi",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "Payrails",
@@ -178,13 +173,6 @@
       ]
     },
     {
-      "company": "neon Switzerland",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "SEON",
       "error": "",
       "jobs": 12,
@@ -193,6 +181,18 @@
         {
           "kind": "ashby",
           "slug": "seon"
+        }
+      ]
+    },
+    {
+      "company": "Primer",
+      "error": "",
+      "jobs": 25,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "primer"
         }
       ]
     },
@@ -209,22 +209,10 @@
       ]
     },
     {
-      "company": "Taptap Send",
+      "company": "LemFi",
       "error": "",
-      "jobs": 36,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "TaptapSend"
-        }
-      ]
-    },
-    {
-      "company": "Clear Junction",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 0,
-      "ok": false,
+      "ok": true,
       "targets": []
     },
     {
@@ -240,23 +228,23 @@
       ]
     },
     {
-      "company": "seQura",
-      "error": "",
-      "jobs": 14,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "recruitee",
-          "slug": "sequra"
-        }
-      ]
-    },
-    {
-      "company": "emerchantpay",
+      "company": "Featurespace",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Taptap Send",
+      "error": "",
+      "jobs": 36,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "TaptapSend"
+        }
+      ]
     },
     {
       "company": "Billie",
@@ -292,13 +280,6 @@
       "targets": []
     },
     {
-      "company": "Trust Payments",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Uphold",
       "error": "",
       "jobs": 1,
@@ -313,52 +294,21 @@
       "targets": []
     },
     {
+      "company": "Trust Payments",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Bitpanda",
       "error": "",
-      "jobs": 26,
+      "jobs": 24,
       "ok": true,
       "targets": [
         {
           "kind": "greenhouse",
           "slug": "bitpanda"
-        }
-      ]
-    },
-    {
-      "company": "Salv",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "personio",
-          "slug": "salv"
-        }
-      ]
-    },
-    {
-      "company": "Coinbase",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.coinbase.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Monese / Pockit",
-      "error": "",
-      "jobs": 9,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Monzo",
-      "error": "",
-      "jobs": 68,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "monzo"
         }
       ]
     },
@@ -370,16 +320,23 @@
       "targets": []
     },
     {
-      "company": "Tide",
+      "company": "seQura",
       "error": "",
-      "jobs": 83,
+      "jobs": 14,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "tide"
+          "kind": "recruitee",
+          "slug": "sequra"
         }
       ]
+    },
+    {
+      "company": "Coinbase",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.coinbase.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
       "company": "dLocal",
@@ -396,10 +353,22 @@
       "targets": []
     },
     {
-      "company": "Strise",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://strise.ai/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
+      "company": "Salv",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "personio",
+          "slug": "salv"
+        }
+      ]
+    },
+    {
+      "company": "Monese / Pockit",
+      "error": "",
+      "jobs": 9,
+      "ok": true,
       "targets": []
     },
     {
@@ -410,9 +379,59 @@
       "targets": []
     },
     {
+      "company": "Monzo",
+      "error": "",
+      "jobs": 68,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "monzo"
+        }
+      ]
+    },
+    {
+      "company": "Tide",
+      "error": "",
+      "jobs": 83,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "tide"
+        }
+      ]
+    },
+    {
+      "company": "Strise",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://strise.ai/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "BVNK",
+      "error": "",
+      "jobs": 17,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "bvnk"
+        }
+      ]
+    },
+    {
       "company": "Fiserv",
       "error": "",
       "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Zimpler",
+      "error": "",
+      "jobs": 1,
       "ok": true,
       "targets": []
     },
@@ -429,6 +448,25 @@
       ]
     },
     {
+      "company": "Airwallex",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.airwallex.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Nium",
+      "error": "",
+      "jobs": 24,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "nium"
+        }
+      ]
+    },
+    {
       "company": "Revolut",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.revolut.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -436,11 +474,16 @@
       "targets": []
     },
     {
-      "company": "Airwallex",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.airwallex.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
+      "company": "Qonto",
+      "error": "",
+      "jobs": 43,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "qonto"
+        }
+      ]
     },
     {
       "company": "Zopa",
@@ -450,21 +493,9 @@
       "targets": []
     },
     {
-      "company": "BVNK",
-      "error": "",
-      "jobs": 17,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "bvnk"
-        }
-      ]
-    },
-    {
       "company": "Upvest",
       "error": "",
-      "jobs": 18,
+      "jobs": 17,
       "ok": true,
       "targets": [
         {
@@ -474,23 +505,23 @@
       ]
     },
     {
-      "company": "GoCardless",
+      "company": "Nickel",
       "error": "",
-      "jobs": 26,
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Ebury",
+      "error": "",
+      "jobs": 164,
       "ok": true,
       "targets": [
         {
           "kind": "greenhouse",
-          "slug": "gocardless"
+          "slug": "ebury"
         }
       ]
-    },
-    {
-      "company": "Trading 212",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.trading212.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
     },
     {
       "company": "Adyen",
@@ -512,104 +543,14 @@
       ]
     },
     {
-      "company": "Qonto",
+      "company": "GoCardless",
       "error": "",
-      "jobs": 44,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "qonto"
-        }
-      ]
-    },
-    {
-      "company": "Ebury",
-      "error": "",
-      "jobs": 164,
+      "jobs": 26,
       "ok": true,
       "targets": [
         {
           "kind": "greenhouse",
-          "slug": "ebury"
-        }
-      ]
-    },
-    {
-      "company": "Nexi",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.nexigroup.com/en/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Mangopay",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mangopay.com/working-at-mangopay'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Spendesk",
-      "error": "",
-      "jobs": 14,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Nium",
-      "error": "",
-      "jobs": 24,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "nium"
-        }
-      ]
-    },
-    {
-      "company": "Remitly",
-      "error": "",
-      "jobs": 14,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Pleo",
-      "error": "",
-      "jobs": 29,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "pleo"
-        }
-      ]
-    },
-    {
-      "company": "Mollie",
-      "error": "",
-      "jobs": 21,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Trade Republic",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Payhawk",
-      "error": "",
-      "jobs": 47,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "payhawkio"
+          "slug": "gocardless"
         }
       ]
     },
@@ -626,17 +567,48 @@
       ]
     },
     {
-      "company": "Paysend",
+      "company": "Payhawk",
       "error": "",
-      "jobs": 3,
+      "jobs": 47,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "payhawkio"
+        }
+      ]
+    },
+    {
+      "company": "Nexi",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.nexigroup.com/en/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Pleo",
+      "error": "",
+      "jobs": 32,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "pleo"
+        }
+      ]
+    },
+    {
+      "company": "Trade Republic",
+      "error": "",
+      "jobs": 1,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Moss",
-      "error": "",
-      "jobs": 19,
-      "ok": true,
+      "company": "Trading 212",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.trading212.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -644,6 +616,20 @@
       "error": "",
       "jobs": 0,
       "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Paysend",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Mangopay",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mangopay.com/working-at-mangopay'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -659,16 +645,37 @@
       ]
     },
     {
-      "company": "Form3",
+      "company": "Mollie",
       "error": "",
-      "jobs": 7,
+      "jobs": 21,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Moss",
+      "error": "",
+      "jobs": 19,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Finom",
+      "error": "",
+      "jobs": 75,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "541"
+          "kind": "lever_eu",
+          "slug": "pnlfin"
         }
       ]
+    },
+    {
+      "company": "Remitly",
+      "error": "",
+      "jobs": 14,
+      "ok": true,
+      "targets": []
     },
     {
       "company": "Xe",
@@ -690,7 +697,73 @@
       ]
     },
     {
-      "company": "Zimpler",
+      "company": "Zepz / WorldRemit",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Copper.co",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "copperco"
+        }
+      ]
+    },
+    {
+      "company": "EPI / Wero",
+      "error": "",
+      "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "SumUp",
+      "error": "",
+      "jobs": 17,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Swan",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Form3",
+      "error": "",
+      "jobs": 7,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "541"
+        }
+      ]
+    },
+    {
+      "company": "Stripe",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Soldo",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Monavate",
       "error": "",
       "jobs": 1,
       "ok": true,
@@ -709,74 +782,29 @@
       ]
     },
     {
-      "company": "Zepz / WorldRemit",
+      "company": "PaySet",
       "error": "",
-      "jobs": 2,
+      "jobs": 9,
       "ok": true,
       "targets": []
-    },
-    {
-      "company": "Stripe",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Swan",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "EPI / Wero",
-      "error": "",
-      "jobs": 16,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "SumUp",
-      "error": "",
-      "jobs": 17,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Finom",
-      "error": "",
-      "jobs": 75,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever_eu",
-          "slug": "pnlfin"
-        }
-      ]
-    },
-    {
-      "company": "Monavate",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Copper.co",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "copperco"
-        }
-      ]
     },
     {
       "company": "ComplyAdvantage",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://complyadvantage.com/careers/jobs/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Spendesk",
+      "error": "",
+      "jobs": 14,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Papara",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.papara.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -789,8 +817,20 @@
       "targets": []
     },
     {
-      "company": "Papara",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.papara.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "Hawk AI",
+      "error": "",
+      "jobs": 17,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "hawk"
+        }
+      ]
+    },
+    {
+      "company": "Veriff",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.veriff.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -810,7 +850,7 @@
       "targets": []
     },
     {
-      "company": "PaySet",
+      "company": "Worldline",
       "error": "",
       "jobs": 9,
       "ok": true,
@@ -829,23 +869,11 @@
       ]
     },
     {
-      "company": "Veriff",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.veriff.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Hawk AI",
+      "company": "TrueLayer",
       "error": "",
-      "jobs": 16,
+      "jobs": 2,
       "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "hawk"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "Sardine",
@@ -858,13 +886,6 @@
           "slug": "sardine"
         }
       ]
-    },
-    {
-      "company": "TrueLayer",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "Fenergo",
@@ -893,9 +914,9 @@
       "targets": []
     },
     {
-      "company": "Soldo",
+      "company": "ESTO Group",
       "error": "",
-      "jobs": 5,
+      "jobs": 22,
       "ok": true,
       "targets": []
     },
@@ -907,11 +928,16 @@
       "targets": []
     },
     {
-      "company": "Worldline",
+      "company": "Yapily",
       "error": "",
-      "jobs": 9,
+      "jobs": 10,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "yapily"
+        }
+      ]
     },
     {
       "company": "Payfuture",
@@ -926,6 +952,13 @@
       ]
     },
     {
+      "company": "OKX",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Ballinger Group",
       "error": "",
       "jobs": 13,
@@ -934,18 +967,6 @@
         {
           "kind": "workable",
           "slug": "ballingerco"
-        }
-      ]
-    },
-    {
-      "company": "Yapily",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "yapily"
         }
       ]
     },
@@ -964,21 +985,54 @@
       "targets": []
     },
     {
-      "company": "OKX",
+      "company": "Napier AI",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MyInvestor",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Mastercard",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers"
+        }
+      ]
+    },
+    {
+      "company": "Mambu",
       "error": "",
       "jobs": 3,
       "ok": true,
       "targets": []
     },
     {
-      "company": "MoonPay",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/moonpay/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 27,
+      "company": "Marqeta",
+      "error": "",
+      "jobs": 37,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Visa",
+      "error": "",
+      "jobs": 7,
       "ok": true,
       "targets": [
         {
-          "kind": "lever",
-          "slug": "moonpay"
+          "kind": "workday",
+          "url": "https://visa.wd5.myworkdayjobs.com/Visa"
         }
       ]
     },
@@ -999,49 +1053,16 @@
       ]
     },
     {
-      "company": "Visa",
-      "error": "",
-      "jobs": 7,
+      "company": "MoonPay",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/moonpay/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 27,
       "ok": true,
       "targets": [
         {
-          "kind": "workday",
-          "url": "https://visa.wd5.myworkdayjobs.com/Visa"
+          "kind": "lever",
+          "slug": "moonpay"
         }
       ]
-    },
-    {
-      "company": "Mastercard",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers"
-        }
-      ]
-    },
-    {
-      "company": "Napier AI",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Mambu",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Nuvei",
-      "error": "",
-      "jobs": 9,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "Dojo",
@@ -1051,24 +1072,10 @@
       "targets": []
     },
     {
-      "company": "Marqeta",
+      "company": "Nuvei",
       "error": "",
-      "jobs": 37,
+      "jobs": 9,
       "ok": true,
-      "targets": []
-    },
-    {
-      "company": "MyInvestor",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "OakNorth",
-      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://oaknorth.co.uk/about/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
       "targets": []
     },
     {
@@ -1091,50 +1098,10 @@
       ]
     },
     {
-      "company": "ESTO Group",
-      "error": "",
-      "jobs": 22,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Nickel",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "eToro",
-      "error": "",
-      "jobs": 41,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "bunq",
-      "error": "",
-      "jobs": 21,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Openbank",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://santander.wd3.myworkdayjobs.com/es/SantanderCareers?q=openbank"
-        }
-      ]
-    },
-    {
-      "company": "Juni",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
+      "company": "OakNorth",
+      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://oaknorth.co.uk/about/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -1152,58 +1119,28 @@
       "targets": []
     },
     {
-      "company": "Kantox",
+      "company": "Openbank",
       "error": "",
-      "jobs": 6,
+      "jobs": 1,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://santander.wd3.myworkdayjobs.com/es/SantanderCareers?q=openbank"
+        }
+      ]
+    },
+    {
+      "company": "eToro",
+      "error": "",
+      "jobs": 41,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Starling",
+      "company": "Signicat",
       "error": "",
-      "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Flywire",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Quantexa",
-      "error": "",
-      "jobs": 16,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Checkout.com",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Banking Circle",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "iBanFirst",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Rapyd",
-      "error": "",
-      "jobs": 10,
+      "jobs": 21,
       "ok": true,
       "targets": []
     },
@@ -1215,6 +1152,34 @@
       "targets": []
     },
     {
+      "company": "bunq",
+      "error": "",
+      "jobs": 21,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Kantox",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Juni",
+      "error": "",
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Flywire",
+      "error": "",
+      "jobs": 13,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Modulr",
       "error": "",
       "jobs": 5,
@@ -1222,37 +1187,37 @@
       "targets": []
     },
     {
-      "company": "Solaris",
+      "company": "ClearBank",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Starling",
       "error": "",
       "jobs": 5,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Fireblocks",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/embed/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.fireblocks.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "TransferGo",
+      "company": "Checkout.com",
       "error": "",
-      "jobs": 17,
+      "jobs": 10,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Sumsub",
+      "company": "Quantexa",
       "error": "",
-      "jobs": 27,
+      "jobs": 16,
       "ok": true,
       "targets": []
     },
     {
-      "company": "ClearBank",
+      "company": "iBanFirst",
       "error": "",
-      "jobs": 2,
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -1273,30 +1238,51 @@
       ]
     },
     {
-      "company": "Wise",
+      "company": "Fireblocks",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/embed/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.fireblocks.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Rapyd",
       "error": "",
-      "jobs": 88,
+      "jobs": 10,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Signicat",
+      "company": "Shift4",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/shift4/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/shift4'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Lunar",
       "error": "",
-      "jobs": 21,
+      "jobs": 18,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Volt",
+      "company": "TransferGo",
       "error": "",
-      "jobs": 3,
+      "jobs": 17,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Payoneer",
+      "company": "Solaris",
       "error": "",
-      "jobs": 22,
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Banking Circle",
+      "error": "",
+      "jobs": 4,
       "ok": true,
       "targets": []
     },
@@ -1313,10 +1299,64 @@
       ]
     },
     {
-      "company": "Shift4",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/shift4/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/shift4'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "company": "Volt",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Wise",
+      "error": "",
+      "jobs": 88,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Treezor",
+      "error": "",
+      "jobs": 11,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Payoneer",
+      "error": "",
+      "jobs": 22,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Corpay",
+      "error": "",
       "jobs": 0,
-      "ok": false,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"
+        }
+      ]
+    },
+    {
+      "company": "Tink (Visa)",
+      "error": "",
+      "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Moneybase",
+      "error": "recruitee: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers-analytics.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 11,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Sumsub",
+      "error": "",
+      "jobs": 27,
+      "ok": true,
       "targets": []
     },
     {
@@ -1334,32 +1374,6 @@
       "targets": []
     },
     {
-      "company": "Lunar",
-      "error": "",
-      "jobs": 18,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Kroo Bank",
-      "error": "workable: HTTPStatusError: Client error '404 Not Found' for url 'https://apply.workable.com/api/v1/widget/accounts/j?details=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Corpay",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"
-        }
-      ]
-    },
-    {
       "company": "Plaid",
       "error": "",
       "jobs": 15,
@@ -1367,42 +1381,16 @@
       "targets": []
     },
     {
-      "company": "Western Union",
-      "error": "",
-      "jobs": 39,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://westernunion.wd5.myworkdayjobs.com/WesternUnionJobs"
-        }
-      ]
-    },
-    {
-      "company": "Moneybase",
-      "error": "recruitee: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers-analytics.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 11,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Treezor",
-      "error": "",
-      "jobs": 11,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Tink (Visa)",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Salt Edge",
       "error": "",
       "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Kroo Bank",
+      "error": "workable: HTTPStatusError: Client error '404 Not Found' for url 'https://apply.workable.com/api/v1/widget/accounts/j?details=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 7,
       "ok": true,
       "targets": []
     },
@@ -1459,6 +1447,18 @@
       ]
     },
     {
+      "company": "Western Union",
+      "error": "",
+      "jobs": 39,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://westernunion.wd5.myworkdayjobs.com/WesternUnionJobs"
+        }
+      ]
+    },
+    {
       "company": "Viva.com",
       "error": "career page: ReadTimeout: ",
       "jobs": 0,
@@ -1468,7 +1468,7 @@
     {
       "company": "American Express",
       "error": "",
-      "jobs": 448,
+      "jobs": 451,
       "ok": true,
       "targets": [
         {
@@ -5571,17 +5571,6 @@
       ]
     },
     {
-      "company": "Remote OK",
-      "error": "skipped this hour by source cadence",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "cadence 2h"
-        }
-      ]
-    },
-    {
       "company": "Himalayas",
       "error": "skipped this hour by source cadence",
       "jobs": 0,
@@ -5606,7 +5595,18 @@
     {
       "company": "Arbeitnow",
       "error": "",
-      "jobs": 1232,
+      "jobs": 1263,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "aggregator"
+        }
+      ]
+    },
+    {
+      "company": "Remote OK",
+      "error": "",
+      "jobs": 99,
       "ok": true,
       "targets": [
         {
