@@ -1,17 +1,17 @@
 {
   "sources": [
     {
-      "company": "C24 Bank",
-      "error": "career page: ConnectError: [Errno -5] No address associated with hostname",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Curve",
       "error": "",
       "jobs": 1,
       "ok": true,
+      "targets": []
+    },
+    {
+      "company": "C24 Bank",
+      "error": "career page: ConnectError: [Errno -5] No address associated with hostname",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -27,49 +27,9 @@
       ]
     },
     {
-      "company": "Moneycorp",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://jobs.moneycorp.com/search/jobs'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Klarna",
       "error": "",
       "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Alma",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "MONEI",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "monei"
-        }
-      ]
-    },
-    {
-      "company": "NomuPay",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://nomupay.com/career/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Crypto.com",
-      "error": "",
-      "jobs": 1,
       "ok": true,
       "targets": []
     },
@@ -86,23 +46,30 @@
       ]
     },
     {
-      "company": "Lucinity",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://lucinity.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Mondu",
+      "company": "MONEI",
       "error": "",
       "jobs": 2,
       "ok": true,
       "targets": [
         {
-          "kind": "workable",
-          "slug": "mondu"
+          "kind": "ashby",
+          "slug": "monei"
         }
       ]
+    },
+    {
+      "company": "Crypto.com",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Alma",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
       "company": "Alpian",
@@ -112,43 +79,22 @@
       "targets": []
     },
     {
-      "company": "Featurespace",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "LemFi",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "emerchantpay",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "SwissBorg",
-      "error": "career page: ConnectError: [Errno -5] No address associated with hostname",
+      "company": "Moneycorp",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://jobs.moneycorp.com/search/jobs'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
     },
     {
-      "company": "neon Switzerland",
-      "error": "",
+      "company": "PPRO",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.ppro.com/about-us/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
     },
     {
-      "company": "Clear Junction",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "company": "NomuPay",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://nomupay.com/career/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -161,39 +107,41 @@
       "targets": []
     },
     {
-      "company": "Payrails",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "payrails"
-        }
-      ]
+      "company": "Clear Junction",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
-      "company": "Paysafe",
+      "company": "Featurespace",
       "error": "",
-      "jobs": 16,
+      "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Primer",
+      "company": "Lucinity",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://lucinity.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "SEON",
       "error": "",
-      "jobs": 26,
+      "jobs": 10,
       "ok": true,
       "targets": [
         {
           "kind": "ashby",
-          "slug": "primer"
+          "slug": "seon"
         }
       ]
     },
     {
-      "company": "PPRO",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.ppro.com/about-us/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "SwissBorg",
+      "error": "career page: ConnectError: [Errno -5] No address associated with hostname",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -211,14 +159,83 @@
       ]
     },
     {
-      "company": "SEON",
+      "company": "Primer",
       "error": "",
-      "jobs": 10,
+      "jobs": 26,
       "ok": true,
       "targets": [
         {
           "kind": "ashby",
-          "slug": "seon"
+          "slug": "primer"
+        }
+      ]
+    },
+    {
+      "company": "Payrails",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "payrails"
+        }
+      ]
+    },
+    {
+      "company": "Mondu",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "mondu"
+        }
+      ]
+    },
+    {
+      "company": "neon Switzerland",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Paysafe",
+      "error": "",
+      "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "LemFi",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Taptap Send",
+      "error": "",
+      "jobs": 36,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "TaptapSend"
+        }
+      ]
+    },
+    {
+      "company": "Teya",
+      "error": "",
+      "jobs": 127,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "teya"
         }
       ]
     },
@@ -237,22 +254,22 @@
       "targets": []
     },
     {
-      "company": "Trust Payments",
+      "company": "emerchantpay",
       "error": "",
-      "jobs": 2,
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Uphold",
+      "error": "",
+      "jobs": 1,
       "ok": true,
       "targets": []
     },
     {
       "company": "Tuum",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://tuum.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Billie",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.billie.io/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -270,53 +287,17 @@
       ]
     },
     {
-      "company": "Thunes",
+      "company": "Trust Payments",
       "error": "",
-      "jobs": 48,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "thunes"
-        }
-      ]
-    },
-    {
-      "company": "Taptap Send",
-      "error": "",
-      "jobs": 36,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "TaptapSend"
-        }
-      ]
-    },
-    {
-      "company": "Lemonway",
-      "error": "",
-      "jobs": 0,
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Teya",
-      "error": "",
-      "jobs": 127,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "teya"
-        }
-      ]
-    },
-    {
-      "company": "Feedzai",
-      "error": "",
-      "jobs": 8,
-      "ok": true,
+      "company": "Billie",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.billie.io/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -324,13 +305,6 @@
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.coinbase.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Scalapay",
-      "error": "",
-      "jobs": 9,
-      "ok": true,
       "targets": []
     },
     {
@@ -370,6 +344,27 @@
       ]
     },
     {
+      "company": "Strise",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://strise.ai/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Feedzai",
+      "error": "",
+      "jobs": 8,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "dLocal",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Tide",
       "error": "",
       "jobs": 80,
@@ -382,10 +377,10 @@
       ]
     },
     {
-      "company": "Strise",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://strise.ai/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
+      "company": "Scalapay",
+      "error": "",
+      "jobs": 9,
+      "ok": true,
       "targets": []
     },
     {
@@ -401,10 +396,10 @@
       ]
     },
     {
-      "company": "Revolut",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.revolut.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
+      "company": "Zimpler",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
       "targets": []
     },
     {
@@ -420,6 +415,13 @@
       ]
     },
     {
+      "company": "Revolut",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.revolut.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
       "company": "Zopa",
       "error": "",
       "jobs": 6,
@@ -427,48 +429,10 @@
       "targets": []
     },
     {
-      "company": "Zimpler",
+      "company": "Lemonway",
       "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Qonto",
-      "error": "",
-      "jobs": 38,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "qonto"
-        }
-      ]
-    },
-    {
-      "company": "Fiserv",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "payabl.",
-      "error": "",
-      "jobs": 79,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "payabl"
-        }
-      ]
-    },
-    {
-      "company": "Airwallex",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.airwallex.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": false,
+      "ok": true,
       "targets": []
     },
     {
@@ -484,6 +448,20 @@
       ]
     },
     {
+      "company": "Airwallex",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.airwallex.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Fiserv",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Trading 212",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.trading212.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -491,14 +469,14 @@
       "targets": []
     },
     {
-      "company": "Nium",
+      "company": "Qonto",
       "error": "",
-      "jobs": 20,
+      "jobs": 39,
       "ok": true,
       "targets": [
         {
           "kind": "lever",
-          "slug": "nium"
+          "slug": "qonto"
         }
       ]
     },
@@ -513,20 +491,6 @@
           "slug": "ebury"
         }
       ]
-    },
-    {
-      "company": "Trade Republic",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Monese / Pockit",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "GoCardless",
@@ -548,13 +512,6 @@
       "targets": []
     },
     {
-      "company": "Nexi",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.nexigroup.com/en/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Adyen",
       "error": "",
       "jobs": 37,
@@ -562,47 +519,14 @@
       "targets": []
     },
     {
-      "company": "Uphold",
+      "company": "payabl.",
       "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Payhawk",
-      "error": "",
-      "jobs": 52,
+      "jobs": 79,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "payhawkio"
-        }
-      ]
-    },
-    {
-      "company": "EPI / Wero",
-      "error": "",
-      "jobs": 16,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Mollie",
-      "error": "",
-      "jobs": 21,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Vivid Money",
-      "error": "",
-      "jobs": 23,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "personio",
-          "slug": "vivid"
+          "kind": "workable",
+          "slug": "payabl"
         }
       ]
     },
@@ -619,23 +543,54 @@
       ]
     },
     {
-      "company": "dLocal",
+      "company": "Payhawk",
       "error": "",
-      "jobs": 2,
+      "jobs": 52,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "payhawkio"
+        }
+      ]
+    },
+    {
+      "company": "Monese / Pockit",
+      "error": "",
+      "jobs": 6,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Mangopay",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mangopay.com/working-at-mangopay'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
+      "company": "Nium",
+      "error": "",
+      "jobs": 20,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "nium"
+        }
+      ]
+    },
+    {
+      "company": "Spendesk",
+      "error": "",
+      "jobs": 14,
+      "ok": true,
       "targets": []
     },
     {
-      "company": "Paysend",
+      "company": "Mollie",
       "error": "",
-      "jobs": 3,
+      "jobs": 21,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Currencycloud (Visa)",
+      "error": "",
+      "jobs": 0,
       "ok": true,
       "targets": []
     },
@@ -652,6 +607,13 @@
       ]
     },
     {
+      "company": "Trade Republic",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Moss",
       "error": "",
       "jobs": 19,
@@ -659,50 +621,10 @@
       "targets": []
     },
     {
-      "company": "BCB Group",
+      "company": "Paysend",
       "error": "",
-      "jobs": 2,
+      "jobs": 3,
       "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "bcbgroup"
-        }
-      ]
-    },
-    {
-      "company": "Spendesk",
-      "error": "",
-      "jobs": 14,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Currencycloud (Visa)",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "SumUp",
-      "error": "",
-      "jobs": 17,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Zepz / WorldRemit",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Xe",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.xe.com/en/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
       "targets": []
     },
     {
@@ -713,26 +635,28 @@
       "targets": []
     },
     {
-      "company": "Griffin",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "griffin"
-        }
-      ]
+      "company": "Mangopay",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mangopay.com/working-at-mangopay'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
-      "company": "Copper.co",
+      "company": "Stripe",
       "error": "",
       "jobs": 4,
       "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Vivid Money",
+      "error": "",
+      "jobs": 23,
+      "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "copperco"
+          "kind": "personio",
+          "slug": "vivid"
         }
       ]
     },
@@ -749,11 +673,37 @@
       ]
     },
     {
-      "company": "Soldo",
+      "company": "Zepz / WorldRemit",
       "error": "",
-      "jobs": 5,
+      "jobs": 2,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Xe",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.xe.com/en/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "SumUp",
+      "error": "",
+      "jobs": 17,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Copper.co",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "copperco"
+        }
+      ]
     },
     {
       "company": "Monavate",
@@ -763,14 +713,26 @@
       "targets": []
     },
     {
-      "company": "Form3",
+      "company": "BCB Group",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "bcbgroup"
+        }
+      ]
+    },
+    {
+      "company": "Griffin",
       "error": "",
       "jobs": 6,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "541"
+          "kind": "ashby",
+          "slug": "griffin"
         }
       ]
     },
@@ -782,11 +744,35 @@
       "targets": []
     },
     {
-      "company": "Stripe",
+      "company": "Hawk AI",
       "error": "",
-      "jobs": 4,
+      "jobs": 17,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "hawk"
+        }
+      ]
+    },
+    {
+      "company": "PaySet",
+      "error": "",
+      "jobs": 9,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Railsr",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "recruitee",
+          "slug": "equalsmoney"
+        }
+      ]
     },
     {
       "company": "Sardine",
@@ -815,58 +801,6 @@
       "targets": []
     },
     {
-      "company": "Hawk AI",
-      "error": "",
-      "jobs": 17,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "hawk"
-        }
-      ]
-    },
-    {
-      "company": "TrueLayer",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Railsr",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "recruitee",
-          "slug": "equalsmoney"
-        }
-      ]
-    },
-    {
-      "company": "Worldline",
-      "error": "",
-      "jobs": 9,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Plaid",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Alloy",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.alloy.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Veriff",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.veriff.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -888,23 +822,25 @@
       "targets": []
     },
     {
-      "company": "Bnext",
+      "company": "TrueLayer",
       "error": "",
-      "jobs": 1,
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Yapily",
+      "company": "Nexi",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.nexigroup.com/en/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Soldo",
       "error": "",
-      "jobs": 11,
+      "jobs": 5,
       "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "yapily"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "Ballinger Group",
@@ -919,13 +855,6 @@
       ]
     },
     {
-      "company": "OKX",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Fenergo",
       "error": "",
       "jobs": 18,
@@ -938,9 +867,56 @@
       ]
     },
     {
-      "company": "Fourthline",
+      "company": "Yapily",
       "error": "",
-      "jobs": 6,
+      "jobs": 11,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "yapily"
+        }
+      ]
+    },
+    {
+      "company": "OKX",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Plaid",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Alloy",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.alloy.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Bnext",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Worldline",
+      "error": "",
+      "jobs": 9,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ESTO Group",
+      "error": "",
+      "jobs": 20,
       "ok": true,
       "targets": []
     },
@@ -952,9 +928,9 @@
       "targets": []
     },
     {
-      "company": "PaySet",
+      "company": "EPI / Wero",
       "error": "",
-      "jobs": 9,
+      "jobs": 16,
       "ok": true,
       "targets": []
     },
@@ -982,6 +958,39 @@
       ]
     },
     {
+      "company": "Fourthline",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Mambu",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Form3",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "541"
+        }
+      ]
+    },
+    {
+      "company": "MyInvestor",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Visa",
       "error": "",
       "jobs": 7,
@@ -994,31 +1003,41 @@
       ]
     },
     {
-      "company": "MyInvestor",
+      "company": "Bitstamp / Robinhood",
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "bitstamp"
+        }
+      ]
     },
     {
-      "company": "ESTO Group",
-      "error": "",
-      "jobs": 20,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Mambu",
+      "company": "Zilch",
       "error": "",
       "jobs": 3,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Nuvei",
+      "company": "Mastercard",
       "error": "",
-      "jobs": 9,
+      "jobs": 2,
       "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers"
+        }
+      ]
+    },
+    {
+      "company": "OakNorth",
+      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://oaknorth.co.uk/about/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
       "targets": []
     },
     {
@@ -1041,32 +1060,6 @@
       "targets": []
     },
     {
-      "company": "OakNorth",
-      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://oaknorth.co.uk/about/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "PayDo",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/paydo/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/paydo'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Bitstamp / Robinhood",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "bitstamp"
-        }
-      ]
-    },
-    {
       "company": "bunq",
       "error": "",
       "jobs": 19,
@@ -1074,9 +1067,37 @@
       "targets": []
     },
     {
-      "company": "Zilch",
+      "company": "eToro",
       "error": "",
-      "jobs": 3,
+      "jobs": 41,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Juni",
+      "error": "",
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Atom Bank",
+      "error": "",
+      "jobs": 9,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Kantox",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Flywire",
+      "error": "",
+      "jobs": 13,
       "ok": true,
       "targets": []
     },
@@ -1088,9 +1109,58 @@
       "targets": []
     },
     {
-      "company": "Lunar",
+      "company": "Checkout.com",
       "error": "",
-      "jobs": 18,
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Modulr",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "iBanFirst",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Remitly",
+      "error": "",
+      "jobs": 14,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "TransferGo",
+      "error": "",
+      "jobs": 15,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Rapyd",
+      "error": "",
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Dojo",
+      "error": "",
+      "jobs": 22,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ClearBank",
+      "error": "",
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
@@ -1107,128 +1177,9 @@
       ]
     },
     {
-      "company": "Dojo",
+      "company": "Lunar",
       "error": "",
-      "jobs": 22,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Juni",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Checkout.com",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Flywire",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Atom Bank",
-      "error": "",
-      "jobs": 9,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "iBanFirst",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Kantox",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Starling",
-      "error": "",
-      "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Modulr",
-      "error": "",
-      "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "ClearBank",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Quantexa",
-      "error": "",
-      "jobs": 16,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "eToro",
-      "error": "",
-      "jobs": 41,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volt",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Payoneer",
-      "error": "",
-      "jobs": 22,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Wise",
-      "error": "",
-      "jobs": 99,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Rapyd",
-      "error": "",
-      "jobs": 10,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Remitly",
-      "error": "",
-      "jobs": 14,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Solaris",
-      "error": "",
-      "jobs": 5,
+      "jobs": 18,
       "ok": true,
       "targets": []
     },
@@ -1240,6 +1191,13 @@
       "targets": []
     },
     {
+      "company": "Quantexa",
+      "error": "",
+      "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "ComplyAdvantage",
       "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/embed/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://complyadvantage.com/careers/jobs/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -1247,11 +1205,30 @@
       "targets": []
     },
     {
-      "company": "TransferGo",
+      "company": "Solaris",
       "error": "",
-      "jobs": 17,
+      "jobs": 5,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Payoneer",
+      "error": "",
+      "jobs": 22,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Wallester",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "breezy",
+          "slug": "wallester"
+        }
+      ]
     },
     {
       "company": "Chainalysis",
@@ -1270,6 +1247,27 @@
       ]
     },
     {
+      "company": "Starling",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Wise",
+      "error": "",
+      "jobs": 99,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volt",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Shift4",
       "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/shift4/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/shift4'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 0,
@@ -1277,16 +1275,32 @@
       "targets": []
     },
     {
-      "company": "Wallester",
+      "company": "Treezor",
       "error": "",
-      "jobs": 2,
+      "jobs": 11,
       "ok": true,
-      "targets": [
-        {
-          "kind": "breezy",
-          "slug": "wallester"
-        }
-      ]
+      "targets": []
+    },
+    {
+      "company": "Banking Circle",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "N26",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/embed/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 12,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Kraken",
+      "error": "ashby: HTTPStatusError: Client error '404 Not Found' for url 'https://api.ashbyhq.com/posting-api/job-board/kraken?includeCompensation=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
     },
     {
       "company": "Corpay",
@@ -1301,56 +1315,9 @@
       ]
     },
     {
-      "company": "Banking Circle",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Treezor",
-      "error": "",
-      "jobs": 11,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Kraken",
-      "error": "ashby: HTTPStatusError: Client error '404 Not Found' for url 'https://api.ashbyhq.com/posting-api/job-board/kraken?includeCompensation=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Mastercard",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers"
-        }
-      ]
-    },
-    {
-      "company": "Tink (Visa)",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Payfuture",
       "error": "workable: HTTPStatusError: Client error '404 Not Found' for url 'https://apply.workable.com/api/v1/widget/accounts/payfuture?details=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Sumsub",
-      "error": "",
-      "jobs": 27,
       "ok": true,
       "targets": []
     },
@@ -1362,28 +1329,37 @@
       "targets": []
     },
     {
-      "company": "Western Union",
+      "company": "Tink (Visa)",
       "error": "",
-      "jobs": 39,
+      "jobs": 7,
       "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://westernunion.wd5.myworkdayjobs.com/WesternUnionJobs"
-        }
-      ]
+      "targets": []
+    },
+    {
+      "company": "Nuvei",
+      "error": "",
+      "jobs": 9,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Sumsub",
+      "error": "",
+      "jobs": 27,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Moneybase",
+      "error": "recruitee: HTTPStatusError: Client error '400 Bad Request' for url 'https://tagging-server.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400 | recruitee: HTTPStatusError: Client error '404 Not Found' for url 'https://support.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | recruitee: HTTPStatusError: Client error '404 Not Found' for url 'https://landing.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.moneybase.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
       "company": "Salt Edge",
       "error": "",
       "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Signicat",
-      "error": "",
-      "jobs": 17,
       "ok": true,
       "targets": []
     },
@@ -1404,13 +1380,6 @@
       ]
     },
     {
-      "company": "Moneybase",
-      "error": "recruitee: HTTPStatusError: Client error '400 Bad Request' for url 'https://tagging-server.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400 | recruitee: HTTPStatusError: Client error '404 Not Found' for url 'https://support.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | recruitee: HTTPStatusError: Client error '404 Not Found' for url 'https://landing.recruitee.com/api/offers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.moneybase.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "AMINA Bank",
       "error": "",
       "jobs": 14,
@@ -1423,11 +1392,16 @@
       ]
     },
     {
-      "company": "N26",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/embed/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 12,
+      "company": "Western Union",
+      "error": "",
+      "jobs": 39,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://westernunion.wd5.myworkdayjobs.com/WesternUnionJobs"
+        }
+      ]
     },
     {
       "company": "Peratera",
@@ -1442,6 +1416,13 @@
       ]
     },
     {
+      "company": "Signicat",
+      "error": "",
+      "jobs": 17,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "amnis",
       "error": "",
       "jobs": 1,
@@ -1454,6 +1435,13 @@
       ]
     },
     {
+      "company": "Thunes",
+      "error": "greenhouse: ReadTimeout:  | rediscovery: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.thunes.com/jobs/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
       "company": "Viva.com",
       "error": "career page: ReadTimeout: ",
       "jobs": 0,
@@ -1461,9 +1449,28 @@
       "targets": []
     },
     {
+      "company": "PayDo",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/paydo/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: ReadTimeout: ",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Swissquote",
+      "error": "",
+      "jobs": 45,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "smartrecruiters",
+          "slug": "Swissquote"
+        }
+      ]
+    },
+    {
       "company": "American Express",
       "error": "",
-      "jobs": 429,
+      "jobs": 431,
       "ok": true,
       "targets": [
         {
@@ -1471,18 +1478,6 @@
           "language": "en",
           "site": "CX_1",
           "url": "https://egug.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1"
-        }
-      ]
-    },
-    {
-      "company": "Swissquote",
-      "error": "",
-      "jobs": 44,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "smartrecruiters",
-          "slug": "Swissquote"
         }
       ]
     },
@@ -1499,7 +1494,7 @@
       ]
     },
     {
-      "company": "Worldpay",
+      "company": "Global Payments",
       "error": "",
       "jobs": 9,
       "ok": true,
@@ -1519,10 +1514,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Senior-MLOps-Engineer_JR0609524-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SHANGHAI-SHANGHAI-CHINA/Business-Development-Manager-China_JR0609640/apply\\"
         },
         {
           "kind": "workday",
@@ -1578,10 +1569,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Partnerships-Manager---Issuer-Advocacy_JR0610121/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/BIRMINGHAM--UNITED-KINGDOM/Senior-Web-Developer_JR0610173-1/apply\\"
         },
         {
@@ -1599,10 +1586,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/PUNE--INDIA/Finance-Shared-Services-Analyst-I--BPS-with-Finance-domain----5---Years---Pune-Indore-Bangalore_JR0610489/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Business-Development-Manager-Japan_JR0610322/apply\\"
         },
         {
           "kind": "workday",
@@ -1674,10 +1657,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Product-Manager-APAC_JR0610566/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Network-Security-Engineer_JR0610761-1/apply\\"
         },
         {
@@ -1691,10 +1670,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/AI-Agent-Designer_JR0610802-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SHANGHAI-SHANGHAI-CHINA/Client-Success-Manager-China_JR0610736/apply\\"
         },
         {
           "kind": "workday",
@@ -1747,10 +1722,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/ATLANTA-GEORGIA/Lead-Stock-Plan-Consultant_JR0610899/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/BRISBANE--AUSTRALIA/Senior-Integration-Consultant--Platforms_JR0610893/apply\\"
         },
         {
           "kind": "workday",
@@ -1886,10 +1857,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/GATESHEAD--UNITED-KINGDOM/Sales-Executive---Cross-Sales_JR0611012/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Sales-Support-Coordinator_JR0611203/apply\\"
         },
         {
@@ -1919,14 +1886,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Inside-Sales-Representative-II_JR0611211/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/APAC-Risk-Specialist--ANZ_JR0611052-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/HONG-KONG/APAC-Risk-Specialist--Hong-Kong_JR0611054-1/apply\\"
         },
         {
           "kind": "workday",
@@ -1962,15 +1921,7 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Assistant-Company-Secretary--APAC_JR0611258/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Senior-Strategy-Manager_JR0611480-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Implementation-Manager-APAC_JR0611410/apply\\"
         },
         {
           "kind": "workday",
@@ -2095,10 +2046,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Product-Owner--Salesforce---AI-Automation_JR0611515/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/TOKYO-TOKYO-JAPAN/Implementation-Manager-Japan_JR0611579/apply\\"
         },
         {
           "kind": "workday",
@@ -2770,6 +2717,22 @@
         },
         {
           "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/APAC-Partnership-Manager--Issuer-Advocacy_R0075399-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Project-Manager-APAC--Japanese-speaking_R0075398-2/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/CHN-SHAN-512-FL17-STE04/Business-Development-Manage-China_R0075397/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/Senior-Compliance-Analyst---Compliance-Manager-ANZ_R0075394/apply\\"
+        },
+        {
+          "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/MEXICO-CITY--MEXICO/Senior-Representative--Sales_R0074894/apply\\"
         },
         {
@@ -2794,11 +2757,47 @@
         },
         {
           "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Implementation-Manager-APAC_R0075471-1/apply\\"
+        },
+        {
+          "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/PUNE--INDIA/Associate-SDET-Specialist_R0075179/apply\\"
         },
         {
           "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/DUBLIN--IRELAND/Representative--Inside-Sales_R0074000/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Product-Manager-APAC_R0075475-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SHANGHAI--CHINA/Client-Success-Manger-China_R0075476-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SHANGHAI--CHINA/Implementation-Manager-China_R0075477-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/APAC-Risk-Specialist--ANZ_R0075479/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/KOWLOON--CHINA/APAC-Risk-Specialist--Hong-Kong_R0075481/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/Sales-Development-Representation--ANZ_R0075484-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Asst-Company-Secretary-APAC_R0075483-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/JPN-TOKY-2-7-2-FL-11/Implementation-Manager-Japan_R0075482-1/apply\\"
         },
         {
           "kind": "workday",
@@ -2863,7 +2862,7 @@
       ]
     },
     {
-      "company": "Global Payments",
+      "company": "Worldpay",
       "error": "",
       "jobs": 9,
       "ok": true,
@@ -2883,10 +2882,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Senior-MLOps-Engineer_JR0609524-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SHANGHAI-SHANGHAI-CHINA/Business-Development-Manager-China_JR0609640/apply\\"
         },
         {
           "kind": "workday",
@@ -2942,10 +2937,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Partnerships-Manager---Issuer-Advocacy_JR0610121/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/BIRMINGHAM--UNITED-KINGDOM/Senior-Web-Developer_JR0610173-1/apply\\"
         },
         {
@@ -2963,10 +2954,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/PUNE--INDIA/Finance-Shared-Services-Analyst-I--BPS-with-Finance-domain----5---Years---Pune-Indore-Bangalore_JR0610489/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Business-Development-Manager-Japan_JR0610322/apply\\"
         },
         {
           "kind": "workday",
@@ -3038,10 +3025,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Product-Manager-APAC_JR0610566/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Network-Security-Engineer_JR0610761-1/apply\\"
         },
         {
@@ -3055,10 +3038,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/AI-Agent-Designer_JR0610802-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SHANGHAI-SHANGHAI-CHINA/Client-Success-Manager-China_JR0610736/apply\\"
         },
         {
           "kind": "workday",
@@ -3111,10 +3090,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/ATLANTA-GEORGIA/Lead-Stock-Plan-Consultant_JR0610899/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/BRISBANE--AUSTRALIA/Senior-Integration-Consultant--Platforms_JR0610893/apply\\"
         },
         {
           "kind": "workday",
@@ -3250,10 +3225,6 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/GATESHEAD--UNITED-KINGDOM/Sales-Executive---Cross-Sales_JR0611012/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Sales-Support-Coordinator_JR0611203/apply\\"
         },
         {
@@ -3283,14 +3254,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/CINCINNATI-OHIO/Inside-Sales-Representative-II_JR0611211/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/APAC-Risk-Specialist--ANZ_JR0611052-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/HONG-KONG/APAC-Risk-Specialist--Hong-Kong_JR0611054-1/apply\\"
         },
         {
           "kind": "workday",
@@ -3326,15 +3289,7 @@
         },
         {
           "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Assistant-Company-Secretary--APAC_JR0611258/apply\\"
-        },
-        {
-          "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Senior-Strategy-Manager_JR0611480-1/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/SINGAPORE--SINGAPORE/Implementation-Manager-APAC_JR0611410/apply\\"
         },
         {
           "kind": "workday",
@@ -3459,10 +3414,6 @@
         {
           "kind": "workday",
           "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/LONDON--UNITED-KINGDOM/Product-Owner--Salesforce---AI-Automation_JR0611515/apply\\"
-        },
-        {
-          "kind": "workday",
-          "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site/job/TOKYO-TOKYO-JAPAN/Implementation-Manager-Japan_JR0611579/apply\\"
         },
         {
           "kind": "workday",
@@ -4134,6 +4085,22 @@
         },
         {
           "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/APAC-Partnership-Manager--Issuer-Advocacy_R0075399-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Project-Manager-APAC--Japanese-speaking_R0075398-2/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/CHN-SHAN-512-FL17-STE04/Business-Development-Manage-China_R0075397/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/Senior-Compliance-Analyst---Compliance-Manager-ANZ_R0075394/apply\\"
+        },
+        {
+          "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/MEXICO-CITY--MEXICO/Senior-Representative--Sales_R0074894/apply\\"
         },
         {
@@ -4158,11 +4125,47 @@
         },
         {
           "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Implementation-Manager-APAC_R0075471-1/apply\\"
+        },
+        {
+          "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/PUNE--INDIA/Associate-SDET-Specialist_R0075179/apply\\"
         },
         {
           "kind": "workday",
           "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/DUBLIN--IRELAND/Representative--Inside-Sales_R0074000/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Product-Manager-APAC_R0075475-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SHANGHAI--CHINA/Client-Success-Manger-China_R0075476-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SHANGHAI--CHINA/Implementation-Manager-China_R0075477-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/APAC-Risk-Specialist--ANZ_R0075479/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/KOWLOON--CHINA/APAC-Risk-Specialist--Hong-Kong_R0075481/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SYDNEY-NEW-SOUTH-WALES-AUSTRALIA/Sales-Development-Representation--ANZ_R0075484-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/SINGAPORE--SINGAPORE/Asst-Company-Secretary-APAC_R0075483-1/apply\\"
+        },
+        {
+          "kind": "workday",
+          "url": "https://tsys.wd1.myworkdayjobs.com/TSYS/job/JPN-TOKY-2-7-2-FL-11/Implementation-Manager-Japan_R0075482-1/apply\\"
         },
         {
           "kind": "workday",
@@ -4238,17 +4241,6 @@
       ]
     },
     {
-      "company": "Remote OK",
-      "error": "skipped this hour by source cadence",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "cadence 2h"
-        }
-      ]
-    },
-    {
       "company": "Himalayas",
       "error": "skipped this hour by source cadence",
       "jobs": 0,
@@ -4262,7 +4254,7 @@
     {
       "company": "Jobicy",
       "error": "",
-      "jobs": 204,
+      "jobs": 203,
       "ok": true,
       "targets": [
         {
@@ -4273,7 +4265,18 @@
     {
       "company": "Arbeitnow",
       "error": "",
-      "jobs": 1402,
+      "jobs": 1394,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "aggregator"
+        }
+      ]
+    },
+    {
+      "company": "Remote OK",
+      "error": "",
+      "jobs": 99,
       "ok": true,
       "targets": [
         {
