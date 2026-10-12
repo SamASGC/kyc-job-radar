@@ -166,12 +166,14 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
         return False
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(page, "html.parser")
-    # Use embedded original JobPosting.datePosted only if ATS did not expose
-    # an original publication date. Never use updated/first-seen timestamps.
-    if original_posted_at(job.posted_at) is None:
-        exact_date = extract_original_jobposting_date(soup, job.title)
-        if exact_date:
-            job.posted_at = exact_date
+    # Cross-check the ATS date against the job-specific schema's datePosted.
+    # The OLDER piece of credible publication evidence wins; a re-post or
+    # updated ATS timestamp must not make an old vacancy look new.
+    exact_date = extract_original_jobposting_date(soup, job.title)
+    ats_date = original_posted_at(job.posted_at)
+    page_date = original_posted_at(exact_date)
+    if page_date is not None and (ats_date is None or page_date < ats_date):
+        job.posted_at = exact_date
     if not within_new_window(job.posted_at, max_hours=max_hours):
         return False
     text = soup.get_text(" ", strip=True).casefold()
