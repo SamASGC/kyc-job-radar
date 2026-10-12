@@ -107,6 +107,30 @@ class V2AdmissionTests(unittest.TestCase):
         _, ok = radar._score_job_with_must_have_gaps(recent, STRICT, known_company=True)
         self.assertTrue(ok)
 
+    def test_acquired_company_redirects_canonical_ats_owner(self):
+        from job_radar.scanner import declared_ats_owners
+        companies = [
+            {"name": "Equals Money", "sector": "Payments",
+             "ats": [{"kind": "recruitee", "slug": "equalsmoney"}]},
+            {"name": "Railsr", "sector": "Payments"},
+        ]
+        owners = declared_ats_owners(companies)
+        self.assertEqual(owners[("recruitee", "equalsmoney")]["name"], "Equals Money")
+        j = job(company="Railsr", title="Regulatory Compliance Analyst")
+        j.source = "Recruitee:equalsmoney"
+        j.source_kind = "official ATS"
+        j.external_id = "eq123"
+        j.fingerprint = ""
+        j.finalize()
+        state, _ = update_state_with_jobs(
+            {"seen": {}, "jobs": {}, "discovery": {}, "stats": {}},
+            [j], companies,
+            {"minimum_score": 0, "max_post_age_days": 4,
+             "onsite_hybrid_countries": ["Spain"], "remote_scope": "Europe"},
+        )
+        for rec in state["jobs"].values():
+            self.assertEqual(rec["company"], "Equals Money")
+
     def test_existing_seen_ledger_survives_migration(self):
         seen = {"legacy-id": {"company": "TestPay", "title": "KYB Analyst", "location": "Spain"}}
         base = {"seen": copy.deepcopy(seen), "jobs": {}, "discovery": {}, "stats": {}}
