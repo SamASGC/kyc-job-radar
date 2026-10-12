@@ -1,4 +1,79 @@
-# KYC / KYB / AML Job Radar v1.3
+# KYC / KYB / AML Job Radar
+
+## Radar v2 — strict quality (experimental branch; NOT yet deployed)
+
+The existing **main** branch and production dashboard remain unchanged until
+this branch has passed both automated tests and a full live-data smoke scan.
+
+### Four non-negotiable admission rules
+
+1. **Original publication within 96 hours**: an unknown date, an ATS
+   `updated_at` timestamp, or an aggregator's repost/first-seen time does not
+   count. Greenhouse's `updated_at` has deliberately been replaced with
+   `first_published` when the feed actually provides it. Records without an
+   original date are withheld. Lever uses `createdAt` instead of no date.
+2. **The vacancy is genuinely open**: it must occur in a live official ATS feed
+   and the job-specific application page must be reachable and show a form or
+   recognizable Apply action. 403/404/errors/blocked pages are withheld,
+   *not* asserted open. This is an automated check, **not** an end-to-end
+   test of submitting a real application.
+3. **Never repeat a presented requisition**: existing persistent
+   `data/state.json → seen` entries survive migration. New results compare
+   company/title and official job ID with historical entries even when the URL
+   or location shifts. Separate verified job IDs permit genuinely distinct
+   requisitions. Conservative dedup may occasionally suppress a new role.
+4. **Location**: priority 1 is genuinely 100% remote from **Spain / Canary
+   Islands**. A bare Europe/EMEA/Worldwide label is not proof of Spain hiring.
+   Relocation-only hybrid/onsite is eligible in Spain **outside Barcelona**,
+   Estonia, Lithuania, Luxembourg, and Switzerland.
+
+Older persisted dashboard rows are removed on the first v2 scan, *without*
+clearing the seen ledger. The HTML shows original dates and timestamps of the
+application-page verification. No matching vacancies = an empty report, not
+filler.
+
+### What the numbers mean
+
+- The v1.3 repository listed **174 direct employer targets**.
+- The open-universe API searches a potentially huge employer dataset but does
+  **not** mean every employer has been checked at its official careers page.
+- The European Commission fintech map presently lists **4,291 firms**. It is
+  a **discovery directory**, not 4,291 individually verified job feeds.
+- The v2 importer/rotation can stage thousands of firms from a permitted CSV
+  export. Only rows with usable HTTPS websites enter *candidate* rotation.
+  Only firms where the radar discovers a working ATS become recurring ATS
+  targets; actual ATS jobs must still pass all four gates.
+- No CSV export is bundled or claimed to have been imported in this branch.
+
+Import a permitted CSV with company/website/sector/country columns:
+
+```bash
+python scripts/import_fintech_directory.py ./fintech_directory.csv
+```
+
+This writes `data/fintech_directory.json`; commit it to the v2 branch only
+after reviewing provenance and duplicates. By default, the scanner tries
+**50 new directory companies per hour**, plus up to **200 previously discovered
+ATS targets per hour**. It rotates batches rather than contacting 4,291
+sites at once. Without an imported directory, this new layer is dormant.
+The existing direct ATS/company sources are still checked normally.
+
+Quality tests (the pull-request workflow only runs tests and never deploys):
+
+```bash
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+```
+
+The dashboard's existing `seen` state is JSON persisted in the repository.
+SQLite or PostgreSQL may be an appropriate later step for concurrency and
+cross-service alerts, but **a SQL database is not needed to preserve the
+existing 278 historical seen records**.
+
+---
+
+## Legacy v1.3 reference (main is unchanged)
+
 
 Radar personal de ofertas orientado a KYC/KYB/AML/FinCrime/Payments. Combina targets directos, career pages/ATS oficiales y un modo **open-universe** que busca puestos relevantes fuera de la lista fija de empresas. Puntúa cada vacante contra un perfil profesional sin datos personales, deduplica de forma persistente y genera un dashboard HTML interactivo.
 
