@@ -10,8 +10,10 @@ this branch has passed both automated tests and a full live-data smoke scan.
 1. **Original publication within 96 hours**: an unknown date, an ATS
    `updated_at` timestamp, or an aggregator's repost/first-seen time does not
    count. Greenhouse's `updated_at` has deliberately been replaced with
-   `first_published` when the feed actually provides it. Records without an
-   original date are withheld. Lever uses `createdAt` instead of no date.
+   `first_published` when the feed actually provides it. If ATS feeds omit the date, v2 checks for the exact job's
+   schema.org `JobPosting.datePosted` on the official application page.
+   Records without any reliable original date are withheld; the oldest
+   credible date wins when sources conflict. Lever uses `createdAt` instead of no date.
 2. **The vacancy is genuinely open**: it must occur in a live official ATS feed
    and the job-specific application page must be reachable and show a form or
    recognizable Apply action. 403/404/errors/blocked pages are withheld,
@@ -34,7 +36,7 @@ filler.
 
 ### What the numbers mean
 
-- The v1.3 repository listed **174 direct employer targets**.
+- The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 verified official employer career pages/ATS boards**, bringing the configured target list to **191** (not 191 fully successful feeds). That covers **38 of the 39 named fintech watchlist companies** directly; Due is currently discoverable on the Speedinvest portfolio board but does not yet have a separately verified direct company ATS in this repository.
 - The open-universe API searches a potentially huge employer dataset but does
   **not** mean every employer has been checked at its official careers page.
 - The European Commission fintech map presently lists **4,291 firms**. It is
