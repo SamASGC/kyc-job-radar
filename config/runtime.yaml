@@ -18,3 +18,14 @@ aggregator_cadence_hours:
   Remote OK: 2
   Remotive: 6
   Himalayas: 24
+
+
+# Long-tail discovery from the licensed directory (NOT 2593 independent ATS).
+directory_cold_per_hour: 50
+directory_hot_per_hour: 200
+directory_domain_queries_per_hour: 80
+
+# Public job-board links are untrusted leads; they must resolve to ATS feeds.
+bridge_new_ats_per_hour: 40
+bridge_hot_per_hour: 200
+bridge_aggregator_pages_per_hour: 24
