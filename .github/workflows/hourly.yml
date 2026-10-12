@@ -2,6 +2,10 @@ name: Hourly KYC job radar
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/hourly.yml"
   schedule:
     - cron: "17 * * * *"
     - cron: "47 * * * *"
