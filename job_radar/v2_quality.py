@@ -139,12 +139,13 @@ def jobposting_spain_remote_verified(soup, expected_title: str) -> bool:
 
 
 def official_active_listing(job: Job) -> bool:
-    """Only current employer ATS lists count as open; aggregator hits are leads.
+    """Admit verifiable employer postings, not aggregators or general careers indexes.
 
-    Inclusion in an active ATS feed + a job-specific URL is the minimum
-    evidence. It is NOT a guarantee the Apply form has been tested end to end.
+    A specific job linked from the employer's own careers page is legitimate
+    first-party evidence even when the firm doesn't use a supported ATS.
+    Its original date and visible application action are separately verified.
     """
-    if job.source_kind != "official ATS":
+    if job.source_kind not in {"official ATS", "official career page"}:
         return False
     url = urlsplit(job.apply_url or "")
     if url.scheme != "https" or not url.netloc:
