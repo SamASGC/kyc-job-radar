@@ -118,3 +118,43 @@ def previously_presented(job: Job, seen: dict) -> bool:
                 continue
             return True
     return False
+
+
+async def verify_application_page(http, job: Job) -> bool:
+    """Second check of a fresh ATS posting, against its specific apply page.
+
+    Non-200, blocked, removed, or pages without an identifiable application
+    action are withheld. No CAPTCHA bypass, cookies or applicant login.
+    """
+    if not official_active_listing(job):
+        return False
+    try:
+        response = await http.get(job.apply_url)
+        if not 200 <= response.status_code < 300:
+            return False
+        page = response.text[:350_000]
+    except Exception:
+        return False
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(page, "html.parser")
+    text = soup.get_text(" ", strip=True).casefold()
+    closed = (
+        "no longer accepting applications", "applications are closed",
+        "this job is no longer available", "this position has been filled",
+        "this posting has expired", "job is closed",
+    )
+    if any(phrase in text for phrase in closed):
+        return False
+    # Form or explicit job application call-to-action on employer/ATS page.
+    apply_cta = ("apply for this job", "apply for this position", "apply now",
+                 "submit application", "apply for this role",
+                 "apply to this job", "start your application")
+    has_form = soup.find("form") is not None
+    has_cta = any(p in text for p in apply_cta)
+    if not has_cta:
+        for a in soup.find_all(["a", "button"]):
+            label = a.get_text(" ", strip=True).casefold()
+            if label in {"apply", "apply now", "apply here", "apply for this job"}:
+                has_cta = True
+                break
+    return bool(has_form or has_cta)
