@@ -36,7 +36,7 @@ filler.
 
 ### What the numbers mean
 
-- The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 verified official employer career pages/ATS boards**, bringing the configured target list to **191** (not 191 fully successful feeds). That covers **38 of the 39 named fintech watchlist companies** directly; Due is currently discoverable on the Speedinvest portfolio board but does not yet have a separately verified direct company ATS in this repository.
+- The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 additional employer career pages/ATS boards** and **Due's investor-maintained Speedinvest page**, bringing the configured employer target list to **192** (not 192 independently verified functional ATS feeds). All **39 of 39** named fintech watchlist companies have an explicit entry, but Due's Getro/Speedinvest site has no unauthenticated official ATS API and Ondato links to LinkedIn only. Those two require alternative verification rather than claiming full ATS monitoring.
 - The open-universe API searches a potentially huge employer dataset but does
   **not** mean every employer has been checked at its official careers page.
   **New v2 ATS bridge:** discover ATS URLs embedded in aggregator job links,
