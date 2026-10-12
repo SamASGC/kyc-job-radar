@@ -80,11 +80,17 @@ class Job:
             # Separate genuine ATS requisitions with distinct stable IDs,
             # while preserving legacy role-level identity when an ID is absent.
             # Cross-source never-repeat checks still compare company/title.
-            if self.source_kind == "official ATS" and self.external_id:
+            if self.source_kind in {"official ATS", "official career page"} and self.external_id:
                 ats_family = norm_text((self.source or "").split(":")[0])
+                stable_id = (
+                    canonical_url(str(self.external_id))
+                    if self.source_kind == "official career page"
+                    else str(self.external_id)
+                )
                 basis = "|".join([
-                    norm_text(self.company), "official-ats", ats_family,
-                    norm_text(str(self.external_id)),
+                    norm_text(self.company),
+                    "official-posting", ats_family,
+                    norm_text(stable_id),
                 ])
             else:
                 basis = "|".join([
