@@ -329,6 +329,19 @@ async def run_scan() -> dict:
     profile = load_yaml("config/profile.yaml")
     runtime = load_yaml("config/runtime.yaml")
     state = load_state()
+    directory_health = {}
+    if profile.get("strict_quality_gate", False):
+        from job_radar.directory import load_directory_batch
+        from job_radar.config import ROOT
+        batch, directory_health = load_directory_batch(
+            ROOT / "data/fintech_directory.json",
+            state.get("discovery", {}),
+            {c["name"] for c in companies},
+            cold_per_hour=int(runtime.get("directory_cold_per_hour", 50)),
+            hot_per_hour=int(runtime.get("directory_hot_per_hour", 200)),
+        )
+        companies.extend(batch)
+        print(f"[RADAR] Directory: {directory_health}", flush=True)
     http = Http(concurrency=int(runtime.get("concurrency", 24)), timeout=float(runtime.get("timeout_seconds", 18)))
     enabled_companies = [x for x in companies if x.get("enabled", True)]
     total = len(enabled_companies)
@@ -366,6 +379,12 @@ async def run_scan() -> dict:
         raw_jobs.extend(agg_jobs)
         health.extend(agg_health)
         print(f"[RADAR] Agregadores terminados | {len(agg_jobs)} jobs brutos", flush=True)
+        if directory_health:
+            health.append({
+                "company": "v2 rotating fintech directory", "ok": True,
+                "jobs": 0, "targets": [{"kind": "directory candidates"}],
+                "error": str(directory_health),
+            })
 
         if profile.get("strict_quality_gate", False):
             from job_radar.v2_quality import passes_strict_gate, verify_application_page
