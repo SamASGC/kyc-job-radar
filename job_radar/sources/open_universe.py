@@ -157,6 +157,10 @@ def _jobopportunities_row(x: dict) -> Job:
     ).finalize()
 
 
+class JobAPIAuthenticationError(RuntimeError):
+    """The upstream Job Opportunities API rejected our credentials."""
+
+
 def has_jobopportunities_api_key() -> bool:
     return bool(os.environ.get("JOB_OPPORTUNITIES_API_KEY", "").strip())
 
@@ -180,21 +184,26 @@ async def _get_jobopportunities(http, params: dict) -> list[Job]:
             wait = 2
         await asyncio.sleep(wait)
         r = await http.get(url, params=params, headers=headers)
+    if r.status_code in (401, 403):
+        raise JobAPIAuthenticationError(
+            f"Job Opportunities API rejected API key (HTTP {r.status_code}). "
+            "Check JOB_OPPORTUNITIES_API_KEY repository secret and API plan."
+        )
     r.raise_for_status()
     data = r.json()
     return [_jobopportunities_row(x) for x in data.get("data", []) if isinstance(x, dict)]
 
 
 async def fetch_jobopportunities_open_universe(http) -> list[Job]:
-    if not has_jobopportunities_api_key():
-        raise RuntimeError("Job Opportunities API skipped: no GitHub Actions secret JOB_OPPORTUNITIES_API_KEY configured.")
+    """Search full JDs for target roles via an authenticated API.
 
-    """Search full JDs across an open employer universe, restricted to Europe.
-
-    For every signal we search remote jobs whose published country is European, plus
-    onsite/hybrid jobs in the specifically authorised countries. Titles are not the main
-    discovery gate.
+    Remote search is Europe-wide for discovery only. Strict v2 scoring later
+    enforces Spain/Canary eligibility, and all jobs require official ATS proof.
     """
+    if not has_jobopportunities_api_key():
+        raise RuntimeError(
+            "Job Opportunities API skipped: JOB_OPPORTUNITIES_API_KEY not configured."
+        )
     posted_after = (datetime.now(timezone.utc) - timedelta(days=14)).date().isoformat()
     scopes = [
         {"remote": "remote", "country": EUROPE_REMOTE_COUNTRIES},
@@ -214,6 +223,8 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
             }
             try:
                 jobs.extend(await _get_jobopportunities(http, params))
+            except JobAPIAuthenticationError:
+                raise
             except Exception:
                 # One expensive full-text slice timing out must not kill the scan.
                 continue
@@ -230,6 +241,8 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
             }
             try:
                 jobs.extend(await _get_jobopportunities(http, params))
+            except JobAPIAuthenticationError:
+                raise
             except Exception:
                 continue
 
