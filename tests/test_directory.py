@@ -37,6 +37,20 @@ class DirectoryTests(unittest.TestCase):
         result, _ = rotate_company_directory(data, {}, {"Finom"}, 1)
         self.assertEqual([r["name"] for r in result], ["Alt Pay"])
 
+    def test_licensed_register_import_and_attribution(self):
+        from scripts.sync_licensed_fintech_register import normalize_rows
+        csv = (
+            "name,website,country,authorised services,status\\n"
+            "IssuerOne,issuerone.example.com,Spain,Electronic Money Institutions,Authorised\\n"
+            "IssuerTwo,,Estonia,Payment Institutions,Active\\n"
+            "IssuerThree,issuerthree.example.com,Lithuania,Crypto-Asset Services,Revoked\\n"
+        )
+        rows, stats = normalize_rows(csv)
+        self.assertEqual(stats["input_rows"], 3)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(stats["with_website"], 1)
+        self.assertTrue(all(r["license"] == "CC BY 4.0" for r in rows))
+
     def test_csv_records_without_website_are_catalogued_not_scanned(self):
         with tempfile.TemporaryDirectory() as temp:
             csv = Path(temp) / "sample.csv"
