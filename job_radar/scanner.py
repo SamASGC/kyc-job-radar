@@ -387,18 +387,29 @@ async def run_scan() -> dict:
             })
 
         if profile.get("strict_quality_gate", False):
-            from job_radar.v2_quality import passes_strict_gate, verify_application_page
+            from job_radar.v2_quality import (
+                passes_strict_gate, verify_application_page, official_active_listing,
+                location_allowed, within_new_window, original_posted_at,
+            )
             max_hours = int(profile.get("max_post_age_hours", 96))
-            prefiltered = [j for j in raw_jobs if passes_strict_gate(j, max_hours=max_hours)]
+            # Undated ATS postings may contain authoritative JobPosting.datePosted
+            # on their exact official apply page; try those as well.
+            prefiltered = [
+                j for j in raw_jobs
+                if official_active_listing(j)
+                and location_allowed(j)
+                and (original_posted_at(j.posted_at) is None
+                     or within_new_window(j.posted_at, max_hours=max_hours))
+            ]
             # An active ATS listing alone is not enough. Check the exact
             # application page before it can enter state/dashboard.
             verified = await asyncio.gather(
-                *(verify_application_page(http, j) for j in prefiltered),
+                *(verify_application_page(http, j, max_hours=max_hours) for j in prefiltered),
                 return_exceptions=True,
             )
             accepted = []
             for j, is_open in zip(prefiltered, verified):
-                if is_open is True:
+                if is_open is True and passes_strict_gate(j, max_hours=max_hours):
                     j.apply_verified_at = utcnow_iso()
                     accepted.append(j)
             health.append({
