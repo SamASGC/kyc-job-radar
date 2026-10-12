@@ -237,6 +237,113 @@ def extract_original_jobposting_date(soup, expected_title: str) -> str:
     return ""
 
 
+def _native_application_url(job: Job) -> str:
+    """Use only an ATS-provided Apply link tied to the *same requisition*.
+
+    A random URL ending in /apply, a different ATS employer, or a generic
+    application page cannot promote a posting into the verified feed.
+    """
+    native = str(getattr(job, "application_api_url", "") or "")
+    source = (job.source or "").split(":", 1)
+    if len(source) != 2 or source[0].casefold() not in {"lever", "ashby"}:
+        return ""
+    board = urlsplit(job.apply_url or "")
+    apply = urlsplit(native)
+    if (board.scheme != "https" or apply.scheme != "https"
+            or board.username or apply.username or board.password or apply.password
+            or board.hostname != apply.hostname):
+        return ""
+    allowed = ({"jobs.lever.co", "jobs.eu.lever.co"} if source[0].casefold() == "lever"
+               else {"jobs.ashbyhq.com"})
+    if board.hostname not in allowed:
+        return ""
+    board_parts = [x for x in board.path.split("/") if x]
+    apply_parts = [x for x in apply.path.split("/") if x]
+    slug = source[1].casefold()
+    if (len(board_parts) < 2 or len(apply_parts) < 3
+            or board_parts[0].casefold() != slug
+            or apply_parts[0].casefold() != slug
+            or apply_parts[:2] != board_parts[:2]
+            or apply_parts[2].casefold() not in {"apply", "application"}):
+        return ""
+    return native
+
+
+def _has_real_apply_action(soup) -> bool:
+    """Recognise accessible controls and actual job forms, not any HTML form.
+
+    Search, login and newsletter forms must never count as job applications.
+    SPA pages with no static control stay uncertain until ATS-native evidence
+    can establish the actual application route.
+    """
+    cta = re.compile(
+        r"^(?:apply(?: now| here| for (?:this|the) (?:job|position|role))?"
+        r"|submit (?:an? )?application|start (?:your )?application"
+        r"|postuler(?: maintenant)?|bewerben(?: sie sich)?"
+        r"|enviar candidatura|solicitar (?:el )?puesto)$", re.I,
+    )
+    for tag in soup.find_all(["a", "button", "input"]):
+        labels = [
+            tag.get_text(" ", strip=True) if tag.name != "input" else "",
+            tag.get("aria-label", ""), tag.get("title", ""),
+            tag.get("value", "") if tag.name == "input" else "",
+        ]
+        if any(cta.fullmatch(str(x).strip()) for x in labels if x):
+            return True
+    for form in soup.find_all("form"):
+        inputs = form.find_all(["input", "textarea"])
+        has_email = any(
+            x.get("type", "").casefold() == "email"
+            or "email" in str(x.get("name", "")).casefold()
+            for x in inputs
+        )
+        has_cv = any(
+            x.get("type", "").casefold() == "file"
+            or re.search(r"resume|curriculum|cv|cover.letter",
+                         str(x.get("name", "")), re.I)
+            for x in inputs
+        )
+        has_application_action = bool(re.search(
+            r"apply|application|candidate|candidatura|postuler|bewerb",
+            str(form.get("action") or ""), re.I,
+        ))
+        if has_email and (has_cv or has_application_action):
+            return True
+    return False
+
+
+async def _native_apply_route_live(http, job: Job) -> bool:
+    """A fresh exact ATS application route is affirmative provider evidence.
+
+    We do NOT infer it from a generic public listing or assume HTTP 200 on
+    the job-description page means candidates can apply.
+    """
+    native = _native_application_url(job)
+    if not native:
+        return False
+    try:
+        response = await http.get(native)
+        if not 200 <= response.status_code < 300:
+            return False
+        # Redirecting to a generic board / homepage is NOT an active form.
+        landed = urlsplit(str(getattr(response, "url", native)))
+        expected = urlsplit(native)
+        if (landed.hostname != expected.hostname
+                or [p for p in landed.path.split("/") if p][:3]
+                != [p for p in expected.path.split("/") if p][:3]):
+            return False
+        visible = __import__("bs4").BeautifulSoup(
+            response.text[:350_000], "html.parser"
+        ).get_text(" ", strip=True).casefold()
+        return not any(x in visible for x in (
+            "no longer accepting applications", "applications are closed",
+            "this job is no longer available", "this position has been filled",
+            "this posting has expired", "job is closed",
+        ))
+    except Exception:
+        return False
+
+
 async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
     """Check the exact ATS application page; attach a diagnostic reason.
 
@@ -282,19 +389,11 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
     if any(phrase in visible_text for phrase in closed):
         job.verification_reason = "explicitly_closed"
         return False
-    ctas = ("apply for this job", "apply for this position", "apply now",
-            "submit application", "apply for this role",
-            "apply to this job", "start your application")
-    has_form = soup.find("form") is not None
-    has_cta = any(p in visible_text for p in ctas)
-    if not has_cta:
-        for a in soup.find_all(["a", "button"]):
-            label = a.get_text(" ", strip=True).casefold()
-            if label in {"apply", "apply now", "apply here", "apply for this job"}:
-                has_cta = True
-                break
-    if not (has_form or has_cta):
-        job.verification_reason = "page_200_but_no_visible_apply_action"
-        return False
-    job.verification_reason = "official_live_page_with_apply_action"
-    return True
+    if _has_real_apply_action(soup):
+        job.verification_reason = "official_live_page_with_apply_action"
+        return True
+    if await _native_apply_route_live(http, job):
+        job.verification_reason = "official_ats_native_application_route_verified"
+        return True
+    job.verification_reason = "page_200_but_no_verified_apply_action"
+    return False
