@@ -453,13 +453,43 @@ async def run_scan() -> dict:
             max_hours = int(profile.get("max_post_age_hours", 96))
             # Undated ATS postings may contain authoritative JobPosting.datePosted
             # on their exact official apply page; try those as well.
-            prefiltered = [
-                j for j in raw_jobs
-                if official_active_listing(j)
-                and location_allowed(j)
-                and (original_posted_at(j.posted_at) is None
-                     or within_new_window(j.posted_at, max_hours=max_hours))
-            ]
+            audit = {
+                "raw_total": len(raw_jobs),
+                "official_ats": 0, "aggregator_or_generic": 0,
+                "official_in_scope": 0, "official_outside_scope": 0,
+                "out_of_scope_examples": [],
+                "original_date_missing": 0, "original_date_expired": 0,
+                "original_date_recent": 0,
+                "prefiltered_candidates": 0,
+                "official_apply_page_verified": 0,
+                "application_not_verified": 0,
+                "rejected_examples": [],
+            }
+            prefiltered = []
+            for j in raw_jobs:
+                if not official_active_listing(j):
+                    audit["aggregator_or_generic"] += 1
+                    continue
+                audit["official_ats"] += 1
+                if not location_allowed(j):
+                    audit["official_outside_scope"] += 1
+                    if len(audit["out_of_scope_examples"]) < 10:
+                        audit["out_of_scope_examples"].append({
+                            "company": j.company, "title": j.title, "location": j.location,
+                            "source": j.source,
+                        })
+                    continue
+                audit["official_in_scope"] += 1
+                posted = original_posted_at(j.posted_at)
+                if posted is None:
+                    audit["original_date_missing"] += 1
+                elif within_new_window(j.posted_at, max_hours=max_hours):
+                    audit["original_date_recent"] += 1
+                else:
+                    audit["original_date_expired"] += 1
+                    continue
+                prefiltered.append(j)
+            audit["prefiltered_candidates"] = len(prefiltered)
             # An active ATS listing alone is not enough. Check the exact
             # application page before it can enter state/dashboard.
             verified = await asyncio.gather(
@@ -471,6 +501,20 @@ async def run_scan() -> dict:
                 if is_open is True and passes_strict_gate(j, max_hours=max_hours):
                     j.apply_verified_at = utcnow_iso()
                     accepted.append(j)
+                    audit["official_apply_page_verified"] += 1
+                else:
+                    audit["application_not_verified"] += 1
+                    if len(audit["rejected_examples"]) < 25:
+                        audit["rejected_examples"].append({
+                            "company": j.company, "title": j.title,
+                            "location": j.location, "source": j.source,
+                            "posted_at": j.posted_at,
+                            "url": j.apply_url,
+                        })
+            save_json("data/quality_audit.json", audit)
+            print("[RADAR] V2 audit funnel: " + str({
+                k: v for k, v in audit.items() if not isinstance(v, list)
+            }), flush=True)
             health.append({
                 "company": "v2 application verification",
                 "ok": True, "jobs": len(accepted),
