@@ -14,6 +14,7 @@ def _public_posting_id(row: dict, slug: str) -> str:
         parts = [unquote(part) for part in url.path.split("/") if part]
         if (url.scheme == "https" and url.hostname == "jobs.ashbyhq.com"
                 and len(parts) >= 2 and parts[0].casefold() == slug.casefold()
+                and parts[1].casefold() not in {"apply", "application", "jobs", "careers"}
                 and re.fullmatch(r"[A-Za-z0-9_-]{3,100}", parts[1])):
             return parts[1]
     except (TypeError, ValueError):
