@@ -43,6 +43,8 @@ jobs:
 
       - name: Scan jobs and rebuild dashboard
         run: python radar.py scan
+        env:
+          JOB_OPPORTUNITIES_API_KEY: ${{ secrets.JOB_OPPORTUNITIES_API_KEY }}
 
       - name: Commit meaningful dataset changes
         shell: bash
