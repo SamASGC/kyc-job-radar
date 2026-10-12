@@ -64,6 +64,7 @@ jobs:
           name: v2-isolated-smoke
           path: |
             public/index.html
+            public/feed.xml
             data/health.json
             data/quality_audit.json
           if-no-files-found: warn
