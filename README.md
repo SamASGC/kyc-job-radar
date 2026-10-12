@@ -46,11 +46,10 @@ filler.
   never treated as verified-open job postings.
 - The European Commission fintech map presently lists **4,291 firms**. It is
   a **discovery directory**, not 4,291 individually verified job feeds.
-- The v2 importer/rotation can stage thousands of firms from a permitted CSV
-  export. Only rows with usable HTTPS websites enter *candidate* rotation.
+- The v2 importer/rotation now stages thousands of attributed firm records. Only rows with usable HTTPS websites enter *candidate* rotation.
   Only firms where the radar discovers a working ATS become recurring ATS
   targets; actual ATS jobs must still pass all four gates.
-- No CSV export is bundled or claimed to have been imported in this branch.
+- **Licensed directory imported on 12 October 2026**: 2,654 source rows, 2,593 unique firm-country entries, 338 with a website in the supplied register. The included `data/fintech_directory.json` file is an attributed CC BY 4.0 snapshot from [Fintechnologica](https://fintechnologica.com/data), compiled from regulatory sources. **Only 338 entries have usable website fields**; the other 2,255 names are for future enrichment, not job feeds. After excluding companies already configured directly, 322 website-bearing entries are available for rotation.
 
 Import a permitted CSV with company/website/sector/country columns:
 
@@ -64,6 +63,8 @@ after reviewing provenance and duplicates. By default, the scanner tries
 ATS targets per hour**. It rotates batches rather than contacting 4,291
 sites at once. Without an imported directory, this new layer is dormant.
 The existing direct ATS/company sources are still checked normally.
+
+The original EU Digital Finance Platform map lists 4,291 fintech firms, but it is separate crowdsourced/Dealroom-derived data; **the 2,593 imported firms come from Fintechnologica, not a claimed export of the EU map**. A company without a website or compatible ATS does **not** count as an active source. The scanner also discovers ATS boards from eligible public aggregator apply links, verifies the ATS independently and stores successful boards in the persistent state.
 
 Quality tests (the pull-request workflow only runs tests and never deploys):
 
