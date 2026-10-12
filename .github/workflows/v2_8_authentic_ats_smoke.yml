@@ -3,7 +3,6 @@ name: Radar v2.8 — authentic financial ATS smoke
 on:
   push:
     branches: ["feat/v2-8-authentic-ats-330"]
-    paths: [".github/workflows/v2_8_authentic_ats_smoke.yml"]
   workflow_dispatch:
 
 permissions:
@@ -39,8 +38,8 @@ jobs:
           assert inventory["ats_explicit"] >= 112
           assert len(state["seen"]) >= 305
           names=["Capital on Tap","OpenFX","Allica Bank","Incard","Verifone",
-                 "Blockstream","Pyth Data Association","Juniper Square","EQT Group","Aksia",
-                 "Tandem Bank","Breeze","HALA","Mercury","Bluevine","Lead Bank",
+                 "Blockstream","Sotheby\u0027s","Juniper Square","EQT Group","Aksia",
+                 "Tandem Bank","Breeze","Garda Capital Partners","Mercury","Bluevine","Lead Bank",
                  "Nubank","Caruso","Sydecar","Emigrant Bank"]
           sources={x["company"]:x for x in inventory["sources"]}
           checks={x["company"]:x for x in health["sources"]}
