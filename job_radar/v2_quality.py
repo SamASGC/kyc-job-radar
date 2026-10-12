@@ -190,8 +190,21 @@ def previously_presented(job: Job, seen: dict) -> bool:
         if jid and prior_id and jid == prior_id:
             return True
         if norm_text(rec.get("title")) == title:
-            if jid and prior_id and jid != prior_id:
+            prior_vendor = norm_text(str(rec.get("source") or "").split(":", 1)[0])
+            new_vendor = norm_text(str(job.source or "").split(":", 1)[0])
+            distinct_requisitions_same_ats = (
+                bool(jid and prior_id and jid != prior_id)
+                and prior_vendor == new_vendor
+                and prior_vendor in {
+                    "greenhouse", "lever", "ashby", "workable", "personio",
+                    "smartrecruiters", "recruitee", "workday", "breezy",
+                }
+            )
+            if distinct_requisitions_same_ats:
                 continue
+            # Different IDs on *different* platforms do not establish that
+            # this is a different role: a career-page URL and ATS ID often
+            # refer to the same requisition.
             return True
     return False
 
