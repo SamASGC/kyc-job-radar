@@ -413,11 +413,26 @@ async def run_scan() -> dict:
         health.extend(agg_health)
         print(f"[RADAR] Agregadores terminados | {len(agg_jobs)} jobs brutos", flush=True)
         if profile.get("strict_quality_gate", False):
-            from job_radar.source_bridge import discover_aggregator_ats
-            new_sources = discover_aggregator_ats(
-                agg_jobs, {c["name"] for c in companies},
+            from job_radar.source_bridge import (
+                discover_aggregator_ats, discover_ats_via_aggregator_pages,
+            )
+            names = {c["name"] for c in companies}
+            direct_sources = discover_aggregator_ats(
+                agg_jobs, names,
                 limit=int(runtime.get("bridge_new_ats_per_hour", 40)),
             )
+            page_sources = await discover_ats_via_aggregator_pages(
+                http, agg_jobs, names,
+                max_pages=int(runtime.get("bridge_aggregator_pages_per_hour", 24)),
+                hour_bucket=int(datetime.now(timezone.utc).timestamp() // 3600),
+            )
+            unique_boards = set()
+            new_sources = []
+            for company, target in direct_sources + page_sources:
+                key = (target.get("kind"), target.get("slug"))
+                if key not in unique_boards:
+                    unique_boards.add(key)
+                    new_sources.append((company, target))
             fetched = await asyncio.gather(
                 *(fetch_target(http, company, target) for company, target in new_sources),
                 return_exceptions=True,
@@ -437,7 +452,7 @@ async def run_scan() -> dict:
                 health.append({"company": company["name"], "ok": True,
                                "jobs": len(data), "targets": [target],
                                "error": "ATS discovered via aggregator; jobs re-fetched from official ATS"})
-            print(f"[RADAR] ATS bridge: {len(new_sources)} candidate boards, {confirmed} verified", flush=True)
+            print(f"[RADAR] ATS bridge: {len(direct_sources)} direct, {len(page_sources)} via approved job pages, {confirmed}/{len(new_sources)} boards verified", flush=True)
         if directory_health:
             health.append({
                 "company": "v2 rotating fintech directory", "ok": True,
