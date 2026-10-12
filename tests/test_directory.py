@@ -51,6 +51,22 @@ class DirectoryTests(unittest.TestCase):
         self.assertEqual(stats["with_website"], 1)
         self.assertTrue(all(r["license"] == "CC BY 4.0" for r in rows))
 
+    def test_company_domain_api_batches_rotate_and_skip_missing_websites(self):
+        from job_radar.sources.open_universe import selected_company_domain_batches
+        entries = [
+            {"name": "A", "website": "https://a.test.com"},
+            {"name": "B", "website": "https://b.test.com/path"},
+            {"name": "C", "website": ""},
+            {"name": "D", "website": "https://www.a.test.com"},
+            {"name": "E", "website": "http://e.test.com"},
+        ]
+        batches = selected_company_domain_batches(entries, hour_bucket=0,
+                                                  companies_per_hour=2,
+                                                  domains_per_request=2)
+        self.assertEqual(sum(len(b) for b in batches), 2)
+        self.assertEqual(set(batches[0]), {"a.test.com", "b.test.com"})
+        self.assertNotIn("e.test.com", batches[0])
+
     def test_csv_records_without_website_are_catalogued_not_scanned(self):
         with tempfile.TemporaryDirectory() as temp:
             csv = Path(temp) / "sample.csv"
