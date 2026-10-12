@@ -1,0 +1,63 @@
+name: Radar v2.1 — isolated hourly coverage smoke
+
+on:
+  push:
+    branches: ["feat/radar-v2-more-hourly-sources"]
+    paths:
+      - ".github/workflows/v2_sources_smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - name: Full scan of 180 rotating directory firms and direct ATS boards
+        run: python radar.py scan
+      - name: Coverage report and state validation
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          src=pathlib.Path("data/health.json")
+          if src.exists():
+              data=json.loads(src.read_text(encoding="utf-8"))
+              health=data.get("sources",[])
+              checked=[x for x in health if not x.get("company","").startswith("v2 ")]
+              print("SOURCE_METRICS",json.dumps({
+                "checked":len(checked),
+                "success":sum(bool(x.get("ok")) for x in checked),
+                "with_jobs":sum(bool(x.get("ok")) and x.get("jobs",0)>0 for x in checked),
+                "errors":sum(not x.get("ok") for x in checked),
+              }))
+          state=pathlib.Path("data/state.json")
+          if state.exists():
+              data=json.loads(state.read_text(encoding="utf-8"))
+              print("STATE_METRICS",json.dumps({
+                "known_requisitions":len(data.get("seen",{})),
+                "visible":len(data.get("jobs",{})),
+                "discovery":len(data.get("discovery",{})),
+              }))
+          for p in ["public/index.html","public/review.html",
+                    "public/status.html","public/feed.xml"]:
+              print("OUTPUT",p,pathlib.Path(p).exists())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: radar-v2-1-coverage-diagnostics
+          path: |
+            data/health.json
+            data/quality_audit.json
+            public/status.json
+          if-no-files-found: warn
