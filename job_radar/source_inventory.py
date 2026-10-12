@@ -78,12 +78,12 @@ def build_source_inventory(companies: list[dict], health: list[dict],
     page = """<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fuentes del Radar AML</title><style>
-body{font:14px system-ui,sans-serif;margin:2rem auto;padding:0 1rem;
+body{{font:14px system-ui,sans-serif;margin:2rem auto;padding:0 1rem;
 max-width:1200px;color:#182230;background:#f9fafb}
-table{border-collapse:collapse;width:100%;background:#fff}
-th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
-th{position:sticky;top:0;background:#e9eff5}
-.summary{font-weight:600}a{color:#1654aa}
+table{{border-collapse:collapse;width:100%;background:#fff}}
+th,td{{padding:12px;border-bottom:1px solid #eee;text-align:left}}
+th{{position:sticky;top:0;background:#e9eff5}}
+.summary{{font-weight:600}}a{{color:#1654aa}}
 </style></head><body><h1>Fuentes auditables · Radar AML</h1>
 <p>Este inventario distingue empresas con ATS configurado, webs de empleo
 pendientes de descubrimiento, respuestas correctas y fallos. Las cifras
