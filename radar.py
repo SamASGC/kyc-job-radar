@@ -25,6 +25,7 @@ from job_radar.sources.oracle_hcm import fetch_oracle_hcm
 from job_radar.sources.open_universe import (
     fetch_jobopportunities_open_universe,
     fetch_remote_landers,
+    fetch_licensed_employer_domain_jobs,
 )
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
@@ -153,6 +154,27 @@ async def _fetch_aggregators_with_open_universe(http, config):
                 "targets": [{"kind": "open-universe aggregator"}],
                 "error": "",
             })
+    # In addition to broad role searches, sweep licensed companies by
+    # their verified domain names, even when roles use unexpected titles.
+    try:
+        rows, stats = await fetch_licensed_employer_domain_jobs(
+            http, ROOT / "data/fintech_directory.json",
+            companies_per_hour=int(config.get("directory_domain_queries_per_hour", 80)),
+        )
+        jobs.extend(rows)
+        health.append({
+            "company": "Licensed employer-domain discovery",
+            "ok": stats.get("errors", 0) == 0,
+            "jobs": len(rows),
+            "targets": [{"kind": "company-domain API rotation"}],
+            "error": str(stats),
+        })
+    except Exception as exc:
+        health.append({
+            "company": "Licensed employer-domain discovery",
+            "ok": False, "jobs": 0, "targets": [{"kind": "company-domain API rotation"}],
+            "error": f"{type(exc).__name__}: {exc}",
+        })
     return jobs, health, skipped
 
 
