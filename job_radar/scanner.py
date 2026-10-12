@@ -12,6 +12,7 @@ from job_radar.state import load_state, save_state
 from job_radar.matching import score_job, obvious_non_job_content
 from job_radar.salary import estimate_salary
 from job_radar.dashboard import build_dashboard
+from job_radar.feed import create_rss
 from job_radar.sources.generic import fetch_generic
 from job_radar.sources.greenhouse import fetch_greenhouse
 from job_radar.sources.lever import fetch_lever
@@ -580,4 +581,6 @@ async def run_scan() -> dict:
     jobs = list(state.get("jobs", {}).values())
     jobs.sort(key=lambda x: (-int(x.get("score", 0)), x.get("company", ""), x.get("title", "")))
     build_dashboard(jobs, state.get("stats", {}), "public/index.html", state.get("dataset_updated_at", ""))
+    if profile.get("strict_quality_gate", False):
+        create_rss(jobs)
     return run_stats
