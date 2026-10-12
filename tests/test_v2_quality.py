@@ -151,8 +151,18 @@ class V2AdmissionTests(unittest.TestCase):
         old = {"first_seen": "2026-10-08", "company": "TestPay",
                "title": "Senior KYB Analyst", "location": "Lithuania"}
         self.assertTrue(previously_presented(j, {"old": old}))
-        self.assertFalse(previously_presented(j, {"old": {**old, "external_id": "129"}}))
-        self.assertTrue(previously_presented(j, {"old": {**old, "external_id": "128"}}))
+        # IDs from the same ATS represent distinct requisitions.
+        self.assertFalse(previously_presented(
+            j, {"old": {**old, "external_id": "129", "source": "Ashby:test"}}
+        ))
+        self.assertTrue(previously_presented(
+            j, {"old": {**old, "external_id": "128", "source": "Ashby:test"}}
+        ))
+        # A company careers URL and a numeric ATS ID may be the SAME job.
+        self.assertTrue(previously_presented(
+            j, {"old": {**old, "external_id": "https://employer.example/careers/kyb",
+                        "source": "Career page:TestPay"}}
+        ))
 
     def test_strict_scoring_overrides_high_fit(self):
         old = job(posted_at=(datetime.now(timezone.utc) - timedelta(days=8)).isoformat())
