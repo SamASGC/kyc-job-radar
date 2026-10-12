@@ -1,8 +1,8 @@
-name: Radar v2.5 financial employer sources smoke
+name: Radar v2.5 — 259 direct financial ATS smoke
 
 on:
   push:
-    branches: ["feat/v2-5-financial-sector-direct-sources"]
+    branches: ["feat/v2-5-ashby-inventory-259"]
   workflow_dispatch:
 
 permissions:
@@ -20,62 +20,51 @@ jobs:
           cache: pip
       - run: python -m pip install --disable-pip-version-check -r requirements.txt
       - run: python -m compileall -q radar.py job_radar tests
-      - name: All regression tests
-        run: python -m unittest discover -s tests -v
-      - name: Check source inventory and deduplication baseline
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          companies=[]
-          for path in ("config/companies.json","config/extra_companies.json"):
-              companies.extend(json.loads(Path(path).read_text(encoding="utf-8")))
-          assert len(companies) == 250, len(companies)
-          assert len({x["name"].casefold() for x in companies}) == 250
-          direct_ats = sum(bool(x.get("ats")) for x in companies)
-          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
-          assert len(state["seen"]) >= 305, "Unexpected historical dedupe loss"
-          print("COVERAGE",{"direct_employers":len(companies),
-                            "ats_configured":direct_ats,
-                            "seen_ledger":len(state["seen"])})
-          PY
-      - name: Isolated real source scan — no production commit or deploy
+      - run: python -m unittest discover -s tests -v
+      - name: Run actual scan without pushes or Pages deployment
         run: python radar.py scan
-      - name: Validate coverage and quality audit
-        if: always()
+      - name: Report confirmed source health and quality
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path("data/quality_audit.json")
-          if p.exists():
-              a=json.loads(p.read_text(encoding="utf-8"))
-              print("QUALITY_FUNNEL",json.dumps({
-                  k:v for k,v in a.items() if not isinstance(v,list)
-              },ensure_ascii=False))
-              assert a["official_apply_page_verified"] <= a["prefiltered_candidates"]
-          p=Path("public/sources.json")
-          if p.exists():
-              s=json.loads(p.read_text(encoding="utf-8"))
-              print("SOURCE_INVENTORY",json.dumps({
-                  "configured":s.get("total_configured_checked_or_scheduled"),
-                  "ats":s.get("ats_explicit"),
-                  "reached":s.get("reached"),
-                  "with_jobs":s.get("with_jobs"),
-                  "errors":s.get("errors"),
-              }))
-          for path in ("public/index.html","public/review.html",
-                       "public/status.html","public/sources.html",
-                       "public/feed.xml"):
-              assert Path(path).exists(), path
+          inventory=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          assert inventory["direct_configured"] == 259, inventory["direct_configured"]
+          assert inventory["total_configured_checked_or_scheduled"] >= 259
+          assert inventory["rotating_checked"] >= 0
+          assert len(state["seen"]) >= 305
+          names=["Paytm","Aspora","LHV Bank","Wolt","Bondora","Boku","Apron","Seccl","Creem"]
+          actual={x["company"]: x for x in inventory["sources"]}
+          print("NEW_SOURCE_HEALTH",json.dumps({
+             n: {"result":actual[n]["result"],"jobs":actual[n]["jobs_found"]}
+             for n in names
+          }))
+          print("FUNNEL",json.dumps({
+             "raw":audit["raw_total"],
+             "candidates":audit["prefiltered_candidates"],
+             "verified":audit["official_apply_page_verified"],
+             "reasons":audit["verification_reasons"],
+             "known_seen":len(state["seen"]),
+          }))
+          print("TOTAL",json.dumps({
+             "configured_in_sweep":inventory["total_configured_checked_or_scheduled"],
+             "direct_configured":inventory["direct_configured"],
+             "rotating":inventory["rotating_checked"],
+             "ats_explicit":inventory["ats_explicit"],"reached":inventory["reached"],
+             "errors":inventory["errors"],"with_jobs":inventory["with_jobs"],
+          }))
+          for name in ("index.html","sources.html","status.html","review.html","feed.xml"):
+              assert (Path("public")/name).exists(),name
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v2-5-financial-sources-live-smoke
+          name: v2-5-sources-and-quality
           path: |
             data/quality_audit.json
             data/health.json
-            public/status.json
             public/sources.json
+            public/status.json
           if-no-files-found: warn

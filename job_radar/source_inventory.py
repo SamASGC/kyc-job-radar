@@ -8,9 +8,14 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from job_radar.config import ROOT
+from job_radar.models import norm_text
 
 
-def summarize_source_coverage(companies: list[dict], health: list[dict]) -> dict:
+def summarize_source_coverage(companies: list[dict], health: list[dict],
+                              direct_company_names: set[str] | None = None) -> dict:
+    # Scan batches include rotating directory firms; do not call them direct.
+    if direct_company_names is None:
+        direct_company_names = {norm_text(c.get("name")) for c in companies}
     by_name = {}
     for check in health:
         name = check.get("company", "")
@@ -28,6 +33,7 @@ def summarize_source_coverage(companies: list[dict], health: list[dict]) -> dict
                   else "error" if results else "not_checked")
         records.append({
             "company": name,
+            "origin_class": "direct" if norm_text(name) in direct_company_names else "rotating",
             "category": c.get("specialism") or c.get("sector") or "Fintech",
             "configured_feed": "ATS API" if c.get("ats") else "Careers site / discovery",
             "result": status,
@@ -37,6 +43,8 @@ def summarize_source_coverage(companies: list[dict], health: list[dict]) -> dict
     counts = Counter(r["result"] for r in records)
     return {
         "total_configured_checked_or_scheduled": len(records),
+        "direct_configured": sum(r["origin_class"] == "direct" for r in records),
+        "rotating_checked": sum(r["origin_class"] == "rotating" for r in records),
         "ats_explicit": sum(bool(c.get("ats")) for c in companies if c.get("enabled", True)),
         "careers_discovery": sum(not c.get("ats") for c in companies if c.get("enabled", True)),
         "reached": counts["ok"], "errors": counts["error"],
@@ -53,8 +61,9 @@ def summarize_source_coverage(companies: list[dict], health: list[dict]) -> dict
 
 
 def build_source_inventory(companies: list[dict], health: list[dict],
-                           out_dir: str = "public") -> dict:
-    summary = summarize_source_coverage(companies, health)
+                           out_dir: str = "public",
+                           direct_company_names: set[str] | None = None) -> dict:
+    summary = summarize_source_coverage(companies, health, direct_company_names)
     root = ROOT / out_dir if not Path(out_dir).is_absolute() else Path(out_dir)
     root.mkdir(parents=True, exist_ok=True)
     (root / "sources.json").write_text(
@@ -88,7 +97,8 @@ th{{position:sticky;top:0;background:#e9eff5}}
 <p>Este inventario distingue empresas con ATS configurado, webs de empleo
 pendientes de descubrimiento, respuestas correctas y fallos. Las cifras
 NO son vacantes abiertas ni fuentes ATS garantizadas.</p>
-<p class="summary">Fuentes en esta pasada: {total} · ATS configurados: {ats} ·
+<p class="summary">Fuentes en esta pasada: {total} · Empresas directas: {direct} ·
+Rotatorias incluidas: {rotating} · ATS configurados: {ats} ·
 Webs de empleo: {generic} · Respondieron: {ok} · Errores: {errors} ·
 No consultadas: {missing} · Con vacantes brutas: {productive}</p>
 <p><a href="index.html">Vacantes verificadas</a> · <a href="status.html">Estado</a></p>
@@ -96,6 +106,8 @@ No consultadas: {missing} · Con vacantes brutas: {productive}</p>
 <th>Última comprobación</th><th>Anuncios brutos</th></tr></thead>
 <tbody>{rows}</tbody></table></body></html>""".format(
         total=summary["total_configured_checked_or_scheduled"],
+        direct=summary["direct_configured"],
+        rotating=summary["rotating_checked"],
         ats=summary["ats_explicit"],generic=summary["careers_discovery"],
         ok=summary["reached"],errors=summary["errors"],
         missing=summary["not_checked"],productive=summary["with_jobs"],
