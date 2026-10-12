@@ -13,23 +13,23 @@ class ReviewPageTests(unittest.TestCase):
         records=[
             {"company":"ExamplePay", "title":"AML Analyst",
              "url":"https://jobs.ashbyhq.com/examplepay/job123",
-             "location":"Spain - Remote", "posted_at":now,
+             "location":"Spain - Remote", "posted_at":now, "geography_verified":True,
              "reason":"page_200_but_no_visible_apply_action"},
             {"company":"ClosedPay", "title":"KYB Analyst",
              "url":"https://jobs.ashbyhq.com/closedpay/job123",
-             "location":"Spain", "posted_at":now,
+             "location":"Spain", "posted_at":now, "geography_verified":True,
              "reason":"explicitly_closed"},
             {"company":"OldPay", "title":"CDD Analyst",
              "url":"https://jobs.ashbyhq.com/oldpay/job123",
-             "location":"Spain", "posted_at":"2025-03-01",
+             "location":"Spain", "posted_at":"2025-03-01", "geography_verified":True,
              "reason":"original_publication_missing_or_older_than_96h"},
             {"company":"SalesPay", "title":"Sales Representative",
              "url":"https://jobs.ashbyhq.com/salespay/job123",
-             "location":"Spain", "posted_at":"",
+             "location":"Spain", "posted_at":"", "geography_verified":True,
              "reason":"page_200_but_no_visible_apply_action"},
             {"company":"ShownPay", "title":"AML Investigator",
              "url":"https://jobs.ashbyhq.com/shownpay/job123",
-             "location":"Spain", "posted_at":now,
+             "location":"Spain", "posted_at":now, "geography_verified":True,
              "reason":"page_200_but_no_visible_apply_action"},
         ]
         seen={"old": {"company":"ShownPay", "title":"AML Investigator"}}
@@ -37,11 +37,22 @@ class ReviewPageTests(unittest.TestCase):
         self.assertEqual(len(result),1)
         self.assertEqual(result[0]["company"],"ExamplePay")
 
+    def test_london_jobs_never_enter_pending_review(self):
+        now=datetime.now(timezone.utc).isoformat()
+        rows=[
+            {"company":"BadFit", "title":"AML Analyst",
+             "url":"https://jobs.ashbyhq.com/badfit/123",
+             "location":"London United Kingdom", "posted_at":now,
+             "geography_verified":False,
+             "reason":"page_200_but_no_visible_apply_action"},
+        ]
+        self.assertEqual(review_candidates(rows),[])
+
     def test_unverified_labels_not_misrepresented_as_official_alerts(self):
         rows=[{
             "company":"Example <Pay>", "title":"AML & Due Diligence Analyst",
             "url":"https://jobs.ashbyhq.com/examplepay/job123",
-            "location":"Spain", "posted_at":"",
+            "location":"Spain", "posted_at":"", "geography_verified":True,
             "reason":"page_200_but_no_visible_apply_action",
         }]
         with tempfile.TemporaryDirectory() as temp:
