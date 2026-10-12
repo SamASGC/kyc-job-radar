@@ -70,3 +70,55 @@ def generic_job_links(html: str, base_url: str, max_links: int = 120) -> list[di
         if len(jobs) >= max_links:
             break
     return jobs
+
+# Company-homepage discovery: find ONE prominent official careers link.
+# Without this step a company's registered website is merely fetched as a
+# homepage and its careers vacancies are often invisible to the scanner.
+def candidate_careers_links(html: str, base_url: str, max_links: int = 2) -> list[str]:
+    from urllib.parse import urlsplit, urljoin
+    from ipaddress import ip_address
+    base = urlsplit(base_url)
+    home_host = (base.hostname or "").lower().removeprefix("www.")
+    if not home_host or "." not in home_host:
+        return []
+    destinations = {}
+    for a in BeautifulSoup(html, "html.parser").find_all("a", href=True):
+        href = urljoin(base_url, str(a["href"]).strip())
+        try:
+            p = urlsplit(href)
+            host = (p.hostname or "").lower()
+            if p.scheme != "https" or not host or p.username or p.password:
+                continue
+            try:
+                ip_address(host)
+                continue
+            except ValueError:
+                pass
+            same_company = (
+                host.removeprefix("www.") == home_host or
+                host.removeprefix("www.").endswith("." + home_host)
+            )
+            ats_link = bool(detect_ats("", href))
+            if not same_company and not ats_link:
+                continue
+            label = " ".join(a.stripped_strings).casefold()
+            label += " " + (a.get("aria-label") or "").casefold()
+            path = (p.path or "").casefold()
+            if not (
+                any(x in label for x in ("careers", "career", "jobs", "vacancies",
+                                       "join our team", "work with us", "open positions",
+                                       "trabaja con", "empleo", "join us"))
+                or any(x in path for x in ("/careers", "/jobs", "/join-us",
+                                           "/work-with-us", "/vacancies", "/career"))
+            ):
+                continue
+            score = (20 if ats_link else 0) + (8 if "career" in path or "jobs" in path else 0)
+            score += (5 if "career" in label or "jobs" in label else 0)
+            url = p._replace(query="", fragment="").geturl()
+            if url == base_url:
+                continue
+            destinations[url] = max(destinations.get(url, 0), score)
+        except (TypeError, ValueError):
+            continue
+    return [u for u, _ in sorted(destinations.items(),
+                                 key=lambda x: (-x[1], x[0]))[:max_links]]
