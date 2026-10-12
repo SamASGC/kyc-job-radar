@@ -40,10 +40,10 @@ class DirectoryTests(unittest.TestCase):
     def test_licensed_register_import_and_attribution(self):
         from scripts.sync_licensed_fintech_register import normalize_rows
         csv = (
-            "name,website,country,authorised services,status\\n"
-            "IssuerOne,issuerone.example.com,Spain,Electronic Money Institutions,Authorised\\n"
-            "IssuerTwo,,Estonia,Payment Institutions,Active\\n"
-            "IssuerThree,issuerthree.example.com,Lithuania,Crypto-Asset Services,Revoked\\n"
+            "name,website,country,authorised services,status\n"
+            "IssuerOne,issuerone.example.com,Spain,Electronic Money Institutions,Authorised\n"
+            "IssuerTwo,,Estonia,Payment Institutions,Active\n"
+            "IssuerThree,issuerthree.example.com,Lithuania,Crypto-Asset Services,Revoked\n"
         )
         rows, stats = normalize_rows(csv)
         self.assertEqual(stats["input_rows"], 3)
