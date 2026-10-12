@@ -71,6 +71,8 @@ class Job:
     salary_display: str = ""
     fingerprint: str = ""
     apply_verified_at: str = ""
+    # Exact ATS-native application link, never inferred from a job URL.
+    application_api_url: str = ""
 
     def finalize(self) -> "Job":
         if not self.discovered_at:
