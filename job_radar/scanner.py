@@ -350,6 +350,18 @@ async def run_scan() -> dict:
                 "first_seen": "2026-10-12T00:00:00+00:00",
                 "source": "ChatGPT and manual radar delivery",
             })
+    # Persistently discovered ATS boards from the broader employer universe.
+    # Do not treat an aggregator listing itself as eligible.
+    if profile.get("strict_quality_gate", False):
+        bridged = list(state.get("bridge_ats", {}).values())
+        bridged.sort(key=lambda x: x.get("name", "").casefold())
+        size = int(runtime.get("bridge_hot_per_hour", 200))
+        if bridged and size > 0:
+            offset = (int(datetime.now(timezone.utc).timestamp() // 3600) * size) % len(bridged)
+            selected = [bridged[(offset + i) % len(bridged)]
+                        for i in range(min(size, len(bridged)))]
+            names = {norm_text(c["name"]) for c in companies}
+            companies.extend(c for c in selected if norm_text(c["name"]) not in names)
     directory_health = {}
     if profile.get("strict_quality_gate", False):
         from job_radar.directory import load_directory_batch
@@ -400,6 +412,32 @@ async def run_scan() -> dict:
         raw_jobs.extend(agg_jobs)
         health.extend(agg_health)
         print(f"[RADAR] Agregadores terminados | {len(agg_jobs)} jobs brutos", flush=True)
+        if profile.get("strict_quality_gate", False):
+            from job_radar.source_bridge import discover_aggregator_ats
+            new_sources = discover_aggregator_ats(
+                agg_jobs, {c["name"] for c in companies},
+                limit=int(runtime.get("bridge_new_ats_per_hour", 40)),
+            )
+            fetched = await asyncio.gather(
+                *(fetch_target(http, company, target) for company, target in new_sources),
+                return_exceptions=True,
+            )
+            confirmed = 0
+            for (company, target), data in zip(new_sources, fetched):
+                if isinstance(data, Exception):
+                    health.append({"company": company["name"], "ok": False,
+                                   "jobs": 0, "targets": [target],
+                                   "error": f"ATS bridge: {type(data).__name__}: {data}"})
+                    continue
+                confirmed += 1
+                raw_jobs.extend(data)
+                state.setdefault("bridge_ats", {})[norm_text(company["name"])] = {
+                    **company, "ats": [target],
+                }
+                health.append({"company": company["name"], "ok": True,
+                               "jobs": len(data), "targets": [target],
+                               "error": "ATS discovered via aggregator; jobs re-fetched from official ATS"})
+            print(f"[RADAR] ATS bridge: {len(new_sources)} candidate boards, {confirmed} verified", flush=True)
         if directory_health:
             health.append({
                 "company": "v2 rotating fintech directory", "ok": True,
