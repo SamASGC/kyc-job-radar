@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+import json
+import os
 
 from job_radar.models import Job
 
@@ -33,11 +37,76 @@ JD_QUERIES = [
 TITLE_FALLBACK_QUERIES = ["kyc", "aml"]
 
 # Onsite/hybrid remains intentionally narrow. Remote discovery is Europe-only.
-ONSITE_COUNTRIES = "ES,LU,CH,EE,CZ,MT"
+ONSITE_COUNTRIES = "ES,LU,CH,EE,LT"
 EUROPE_REMOTE_COUNTRIES = (
     "AL,AT,BE,BA,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IS,IE,IT,LV,LI,LT,LU,MT,ME,"
     "NL,MK,NO,PL,PT,RO,RS,SK,SI,ES,SE,CH,GB"
 )
+
+
+def selected_company_domain_batches(directory: list[dict], hour_bucket: int,
+                                    companies_per_hour: int = 80,
+                                    domains_per_request: int = 20) -> list[list[str]]:
+    """Rotate reliable company websites through employer-domain API queries."""
+    domains, unique = [], set()
+    for entry in directory:
+        try:
+            web = urlsplit(str(entry.get("website") or ""))
+            host = (web.hostname or "").lower().removeprefix("www.")
+        except (ValueError, TypeError, AttributeError):
+            continue
+        if web.scheme != "https" or not host or "." not in host or host in unique:
+            continue
+        unique.add(host)
+        domains.append(host)
+    domains.sort()
+    if not domains or companies_per_hour <= 0 or domains_per_request <= 0:
+        return []
+    n = min(companies_per_hour, len(domains))
+    start = (hour_bucket * n) % len(domains)
+    sampled = [domains[(start + i) % len(domains)] for i in range(n)]
+    return [sampled[i:i + domains_per_request]
+            for i in range(0, len(sampled), domains_per_request)]
+
+
+async def fetch_licensed_employer_domain_jobs(http, directory_path: Path,
+                                               companies_per_hour: int = 80) -> tuple[list[Job], dict]:
+    """Discover leads by employer domains from an attributed/licensed directory.
+
+    The company_domain filter is documented by Job Opportunities API. These
+    are still AGGREGATOR leads, and cannot be delivered without independent
+    official ATS verification later in the pipeline.
+    """
+    if not has_jobopportunities_api_key():
+        return [], {
+            "queried_domains": 0, "batches": 0, "results": 0, "errors": 0,
+            "status": "skipped_no_api_key",
+        }
+    if not directory_path.exists():
+        return [], {"queried_domains": 0, "batches": 0, "results": 0, "errors": 0, "status": "no_directory"}
+    directory = json.loads(directory_path.read_text(encoding="utf-8"))
+    now = datetime.now(timezone.utc)
+    batches = selected_company_domain_batches(
+        directory, int(now.timestamp() // 3600), companies_per_hour
+    )
+    posted_after = (now - timedelta(days=5)).date().isoformat()
+    results = []
+    errors = 0
+    for domains in batches:
+        params = {
+            "company_domain": ",".join(domains),
+            "limit": 50,
+            "include_description": "true",
+            "posted_after": posted_after,
+        }
+        try:
+            results.extend(await _get_jobopportunities(http, params))
+        except Exception:
+            errors += 1
+    return _dedupe(results), {
+        "queried_domains": sum(len(b) for b in batches),
+        "batches": len(batches), "results": len(results), "errors": errors,
+    }
 
 
 def _dedupe(jobs: list[Job]) -> list[Job]:
@@ -88,30 +157,53 @@ def _jobopportunities_row(x: dict) -> Job:
     ).finalize()
 
 
+class JobAPIAuthenticationError(RuntimeError):
+    """The upstream Job Opportunities API rejected our credentials."""
+
+
+def has_jobopportunities_api_key() -> bool:
+    return bool(os.environ.get("JOB_OPPORTUNITIES_API_KEY", "").strip())
+
+
 async def _get_jobopportunities(http, params: dict) -> list[Job]:
-    url = "https://api.jobopportunitiesapi.org/public/jobs"
-    # Keyless traffic is documented around 40 requests/minute. We serialize deliberately.
+    """Authenticated external API; public listings require a key as of 2026-10-12."""
+    token = os.environ.get("JOB_OPPORTUNITIES_API_KEY", "").strip()
+    if not token:
+        raise RuntimeError(
+            "Job Opportunities API is disabled: JOB_OPPORTUNITIES_API_KEY required "
+            "(both /public/jobs and /v1/jobs return HTTP 401 without credentials)"
+        )
+    url = "https://api.jobopportunitiesapi.org/v1/jobs"
+    headers = {"Accept": "application/json", "Authorization": token}
     await asyncio.sleep(0.78)
-    r = await http.get(url, params=params, headers={"Accept": "application/json"})
+    r = await http.get(url, params=params, headers=headers)
     if r.status_code == 429:
         try:
             wait = min(15, max(1, int(r.headers.get("Retry-After") or "2")))
         except ValueError:
             wait = 2
         await asyncio.sleep(wait)
-        r = await http.get(url, params=params, headers={"Accept": "application/json"})
+        r = await http.get(url, params=params, headers=headers)
+    if r.status_code in (401, 403):
+        raise JobAPIAuthenticationError(
+            f"Job Opportunities API rejected API key (HTTP {r.status_code}). "
+            "Check JOB_OPPORTUNITIES_API_KEY repository secret and API plan."
+        )
     r.raise_for_status()
     data = r.json()
     return [_jobopportunities_row(x) for x in data.get("data", []) if isinstance(x, dict)]
 
 
 async def fetch_jobopportunities_open_universe(http) -> list[Job]:
-    """Search full JDs across an open employer universe, restricted to Europe.
+    """Search full JDs for target roles via an authenticated API.
 
-    For every signal we search remote jobs whose published country is European, plus
-    onsite/hybrid jobs in the specifically authorised countries. Titles are not the main
-    discovery gate.
+    Remote search is Europe-wide for discovery only. Strict v2 scoring later
+    enforces Spain/Canary eligibility, and all jobs require official ATS proof.
     """
+    if not has_jobopportunities_api_key():
+        raise RuntimeError(
+            "Job Opportunities API skipped: JOB_OPPORTUNITIES_API_KEY not configured."
+        )
     posted_after = (datetime.now(timezone.utc) - timedelta(days=14)).date().isoformat()
     scopes = [
         {"remote": "remote", "country": EUROPE_REMOTE_COUNTRIES},
@@ -131,6 +223,8 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
             }
             try:
                 jobs.extend(await _get_jobopportunities(http, params))
+            except JobAPIAuthenticationError:
+                raise
             except Exception:
                 # One expensive full-text slice timing out must not kill the scan.
                 continue
@@ -147,6 +241,8 @@ async def fetch_jobopportunities_open_universe(http) -> list[Job]:
             }
             try:
                 jobs.extend(await _get_jobopportunities(http, params))
+            except JobAPIAuthenticationError:
+                raise
             except Exception:
                 continue
 

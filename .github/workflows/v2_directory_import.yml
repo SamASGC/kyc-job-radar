@@ -1,0 +1,60 @@
+name: Radar v2 — Import licensed fintech directory (isolated)
+
+on:
+  push:
+    branches:
+      - "feat/radar-v2-strict-quality"
+    paths:
+      - ".github/workflows/v2_directory_import.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 0"  # Sundays 03:23 UTC, only after merged to default branch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v2-directory-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Download and validate CC BY 4.0 fintech register
+        run: python -m scripts.sync_licensed_fintech_register --out data/fintech_directory.json
+      - name: Validate directory size and website sanity
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("data/fintech_directory.json",encoding="utf-8"))
+          live=sum(bool(c.get("website")) for c in x)
+          print(f"Unique licensed firms: {len(x)}, websites: {live}")
+          assert len(x) >= 200
+          assert live > 40
+          assert all(c.get("license") == "CC BY 4.0" for c in x)
+          PY
+      - name: Save licensed directory on development branch only
+        run: |
+          git config user.name "kyc-radar-bot"
+          git config user.email "kyc-radar-bot@users.noreply.github.com"
+          git add data/fintech_directory.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data(v2): licensed fintech directory snapshot [skip ci]"
+            git pull --rebase origin "${{ github.ref_name }}"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v2-fintech-directory-metrics
+          path: data/fintech_directory.json
+          retention-days: 7

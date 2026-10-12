@@ -6,9 +6,16 @@
     "priority": "P1+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["Ballinger", "Ballinger & Co", "Ballinger EU"],
+    "aliases": [
+      "Ballinger",
+      "Ballinger & Co",
+      "Ballinger EU"
+    ],
     "ats": [
-      {"kind": "workable", "slug": "ballingerco"}
+      {
+        "kind": "workable",
+        "slug": "ballingerco"
+      }
     ]
   },
   {
@@ -18,9 +25,15 @@
     "priority": "P1+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["Corpay Cross-Border", "Alpha Group"],
+    "aliases": [
+      "Corpay Cross-Border",
+      "Alpha Group"
+    ],
     "ats": [
-      {"kind": "workday", "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"}
+      {
+        "kind": "workday",
+        "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"
+      }
     ]
   },
   {
@@ -30,7 +43,10 @@
     "priority": "P1+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["Calamatta Cuschieri Moneybase", "CC Moneybase"]
+    "aliases": [
+      "Calamatta Cuschieri Moneybase",
+      "CC Moneybase"
+    ]
   },
   {
     "name": "Shift4",
@@ -40,7 +56,10 @@
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
     "ats": [
-      {"kind": "greenhouse", "slug": "shift4"}
+      {
+        "kind": "greenhouse",
+        "slug": "shift4"
+      }
     ]
   },
   {
@@ -50,9 +69,14 @@
     "priority": "P2+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["amnis Europe AG"],
+    "aliases": [
+      "amnis Europe AG"
+    ],
     "ats": [
-      {"kind": "personio", "slug": "amnis-europe-ag"}
+      {
+        "kind": "personio",
+        "slug": "amnis-europe-ag"
+      }
     ]
   },
   {
@@ -62,7 +86,9 @@
     "priority": "P2+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["ESTO"]
+    "aliases": [
+      "ESTO"
+    ]
   },
   {
     "name": "Saxo",
@@ -71,7 +97,9 @@
     "priority": "P2+",
     "origin": "Country expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["Saxo Bank"]
+    "aliases": [
+      "Saxo Bank"
+    ]
   },
   {
     "name": "OKX",
@@ -96,7 +124,10 @@
     "priority": "P1+",
     "origin": "Oracle HCM expansion 2026-08-31",
     "enabled": true,
-    "aliases": ["Amex", "American Express Company"],
+    "aliases": [
+      "Amex",
+      "American Express Company"
+    ],
     "ats": [
       {
         "kind": "oracle_hcm",
@@ -105,5 +136,212 @@
         "language": "en"
       }
     ]
+  },
+  {
+    "name": "Squads / Altitude",
+    "careers_url": "https://jobs.ashbyhq.com/squads",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Ashby verification",
+    "enabled": true,
+    "aliases": [
+      "Squads",
+      "Altitude"
+    ],
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "squads"
+      }
+    ]
+  },
+  {
+    "name": "Mercuryo",
+    "careers_url": "https://www.mercuryo.io/career",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "Swipelux",
+    "careers_url": "https://careers.swipelux.com/",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "OpenPayd",
+    "careers_url": "https://jobs.lever.co/OpenPayd",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Lever verification",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "OpenPayd"
+      }
+    ]
+  },
+  {
+    "name": "Gnosis Pay",
+    "careers_url": "https://gnosis.jobs.personio.com/?language=en",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Gnosis Personio verification",
+    "enabled": true,
+    "aliases": [
+      "Gnosis"
+    ],
+    "ats": [
+      {
+        "kind": "personio",
+        "slug": "gnosis"
+      }
+    ]
+  },
+  {
+    "name": "Crossmint",
+    "careers_url": "https://www.crossmint.com/team",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official company team careers link",
+    "enabled": true
+  },
+  {
+    "name": "Transak",
+    "careers_url": "https://careers.transak.com/",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "Bleap",
+    "careers_url": "https://www.bleap.finance/en-us/about/careers",
+    "sector": "Fintech",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "Triple-A",
+    "careers_url": "https://www.triple-a.io/careers",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "Keyrock",
+    "careers_url": "https://jobs.ashbyhq.com/keyrock",
+    "sector": "Fintech",
+    "priority": "P1+",
+    "origin": "Official Ashby ATS confirmed via Keyrock careers link, 2026-10-12",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "keyrock"
+      }
+    ]
+  },
+  {
+    "name": "Elliptic",
+    "careers_url": "https://www.elliptic.co/careers/",
+    "sector": "Fintech",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers verification",
+    "enabled": true
+  },
+  {
+    "name": "Ondato",
+    "careers_url": "https://ondato.com/careers/",
+    "sector": "Fintech",
+    "priority": "P1+",
+    "origin": "Official careers page links to LinkedIn only; HTTP 403 from GitHub runner; not independently ATS-verified",
+    "enabled": true
+  },
+  {
+    "name": "Ramp Network",
+    "careers_url": "https://job-boards.greenhouse.io/rampnetwork",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Greenhouse board",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "rampnetwork"
+      }
+    ]
+  },
+  {
+    "name": "Zero Hash",
+    "careers_url": "https://zero-hash.breezy.hr/",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Breezy careers",
+    "enabled": true,
+    "aliases": [
+      "zerohash"
+    ],
+    "ats": [
+      {
+        "kind": "breezy",
+        "slug": "zero-hash"
+      }
+    ]
+  },
+  {
+    "name": "Rain",
+    "careers_url": "https://jobs.ashbyhq.com/rain",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Ashby stablecoin provider",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "rain"
+      }
+    ]
+  },
+  {
+    "name": "WeTravel",
+    "careers_url": "https://careers.wetravel.com/careers",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers subdomain",
+    "enabled": true
+  },
+  {
+    "name": "Satispay",
+    "careers_url": "https://jobs.ashbyhq.com/satispay",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Ashby board",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "satispay"
+      }
+    ]
+  },
+  {
+    "name": "Due",
+    "careers_url": "https://careers.speedinvest.com/companies/due-2-0e6b6eb7-4621-492a-8688-37857866bac8",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "Investor-maintained public company job board; official careers Notion returns 404 (verified 2026-10-12)",
+    "enabled": true,
+    "aliases": [
+      "Due Network",
+      "Due Payments"
+    ],
+    "notes": "Getro board requires authentication for programmatic API; public page may hide jobs in client JavaScript. Do not claim full automated ATS verification."
   }
 ]

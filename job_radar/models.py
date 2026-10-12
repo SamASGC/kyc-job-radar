@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import re
 import unicodedata
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
 
 def utcnow_iso() -> str:
@@ -21,12 +21,29 @@ def norm_text(value: str | None) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+# Keep job selectors: some companies host all vacancies at /careers?gh_jid=...
+# Removing those parameters turns a working Apply link into a generic page.
+JOB_SELECTOR_PARAMS = frozenset({
+    "gh_jid", "job", "jobid", "job_id", "job-id", "jid", "id",
+    "requisition", "requisitionid", "requisition_id", "reqid", "req_id",
+    "position", "positionid", "position_id", "postingid", "posting_id",
+    "opening", "openingid", "roleid", "ashby_jid", "oid", "rid",
+})
+
+
 def canonical_url(url: str) -> str:
     try:
         p = urlsplit(url)
-        # Drop tracking query/fragment for dedupe, preserve path.
-        return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", ""))
-    except Exception:
+        # Drop ad/campaign tracking, NOT requisition selectors needed to apply.
+        selectors = [
+            (key, value) for key, value in parse_qsl(p.query, keep_blank_values=True)
+            if key.casefold() in JOB_SELECTOR_PARAMS and value
+        ]
+        return urlunsplit((
+            p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"),
+            urlencode(sorted(selectors)), ""
+        ))
+    except (ValueError, TypeError):
         return url
 
 
@@ -53,17 +70,34 @@ class Job:
     country: str = ""
     salary_display: str = ""
     fingerprint: str = ""
+    apply_verified_at: str = ""
 
     def finalize(self) -> "Job":
         if not self.discovered_at:
             self.discovered_at = utcnow_iso()
         if not self.fingerprint:
             # Cross-source dedupe intentionally prefers merging identical role/company/location.
-            basis = "|".join([
-                norm_text(self.company),
-                norm_text(self.title),
-                norm_text(self.location),
-            ])
+            # Separate genuine ATS requisitions with distinct stable IDs,
+            # while preserving legacy role-level identity when an ID is absent.
+            # Cross-source never-repeat checks still compare company/title.
+            if self.source_kind in {"official ATS", "official career page"} and self.external_id:
+                ats_family = norm_text((self.source or "").split(":")[0])
+                stable_id = (
+                    canonical_url(str(self.external_id))
+                    if self.source_kind == "official career page"
+                    else str(self.external_id)
+                )
+                basis = "|".join([
+                    norm_text(self.company),
+                    "official-posting", ats_family,
+                    norm_text(stable_id),
+                ])
+            else:
+                basis = "|".join([
+                    norm_text(self.company),
+                    norm_text(self.title),
+                    norm_text(self.location),
+                ])
             self.fingerprint = hashlib.sha256(basis.encode("utf-8")).hexdigest()[:24]
         self.apply_url = canonical_url(self.apply_url)
         if self.skills_to_buy is None:

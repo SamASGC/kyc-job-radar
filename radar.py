@@ -11,6 +11,7 @@ import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
 import job_radar.fit_adjustments as fit_adjustments_module
 from job_radar.fit_adjustments import apply_fit_adjustments
+from job_radar.v2_quality import passes_strict_gate
 from job_radar.precision import (
     contains_any,
     required_near,
@@ -24,9 +25,12 @@ from job_radar.sources.oracle_hcm import fetch_oracle_hcm
 from job_radar.sources.open_universe import (
     fetch_jobopportunities_open_universe,
     fetch_remote_landers,
+    fetch_licensed_employer_domain_jobs,
+    has_jobopportunities_api_key,
 )
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
+from job_radar.feed import create_rss
 
 
 _BASE_LOAD_JSON = scanner_module.load_json
@@ -111,7 +115,11 @@ def _score_job_with_must_have_gaps(job, profile, known_company=False):
     if irrelevant_profession_title(job.title):
         return job, False
     scored, ok = _BASE_SCORE_JOB(job, profile, known_company=known_company)
-    return apply_fit_adjustments(scored, profile, ok)
+    scored, ok = apply_fit_adjustments(scored, profile, ok)
+    if profile.get("strict_quality_gate", False):
+        if not passes_strict_gate(scored, max_hours=int(profile.get("max_post_age_hours", 96))):
+            return scored, False
+    return scored, ok
 
 
 async def _fetch_target_with_oracle(http, company, target):
@@ -124,10 +132,17 @@ async def _fetch_aggregators_with_open_universe(http, config):
     """Keep the original feeds and add broad employer-direct discovery surfaces."""
     jobs, health, skipped = await _BASE_FETCH_AGGREGATORS(http, config)
 
-    specs = [
-        ("Job Opportunities API", fetch_jobopportunities_open_universe),
-        ("Remote Landers", fetch_remote_landers),
-    ]
+    specs = [("Remote Landers", fetch_remote_landers)]
+    if has_jobopportunities_api_key():
+        specs.append(("Job Opportunities API", fetch_jobopportunities_open_universe))
+    else:
+        health.append({
+            "company": "Job Opportunities API",
+            "ok": True,
+            "jobs": 0,
+            "targets": [{"kind": "disabled — API key required"}],
+            "error": "SKIPPED: no JOB_OPPORTUNITIES_API_KEY; public listings endpoint returned HTTP 401",
+        })
     results = await asyncio.gather(*(func(http) for _, func in specs), return_exceptions=True)
     for (name, _), result in zip(specs, results):
         if isinstance(result, Exception):
@@ -148,6 +163,31 @@ async def _fetch_aggregators_with_open_universe(http, config):
                 "targets": [{"kind": "open-universe aggregator"}],
                 "error": "",
             })
+    # In addition to broad role searches, sweep licensed companies by
+    # their verified domain names, even when roles use unexpected titles.
+    try:
+        rows, stats = await fetch_licensed_employer_domain_jobs(
+            http, ROOT / "data/fintech_directory.json",
+            companies_per_hour=int(config.get("directory_domain_queries_per_hour", 80)),
+        )
+        jobs.extend(rows)
+        health.append({
+            "company": "Licensed employer-domain discovery",
+            "ok": stats.get("errors", 0) == 0,
+            "jobs": len(rows),
+            "targets": [{
+                "kind": "disabled — API key required"
+                if stats.get("status") == "skipped_no_api_key"
+                else "company-domain API rotation"
+            }],
+            "error": str(stats),
+        })
+    except Exception as exc:
+        health.append({
+            "company": "Licensed employer-domain discovery",
+            "ok": False, "jobs": 0, "targets": [{"kind": "company-domain API rotation"}],
+            "error": f"{type(exc).__name__}: {exc}",
+        })
     return jobs, health, skipped
 
 
@@ -211,7 +251,8 @@ def cmd_build(args):
     jobs = list(state.get("jobs", {}).values())
     jobs.sort(key=lambda x: (-int(x.get("score", 0)), x.get("company", ""), x.get("title", "")))
     build_dashboard(jobs, state.get("stats", {}), "public/index.html", state.get("dataset_updated_at", ""))
-    print(f"Built: {ROOT / 'public/index.html'}")
+    create_rss(jobs)
+    print(f"Built: {ROOT / 'public/index.html'} + feed.xml")
 
 
 def cmd_health(args):

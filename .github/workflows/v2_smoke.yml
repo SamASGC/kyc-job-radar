@@ -1,0 +1,79 @@
+# Final release candidate smoke: geography-safe review, stable dedup, first-party date selectors
+# Isolated full scan after strict-vs-review separation and preserved query job IDs
+# Live regression 2026-10-12: first-party careers, stable job query selectors, explicit workstyle
+# Final isolated end-to-end test — API key no longer assumed, RSS and heartbeat enabled
+# Final live validation of licensed company-domain batches and remote Spain structured eligibility
+# Diagnose official ATS application rejection reasons with licensed directory + safe aggregator bridge
+# Validate 2593 licensed firm directory imported and 96h-funnel diagnostics
+# Final source-bridge isolated smoke verification - October 2026
+# Final v2 quality checkpoint 2026-10-12 (isolated; no production publishing)
+name: Radar v2 isolated live smoke
+
+on:
+  push:
+    branches:
+      - "feat/radar-v2-strict-quality"
+    paths:
+      - ".github/workflows/v2_smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Test one full live scan (no git push and no Pages deployment)
+        run: python radar.py scan
+        env:
+          JOB_OPPORTUNITIES_API_KEY: ${{ secrets.JOB_OPPORTUNITIES_API_KEY }}
+      - name: Source health and output sizes
+        if: always()
+        run: |
+          python radar.py health
+          python -c "import json; d=json.load(open('data/state.json')); print('v2 active:',len(d.get('jobs',{})), 'historical seen:',len(d.get('seen',{})))"
+      - name: Source coverage and verification funnel summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p = pathlib.Path("data/health.json")
+          if p.exists():
+              sources = json.loads(p.read_text(encoding="utf-8")).get("sources",[])
+              ok = [s for s in sources if s.get("ok")]
+              productive = [s for s in ok if s.get("jobs",0)>0]
+              print("Sources checked:", len(sources), "| reachable:",len(ok),"| with jobs:",len(productive))
+              print("ATS bridged:", [s.get("company") for s in sources
+                    if "ATS discovered via aggregator" in s.get("error","")][:20])
+          p=pathlib.Path("data/quality_audit.json")
+          if p.exists():
+              audit=json.loads(p.read_text(encoding="utf-8"))
+              print("Verification rejection reasons:",audit.get("verification_reasons",{}))
+              for entry in audit.get("rejected_examples",[])[:25]:
+                  print("  ",entry.get("company"),"|",entry.get("title"),
+                        "|",entry.get("reason"))
+          PY
+      - name: Archive HTML and health for manual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-isolated-smoke
+          path: |
+            public/index.html
+            public/review.html
+            public/feed.xml
+            public/status.html
+            public/status.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn

@@ -176,13 +176,39 @@ def extract_growth_skills(job: Job) -> list[str]:
 
 
 def detect_mode(job: Job) -> str:
-    blob = norm_text(" ".join([job.location, job.remote_hint, job.title, job.description[:1500]]))
-    if "hybrid" in blob or "hibrid" in blob:
+    """Prioritize vacancy location/ATS work-style over generic benefit language.
+
+    Corporate boilerplate can describe a 'hybrid company' even for a fully
+    remote vacancy. Conversely, an on-site role can mention remote support or
+    global remote teams. The structured location and work-style win.
+    """
+    direct = norm_text(" ".join([job.location, job.remote_hint]))
+    if any(word in direct for word in ("hybrid", "hibrid", "hibrido", "hibrida")):
         return "Híbrido"
-    if "remote" in blob or "remoto" in blob or "work from home" in blob:
-        return "Remoto"
-    if "on site" in blob or "onsite" in blob or "on-site" in (job.location + job.description).lower():
+    if any(word in direct for word in (
+        "on site", "onsite", "presencial", "office based", "office only",
+    )):
         return "Presencial"
+    if any(word in direct for word in (
+        "remote", "remoto", "remota", "teletrabajo", "work from home",
+    )):
+        return "Remoto"
+
+    # Without explicit structured information, require an unambiguous
+    # work-arrangement statement near the beginning of the job description.
+    intro = norm_text((job.description or "")[:650])
+    if any(phrase in intro for phrase in (
+        "this role is hybrid", "this position is hybrid", "hybrid working model",
+        "hybrid work arrangement", "hybrid work model",
+    )):
+        return "Híbrido"
+    if any(phrase in intro for phrase in (
+        "this role is fully remote", "this position is fully remote",
+        "this role is remote", "this position is remote",
+        "100 remote", "fully remote position", "full remote position",
+        "trabajo 100 remoto", "puesto 100 remoto",
+    )):
+        return "Remoto"
     return "Presencial" if job.location else "No indicado"
 
 

@@ -19,6 +19,6 @@ async def fetch_greenhouse(http, company: dict, slug: str, eu: bool = False):
             company=company["name"], sector=company.get("sector", "Fintech"),
             title=x.get("title", ""), location=loc, description=content,
             apply_url=x.get("absolute_url", ""), external_id=str(x.get("id", "")),
-            posted_at=x.get("updated_at", "") or "",
+            posted_at=x.get("first_published") or x.get("first_published_at") or "",
         ).finalize())
     return jobs

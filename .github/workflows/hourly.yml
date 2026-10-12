@@ -43,6 +43,8 @@ jobs:
 
       - name: Scan jobs and rebuild dashboard
         run: python radar.py scan
+        env:
+          JOB_OPPORTUNITIES_API_KEY: ${{ secrets.JOB_OPPORTUNITIES_API_KEY }}
 
       - name: Commit meaningful dataset changes
         shell: bash
@@ -50,7 +52,7 @@ jobs:
           git config user.name "kyc-radar-bot"
           git config user.email "kyc-radar-bot@users.noreply.github.com"
 
-          git add data/state.json public/index.html
+          git add data/state.json public/index.html public/feed.xml
 
           if git diff --cached --quiet; then
             echo "No dataset changes."
