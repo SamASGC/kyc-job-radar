@@ -1,3 +1,4 @@
+# Isolated full scan after strict-vs-review separation and preserved query job IDs
 # Live regression 2026-10-12: first-party careers, stable job query selectors, explicit workstyle
 # Final isolated end-to-end test — API key no longer assumed, RSS and heartbeat enabled
 # Final live validation of licensed company-domain batches and remote Spain structured eligibility
@@ -68,7 +69,10 @@ jobs:
           name: v2-isolated-smoke
           path: |
             public/index.html
+            public/review.html
             public/feed.xml
+            public/status.html
+            public/status.json
             data/health.json
             data/quality_audit.json
           if-no-files-found: warn
