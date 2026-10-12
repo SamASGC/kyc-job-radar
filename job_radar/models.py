@@ -60,11 +60,21 @@ class Job:
             self.discovered_at = utcnow_iso()
         if not self.fingerprint:
             # Cross-source dedupe intentionally prefers merging identical role/company/location.
-            basis = "|".join([
-                norm_text(self.company),
-                norm_text(self.title),
-                norm_text(self.location),
-            ])
+            # Separate genuine ATS requisitions with distinct stable IDs,
+            # while preserving legacy role-level identity when an ID is absent.
+            # Cross-source never-repeat checks still compare company/title.
+            if self.source_kind == "official ATS" and self.external_id:
+                ats_family = norm_text((self.source or "").split(":")[0])
+                basis = "|".join([
+                    norm_text(self.company), "official-ats", ats_family,
+                    norm_text(str(self.external_id)),
+                ])
+            else:
+                basis = "|".join([
+                    norm_text(self.company),
+                    norm_text(self.title),
+                    norm_text(self.location),
+                ])
             self.fingerprint = hashlib.sha256(basis.encode("utf-8")).hexdigest()[:24]
         self.apply_url = canonical_url(self.apply_url)
         if self.skills_to_buy is None:
