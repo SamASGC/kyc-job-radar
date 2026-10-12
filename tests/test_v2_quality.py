@@ -87,6 +87,25 @@ class V2AdmissionTests(unittest.TestCase):
         for rejected in ("Barcelona Spain - Hybrid", "Berlin Germany - Hybrid", "Malta - Hybrid"):
             self.assertFalse(location_allowed(job(location=rejected)), rejected)
 
+    def test_real_employer_job_specific_career_pages_are_eligible(self):
+        from job_radar.models import canonical_url
+        self.assertEqual(
+            canonical_url(
+                "https://employer.example/careers/?gh_jid=8675309&utm_source=linkedin"
+            ),
+            "https://employer.example/careers?gh_jid=8675309",
+        )
+        page_job = job(source_kind="official career page")
+        page_job.apply_url = canonical_url(
+            "https://employer.example/careers?gh_jid=8675309&utm_campaign=advert"
+        )
+        self.assertTrue(official_active_listing(page_job))
+        page_job.apply_url = "https://employer.example/careers"
+        self.assertFalse(official_active_listing(page_job))
+        page_job.apply_url = "https://employer.example/careers/jobs/analyst-123"
+        self.assertTrue(official_active_listing(page_job))
+        self.assertFalse(official_active_listing(job(source_kind="aggregator")))
+
     def test_only_current_official_ats(self):
         self.assertTrue(official_active_listing(job()))
         self.assertFalse(official_active_listing(job(source_kind="aggregator")))
