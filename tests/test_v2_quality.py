@@ -120,6 +120,25 @@ class V2AdmissionTests(unittest.TestCase):
         self.assertFalse(passes_strict_gate(job(posted_at="posted today")))
         self.assertTrue(passes_strict_gate(job()))
 
+    def test_first_party_postings_have_stable_guids_and_distinct_requisitions(self):
+        first = job(source_kind="official career page", external_id=
+                    "https://employer.example/careers?gh_jid=100&utm_source=li")
+        first.source = "Career page:TestPay"
+        first.fingerprint = ""
+        first.finalize()
+        repost = job(source_kind="official career page", title="KYB Analyst — French",
+                     external_id="https://employer.example/careers?gh_jid=100&utm_source=web")
+        repost.source = "Career page:TestPay"
+        repost.fingerprint = ""
+        repost.finalize()
+        second = job(source_kind="official career page",
+                     external_id="https://employer.example/careers?gh_jid=200")
+        second.source = "Career page:TestPay"
+        second.fingerprint = ""
+        second.finalize()
+        self.assertEqual(first.fingerprint, repost.fingerprint)
+        self.assertNotEqual(first.fingerprint, second.fingerprint)
+
     def test_distinct_ats_requisitions_have_distinct_fingerprints(self):
         a = job(company="TestPay", title="KYB Analyst", external_id="123")
         b = job(company="TestPay", title="KYB Analyst", external_id="456")
