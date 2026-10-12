@@ -7,6 +7,8 @@ on:
     paths:
       - ".github/workflows/v2_directory_import.yml"
   workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 0"  # Sundays 03:23 UTC, only after merged to default branch
 
 permissions:
   contents: write
@@ -22,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/radar-v2-strict-quality
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -48,8 +50,8 @@ jobs:
           git add data/fintech_directory.json
           if ! git diff --cached --quiet; then
             git commit -m "data(v2): licensed fintech directory snapshot [skip ci]"
-            git pull --rebase origin feat/radar-v2-strict-quality
-            git push origin HEAD:feat/radar-v2-strict-quality
+            git pull --rebase origin "${{ github.ref_name }}"
+            git push origin "HEAD:${{ github.ref_name }}"
           fi
       - uses: actions/upload-artifact@v4
         with:
