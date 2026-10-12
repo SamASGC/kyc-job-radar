@@ -565,7 +565,10 @@ async def run_scan() -> dict:
                     audit["application_not_verified"] += 1
                     reason = str(getattr(j, "verification_reason", "unknown"))
                     audit["verification_reasons"][reason] = audit["verification_reasons"].get(reason, 0) + 1
-                    if len(audit["rejected_examples"]) < 25:
+                    # Keep the complete bounded review pool instead of only
+                    # the first 25 arbitrary results (often sales/IT roles).
+                    # The HTML review then ranks recent relevant AML cases first.
+                    if len(audit["rejected_examples"]) < 500:
                         audit["rejected_examples"].append({
                             "company": j.company, "title": j.title,
                             "location": j.location, "source": j.source,
