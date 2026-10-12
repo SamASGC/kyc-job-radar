@@ -153,9 +153,8 @@ async def fetch_generic(http, company: dict):
     host = (urlsplit(url).hostname or "").lower()
     if host in {"careers.speedinvest.com", "jobs.speedinvest.com",
                 "jobs.getro.com", "careers.getro.com"}:
-        for job in jobs:
-            job.source = "Investor job board:" + company["name"]
-            job.source_kind = "aggregator"
-            job.fingerprint = ""
-            job.finalize()
+        # Portfolio listings have mixed employer ownership. Without a
+        # supported company-scoped API, never attribute those individual
+        # jobs to the single portfolio company being looked up.
+        return [], detected, final_url
     return jobs, detected, final_url
