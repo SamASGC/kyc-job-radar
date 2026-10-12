@@ -35,6 +35,27 @@ jobs:
         run: |
           python radar.py health
           python -c "import json; d=json.load(open('data/state.json')); print('v2 active:',len(d.get('jobs',{})), 'historical seen:',len(d.get('seen',{})))"
+      - name: Source coverage and verification funnel summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p = pathlib.Path("data/health.json")
+          if p.exists():
+              sources = json.loads(p.read_text(encoding="utf-8")).get("sources",[])
+              ok = [s for s in sources if s.get("ok")]
+              productive = [s for s in ok if s.get("jobs",0)>0]
+              print("Sources checked:", len(sources), "| reachable:",len(ok),"| with jobs:",len(productive))
+              print("ATS bridged:", [s.get("company") for s in sources
+                    if "ATS discovered via aggregator" in s.get("error","")][:20])
+          p=pathlib.Path("data/quality_audit.json")
+          if p.exists():
+              audit=json.loads(p.read_text(encoding="utf-8"))
+              print("Verification rejection reasons:",audit.get("verification_reasons",{}))
+              for entry in audit.get("rejected_examples",[])[:25]:
+                  print("  ",entry.get("company"),"|",entry.get("title"),
+                        "|",entry.get("reason"))
+          PY
       - name: Archive HTML and health for manual review
         if: always()
         uses: actions/upload-artifact@v4
