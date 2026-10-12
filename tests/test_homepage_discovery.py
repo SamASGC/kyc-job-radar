@@ -67,6 +67,28 @@ class HomepageToCareersTests(unittest.TestCase):
             {"name":"ComplyAdvantage"}, {"kind":"greenhouse","slug":"embed"}
         ))
 
+    def test_investor_job_board_is_never_own_company_official_career(self):
+        import asyncio
+        class Response:
+            def __init__(self,url,html):
+                self.url=url
+                self.text=html
+            def raise_for_status(self):
+                return None
+        class FakeHTTP:
+            async def get(self,url):
+                if url.startswith("https://careers.speedinvest.com/"):
+                    return Response(url,
+                       '<a href="https://jobs.example.org/careers/kyb">KYB Analyst</a>')
+                return Response(url,"<h1>KYB Analyst</h1>")
+        due={
+            "name":"Due", "sector":"Payments",
+            "careers_url":"https://careers.speedinvest.com/companies/due-2"
+        }
+        jobs,_,_=asyncio.run(fetch_generic(FakeHTTP(),due))
+        self.assertTrue(jobs)
+        self.assertTrue(all(j.source_kind=="aggregator" for j in jobs))
+
     def test_no_crawl_of_external_non_ats_careers(self):
         self.assertEqual(
             candidate_careers_links(
