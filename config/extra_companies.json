@@ -257,5 +257,72 @@
     "priority": "P1+",
     "origin": "2026-10-12 official careers verification",
     "enabled": true
+  },
+  {
+    "name": "Ramp Network",
+    "careers_url": "https://job-boards.greenhouse.io/rampnetwork",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Greenhouse board",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "rampnetwork"
+      }
+    ]
+  },
+  {
+    "name": "Zero Hash",
+    "careers_url": "https://zero-hash.breezy.hr/",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Breezy careers",
+    "enabled": true,
+    "aliases": [
+      "zerohash"
+    ],
+    "ats": [
+      {
+        "kind": "breezy",
+        "slug": "zero-hash"
+      }
+    ]
+  },
+  {
+    "name": "Rain",
+    "careers_url": "https://jobs.ashbyhq.com/rain",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Ashby stablecoin provider",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "rain"
+      }
+    ]
+  },
+  {
+    "name": "WeTravel",
+    "careers_url": "https://careers.wetravel.com/careers",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official careers subdomain",
+    "enabled": true
+  },
+  {
+    "name": "Satispay",
+    "careers_url": "https://jobs.ashbyhq.com/satispay",
+    "sector": "Payments",
+    "priority": "P1+",
+    "origin": "2026-10-12 official Ashby board",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "satispay"
+      }
+    ]
   }
 ]
