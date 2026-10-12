@@ -18,6 +18,7 @@ def build_dashboard(jobs: list[dict], stats: dict, out_path: str = "public/index
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="alternate" type="application/rss+xml" title="Radar AML - novedades" href="feed.xml">
 <title>KYC/KYB Job Radar</title>
 <style>
 :root {{ color-scheme: light dark; --bg:#f5f7fb; --card:#fff; --text:#182230; --muted:#667085; --line:#e4e7ec; --accent:#155eef; --good:#067647; --warn:#b54708; }}
@@ -56,7 +57,7 @@ a {{ color:var(--accent); text-decoration:none; font-weight:700; }} a:hover {{ t
 </head>
 <body><div class="wrap">
 <h1>KYC / KYB / AML Job Radar</h1>
-<div class="sub">Radar v2 · solo publicaciones originales de hasta 96 horas, candidatura ATS comprobada y bloqueo de ofertas ya conocidas.</div>
+<div class="sub">Radar v2 · solo publicaciones originales de hasta 96 horas, candidatura ATS comprobada y bloqueo de ofertas ya conocidas. <a href="feed.xml" title="RSS con identificadores únicos de cada vacante">Suscribirse al RSS</a></div>
 <div class="cards">
   <div class="card"><b id="cVisible">0</b><span>ofertas visibles</span></div>
   <div class="card"><b id="c90">0</b><span>encaje ≥ 90%</span></div>
