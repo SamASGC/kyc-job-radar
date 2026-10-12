@@ -83,7 +83,7 @@ antiguo respecto a la frecuencia prevista, comprueba las ejecuciones de GitHub A
 Un origen puede responder sin ofrecer vacantes apropiadas.
 Un cero en el dashboard no significa necesariamente que el radar esté caído.</p>
 <p><a href="index.html">Dashboard de ofertas</a> ·
-<a href="feed.xml">RSS de novedades</a> ·
+<a href="sources.html">Fuentes y empresas</a> · <a href="feed.xml">RSS de novedades</a> ·
 <a href="status.json">Estado en JSON</a></p>
 </main></body></html>"""
     (root / "status.html").write_text(doc, encoding="utf-8")
