@@ -82,7 +82,7 @@ def build_review_page(records: list[dict], seen: dict | None = None,
     root = ROOT / out_path if not Path(out_path).is_absolute() else Path(out_path)
     root.parent.mkdir(parents=True, exist_ok=True)
     rows = "\n".join(
-        "<tr><td>" + html.escape(rec["company"]) + "</td><td>" +
+        "<tr><td>" + ("Prioritaria · " if __import__("job_radar.v2_quality", fromlist=["within_new_window"]).within_new_window(rec["posted_at"]) else "") + html.escape(rec["company"]) + "</td><td>" +
         '<a href="' + html.escape(rec["url"], quote=True) +
         '" target="_blank" rel="noopener noreferrer">' +
         html.escape(rec["title"]) + "</a></td><td>" +
@@ -103,7 +103,7 @@ th{{background:#e8eef5}} a{{color:#175cd3}}
 <h1>Publicaciones pendientes de revisión</h1>
 <div class="notice"><b>NO SON OFERTAS VERIFICADAS NI ALERTAS.</b>
 La fecha puede ser desconocida o el formulario imposible de comprobar automáticamente.
-No interpretes esta lista como novedades de los últimos 4 días. Antes de aplicar,
+Las publicaciones recientes aparecen primero, marcadas como prioritarias, pero tampoco son ofertas confirmadas. Antes de aplicar,
 comprueba manualmente que la oferta está abierta y permite trabajar en la ubicación indicada.</div>
 <p>{len(accepted)} enlaces potencialmente relevantes, sin duplicados ya comunicados.</p>
 <table><thead><tr><th>Empresa</th><th>Rol</th><th>Ubicación</th>
