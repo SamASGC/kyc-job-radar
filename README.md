@@ -52,6 +52,42 @@ filler.
   a supported ATS, but must expose a defensible original date and visible
   apply/form evidence. A merely indexed/generic careers home page does not count.
 
+### Radar v2.3 — banking, wealth and financial crime employers
+
+The career-source universe now includes **25 newly researched official employer
+career websites** not present in previous lists (208 + 25 = **233 configured
+direct employers**). Categories:
+
+- **Swiss wealth and private banking**: UBS, Pictet, Lombard Odier,
+  Vontobel, LGT Group.
+- **International/Nordic/Baltic banking**: HSBC, Deutsche Bank, SEB,
+  Swedbank, Nordea, Luminor, Citadele Bank.
+- **Custody/asset servicing/market infrastructure**: State Street,
+  Northern Trust, CACEIS, SIX Group, Brown Brothers Harriman.
+- **Fund administration, wealth software, consulting/outsourcing**:
+  IQ-EQ, Alter Domus, Vistra, Azets, Deloitte Luxembourg, KPMG Luxembourg,
+  Avaloq, TMF Group.
+
+Each URL was checked against the employer's own careers pages or live
+listings. **These are 25 verified career-page URLs, not 25 new functioning
+ATS APIs.** Company-specific job sources still need successful retrieval,
+original publication date <=96 hours, genuinely open application and
+approved geography. No results are inserted just because the company was
+added. Technical coverage and failures are published in
+`public/sources.html` / `public/sources.json`. The new page lists configured
+ATS feeds separately from general careers websites, source successes and
+errors. The total is **not** a count of confirmed job openings.
+
+The diagnostics page `public/review.html` no longer silently keeps only the
+first 25 arbitrary application-verification failures. It stores up to 500
+source records and ranks **recent relevant AML roles first**, without adding
+unverified ones to confirmed HTML/RSS alerts.
+
+The long-term targets remain ~500 then 1,000 actual employer sources, but
+this increment adds **25**, rather than claiming those future targets are
+already live. The existing :17 and :47 UTC checks continue, subject to
+GitHub Actions scheduling delays.
+
 ### Radar v2.2 — hourly evidence-based website enrichment (12 October 2026)
 
 The existing hourly direct-employer + licensed-register sweeps continue unchanged.

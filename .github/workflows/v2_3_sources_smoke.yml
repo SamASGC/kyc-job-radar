@@ -1,0 +1,61 @@
+# Release candidate: 25 researched banking/wealth/custody/consulting career sources + live source status
+name: Radar v2.3 — bank/wealth sources smoke
+
+on:
+  push:
+    branches: ["feat/v2-3-banking-wealth-aml-sources"]
+    paths: [".github/workflows/v2_3_sources_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - name: Full live scan with new banks/wealth/fund administrators
+        run: python radar.py scan
+      - name: Validate traceable coverage outputs
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path("public/sources.json")
+          if r.exists():
+              s=json.loads(r.read_text())
+              print("SOURCE_INVENTORY",json.dumps({
+                "configured":s["total_configured_checked_or_scheduled"],
+                "ats":s["ats_explicit"],
+                "reached":s["reached"],
+                "errors":s["errors"],
+                "with_jobs":s["with_jobs"],
+              }))
+              print("NEW_SECTORS",sorted(k for k in s["by_specialism"]
+                                        if "wealth" in k.lower() or "bank" in k.lower()
+                                        or "custody" in k.lower()))
+          else:
+              print("SOURCE_INVENTORY_MISSING")
+          for p in ("public/index.html","public/review.html","public/status.html",
+                    "public/sources.html","public/feed.xml"):
+              print("OUTPUT",p,Path(p).exists())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-3-banking-wealth-smoke
+          path: |
+            data/health.json
+            data/quality_audit.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn

@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from job_radar.config import ROOT
 from job_radar.models import norm_text
+from job_radar.v2_quality import within_new_window
 
 RELEVANT_TITLE_TERMS = (
     "kyc", "kyb", "aml", "edd", "cdd", "compliance", "fincrime",
@@ -28,7 +29,7 @@ REASON_NAMES = {
 
 def review_candidates(records: list[dict], seen: dict | None = None,
                       max_count: int = 80) -> list[dict]:
-    from job_radar.v2_quality import original_posted_at, within_new_window
+    from job_radar.v2_quality import original_posted_at
     seen = seen or {}
     out, dedupe = [], set()
     for rec in records:
@@ -71,9 +72,8 @@ def review_candidates(records: list[dict], seen: dict | None = None,
             "posted_at": posted,
             "url": link, "reason": REASON_NAMES.get(reason, reason),
         })
-        if len(out) >= max_count:
-            break
-    return out
+    out.sort(key=lambda j: (not within_new_window(j["posted_at"]), -sum(t in norm_text(j["title"]) for t in ("kyc", "kyb", "aml", "financial crime", "edd", "sanction", "transaction monitoring", "investigat")), j["company"]))
+    return out[:max_count]
 
 
 def build_review_page(records: list[dict], seen: dict | None = None,
@@ -82,7 +82,7 @@ def build_review_page(records: list[dict], seen: dict | None = None,
     root = ROOT / out_path if not Path(out_path).is_absolute() else Path(out_path)
     root.parent.mkdir(parents=True, exist_ok=True)
     rows = "\n".join(
-        "<tr><td>" + html.escape(rec["company"]) + "</td><td>" +
+        "<tr><td>" + ("Prioritaria · " if within_new_window(rec["posted_at"]) else "") + html.escape(rec["company"]) + "</td><td>" +
         '<a href="' + html.escape(rec["url"], quote=True) +
         '" target="_blank" rel="noopener noreferrer">' +
         html.escape(rec["title"]) + "</a></td><td>" +
@@ -103,7 +103,7 @@ th{{background:#e8eef5}} a{{color:#175cd3}}
 <h1>Publicaciones pendientes de revisión</h1>
 <div class="notice"><b>NO SON OFERTAS VERIFICADAS NI ALERTAS.</b>
 La fecha puede ser desconocida o el formulario imposible de comprobar automáticamente.
-No interpretes esta lista como novedades de los últimos 4 días. Antes de aplicar,
+Las publicaciones recientes aparecen primero, marcadas como prioritarias, pero tampoco son ofertas confirmadas. Antes de aplicar,
 comprueba manualmente que la oferta está abierta y permite trabajar en la ubicación indicada.</div>
 <p>{len(accepted)} enlaces potencialmente relevantes, sin duplicados ya comunicados.</p>
 <table><thead><tr><th>Empresa</th><th>Rol</th><th>Ubicación</th>
