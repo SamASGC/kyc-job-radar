@@ -71,9 +71,9 @@ def review_candidates(records: list[dict], seen: dict | None = None,
             "posted_at": posted,
             "url": link, "reason": REASON_NAMES.get(reason, reason),
         })
-        if len(out) >= max_count:
-            break
-    return out
+    from job_radar.v2_quality import within_new_window
+    out.sort(key=lambda j: (not within_new_window(j["posted_at"]), -sum(t in norm_text(j["title"]) for t in ("kyc", "kyb", "aml", "financial crime", "edd", "sanction", "transaction monitoring", "investigat")), j["company"]))
+    return out[:max_count]
 
 
 def build_review_page(records: list[dict], seen: dict | None = None,
