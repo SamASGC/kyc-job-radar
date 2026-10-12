@@ -479,6 +479,7 @@ async def run_scan() -> dict:
                 "official_apply_page_verified": 0,
                 "application_not_verified": 0,
                 "rejected_examples": [],
+                "verification_reasons": {},
             }
             prefiltered = []
             for j in raw_jobs:
@@ -519,11 +520,13 @@ async def run_scan() -> dict:
                     audit["official_apply_page_verified"] += 1
                 else:
                     audit["application_not_verified"] += 1
+                    reason = str(getattr(j, "verification_reason", "unknown"))
+                    audit["verification_reasons"][reason] = audit["verification_reasons"].get(reason, 0) + 1
                     if len(audit["rejected_examples"]) < 25:
                         audit["rejected_examples"].append({
                             "company": j.company, "title": j.title,
                             "location": j.location, "source": j.source,
-                            "posted_at": j.posted_at,
+                            "posted_at": j.posted_at, "reason": reason,
                             "url": j.apply_url,
                         })
             save_json("data/quality_audit.json", audit)
