@@ -2,6 +2,9 @@ name: Find missing fintech websites (hourly)
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: [".github/workflows/hourly_website_enrichment.yml"]
   schedule:
     - cron: "5 * * * *"
 
