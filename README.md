@@ -34,6 +34,25 @@ clearing the seen ledger. The HTML shows original dates and timestamps of the
 application-page verification. No matching vacancies = an empty report, not
 filler.
 
+### Two independent outputs (no false alerts)
+
+- `public/index.html` and `public/feed.xml` contain **only** opportunities
+  that pass all strict checks. The default HTML order is 100% remote from Spain
+  first, then hybrid, then on-site, with best fit first within each mode.
+- `public/review.html` is a separate manual-review diagnostics page for
+  potentially relevant, geographically verified employer listings with
+  ambiguous original dates or an inaccessible/unrecognized apply action.
+  It explicitly warns that these are **not confirmed open, recent vacancies**,
+  excludes old/closed ads, and never sends RSS entries or notifications.
+- `public/status.html` / `public/status.json` always show the last successful
+  scan and the count of reachable, unavailable and disabled sources.
+- The link-normalizer preserves **job-identifying query parameters** such as
+  `gh_jid` while removing tracking, preventing accidental loss of application
+  pages.
+- A first-party job-specific employer career page can be eligible even without
+  a supported ATS, but must expose a defensible original date and visible
+  apply/form evidence. A merely indexed/generic careers home page does not count.
+
 ### What the numbers mean
 
 - The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 additional employer career pages/ATS boards** and **Due's investor-maintained Speedinvest page**, bringing the configured employer target list to **192** (not 192 independently verified functional ATS feeds). All **39 of 39** named fintech watchlist companies have an explicit entry, but Due's Getro/Speedinvest site has no unauthenticated official ATS API and Ondato links to LinkedIn only. Those two require alternative verification rather than claiming full ATS monitoring.
