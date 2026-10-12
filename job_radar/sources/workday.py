@@ -17,13 +17,22 @@ async def fetch_workday(http, company: dict, careers_url: str):
         r"[a-z]{2}(?:-[A-Z]{2})?", parts[0]
     ) else parts[0])
     endpoint = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
-    payload = {"appliedFacets": {}, "limit": 100, "offset": 0, "searchText": ""}
+    # Workday CXS portals can return 400 for a 100-row request.
+    # Verified against real Aztec and Arendt boards: limit=20 works.
+    page_size = 20
+    payload = {"appliedFacets": {}, "limit": page_size, "offset": 0, "searchText": ""}
     jobs = []
     offset = 0
     while offset < 500:
         payload["offset"] = offset
         r = await http.post(endpoint, json=payload, headers={"Content-Type": "application/json"})
         if r.status_code >= 400:
+            # An ATS failure on page one is NOT an empty jobs board.
+            # Let the scanner record the error instead of a false healthy board.
+            if offset == 0:
+                r.raise_for_status()
+                raise RuntimeError(f"Workday API HTTP {r.status_code}")
+            # Partial pagination: keep previously retrieved job requisitions.
             break
         data = r.json()
         batch = data.get("jobPostings") or []
@@ -36,7 +45,7 @@ async def fetch_workday(http, company: dict, careers_url: str):
                 title=x.get("title", ""), location=x.get("locationsText", ""), description="",
                 apply_url=apply, external_id=ext, posted_at=x.get("postedOn", ""),
             ).finalize())
-        if len(batch) < 100:
+        if len(batch) < page_size:
             break
-        offset += 100
+        offset += page_size
     return jobs
