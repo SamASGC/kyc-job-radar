@@ -559,6 +559,7 @@ async def run_scan() -> dict:
                             "company": j.company, "title": j.title,
                             "location": j.location, "source": j.source,
                             "posted_at": j.posted_at, "reason": reason,
+                            "geography_verified": location_allowed(j),
                             "url": j.apply_url,
                         })
             save_json("data/quality_audit.json", audit)
