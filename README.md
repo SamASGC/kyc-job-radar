@@ -39,6 +39,11 @@ filler.
 - The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 verified official employer career pages/ATS boards**, bringing the configured target list to **191** (not 191 fully successful feeds). That covers **38 of the 39 named fintech watchlist companies** directly; Due is currently discoverable on the Speedinvest portfolio board but does not yet have a separately verified direct company ATS in this repository.
 - The open-universe API searches a potentially huge employer dataset but does
   **not** mean every employer has been checked at its official careers page.
+  **New v2 ATS bridge:** discover ATS URLs embedded in aggregator job links,
+  independently re-fetch those employers' official ATS feeds (up to 40 new
+  boards/hour), and persist successfully reached boards for up to 200
+  recurring checks/hour. Aggregator listings are discovery hints only,
+  never treated as verified-open job postings.
 - The European Commission fintech map presently lists **4,291 firms**. It is
   a **discovery directory**, not 4,291 individually verified job feeds.
 - The v2 importer/rotation can stage thousands of firms from a permitted CSV
