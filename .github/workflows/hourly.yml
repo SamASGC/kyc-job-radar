@@ -63,7 +63,10 @@ jobs:
           else
             git add data/health.json
             git commit -m "radar: refresh jobs [skip ci]"
-            git push
+            # Another authorised edit may land in main during this scan.
+            # Preserve both commits; never force-push or discard verified state.
+            git pull --rebase origin main
+            git push origin HEAD:main
           fi
 
       - name: Upload dashboard
