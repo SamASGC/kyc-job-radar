@@ -56,11 +56,11 @@ a {{ color:var(--accent); text-decoration:none; font-weight:700; }} a:hover {{ t
 </head>
 <body><div class="wrap">
 <h1>KYC / KYB / AML Job Radar</h1>
-<div class="sub">Radar determinista, sin IA de pago. Deduplicación persistente por empresa + rol + ubicación.</div>
+<div class="sub">Radar v2 · solo publicaciones originales de hasta 96 horas, candidatura ATS comprobada y bloqueo de ofertas ya conocidas.</div>
 <div class="cards">
   <div class="card"><b id="cVisible">0</b><span>ofertas visibles</span></div>
   <div class="card"><b id="c90">0</b><span>encaje ≥ 90%</span></div>
-  <div class="card"><b id="c7">0</b><span>detectadas/publicadas ≤ 7 días</span></div>
+  <div class="card"><b id="c7">0</b><span>publicadas originalmente ≤ 4 días</span></div>
   <div class="card"><b id="cHidden">0</b><span>ocultas por ti</span></div>
 </div>
 <div class="controls">
@@ -78,7 +78,7 @@ a {{ color:var(--accent); text-decoration:none; font-weight:700; }} a:hover {{ t
 <th data-sort="score">Encaje</th><th>Skills que comprarías</th><th data-sort="location_mode">Lugar</th><th data-sort="salary_display">Salario esperable</th>
 <th data-sort="posted_at">Fecha</th><th>Link</th><th>Acción</th>
 </tr></thead><tbody id="tbody"></tbody></table><div id="empty" class="empty" hidden>No hay ofertas con esos filtros.</div></div>
-<div class="footer">Generado: {html.escape(generated)} · Los salarios marcados “estimado” son bandas orientativas, no salarios publicados por la empresa. “Fecha no publicada” significa que el radar detectó una vacante activa pero la fuente no expuso una fecha fiable. LinkedIn/Indeed no se scrapean.<br>Fuentes agregadas: <a href="https://jobicy.com/" target="_blank" rel="noopener">Jobicy</a>, <a href="https://remotive.com/" target="_blank" rel="noopener">Remotive</a>, <a href="https://www.arbeitnow.com/" target="_blank" rel="noopener">Arbeitnow</a>, <a href="https://remoteok.com/" target="_blank" rel="noopener">Remote OK</a>, <a href="https://himalayas.app/" target="_blank" rel="noopener">Himalayas</a> y <a href="https://weworkremotely.com/" target="_blank" rel="noopener">We Work Remotely</a>. La fuente concreta aparece debajo de cada empresa.</div>
+<div class="footer">Generado: {html.escape(generated)} · Los salarios marcados “estimado” son bandas orientativas, no salarios publicados por la empresa. Las vacantes sin fecha original verificable no deben entrar al dashboard v2. Las fechas de detección o actualización no sustituyen la publicación original. LinkedIn/Indeed no se scrapean.<br>Fuentes agregadas: <a href="https://jobicy.com/" target="_blank" rel="noopener">Jobicy</a>, <a href="https://remotive.com/" target="_blank" rel="noopener">Remotive</a>, <a href="https://www.arbeitnow.com/" target="_blank" rel="noopener">Arbeitnow</a>, <a href="https://remoteok.com/" target="_blank" rel="noopener">Remote OK</a>, <a href="https://himalayas.app/" target="_blank" rel="noopener">Himalayas</a> y <a href="https://weworkremotely.com/" target="_blank" rel="noopener">We Work Remotely</a>. La fuente concreta aparece debajo de cada empresa.</div>
 </div>
 <script>
 const JOBS = {payload};
@@ -89,7 +89,7 @@ let showHidden=false, sortKey='score', sortDir=-1;
 const $=id=>document.getElementById(id);
 function esc(s){{return String(s??'').replace(/[&<>"']/g,m=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[m]));}}
 function ageDays(j){{
- const s=j.posted_at||j.discovered_at; if(!s)return null; const d=new Date(s); if(Number.isNaN(d.getTime()))return null; return (Date.now()-d.getTime())/86400000;
+ const s=j.posted_at; if(!s)return null; const d=new Date(s); if(Number.isNaN(d.getTime()))return null; return (Date.now()-d.getTime())/86400000;
 }}
 function selectedJobs(){{
  const q=$('q').value.trim().toLowerCase(), min=+$('minScore').value, sector=$('sector').value, mode=$('mode').value, country=$('country').value, source=$('source').value;
@@ -104,8 +104,8 @@ function render(){{
  for(const j of arr){{
    const tr=document.createElement('tr'); const cls=j.score>=90?'hi':(j.score>=80?'mid':'');
    const skills=(j.skills_to_buy||[]).length?(j.skills_to_buy||[]).map(x=>`<span class="badge">${{esc(x)}}</span>`).join(''):'<span class="muted">Consolida skills actuales</span>';
-   const date=j.posted_at?esc(j.posted_at):`<span class="muted">Detectada ${{esc((j.discovered_at||'').slice(0,10))}}</span>`;
-   tr.innerHTML=`<td class="role">${{esc(j.title)}}<div class="small">${{esc(j.score_reason)}}</div></td><td class="company">${{esc(j.company)}}<div class="small">${{esc(j.source)}}</div></td><td>${{esc(j.sector)}}</td><td class="score ${{cls}}">${{j.score}}%</td><td class="skills">${{skills}}</td><td><b>${{esc(j.location_mode)}}</b><div>${{esc(j.location||'No indicada')}}</div></td><td>${{esc(j.salary_display)}}</td><td>${{date}}</td><td><a href="${{esc(j.apply_url)}}" target="_blank" rel="noopener">Aplicar ↗</a></td><td><button data-id="${{esc(j.fingerprint)}}">${{showHidden?'Restaurar':'Ocultar'}}</button></td>`;
+   const date=j.posted_at?esc(j.posted_at):`<span class="muted">Fecha original desconocida</span>`;
+   tr.innerHTML=`<td class="role">${{esc(j.title)}}<div class="small">${{esc(j.score_reason)}}</div></td><td class="company">${{esc(j.company)}}<div class="small">${{esc(j.source)}}</div></td><td>${{esc(j.sector)}}</td><td class="score ${{cls}}">${{j.score}}%</td><td class="skills">${{skills}}</td><td><b>${{esc(j.location_mode)}}</b><div>${{esc(j.location||'No indicada')}}</div></td><td>${{esc(j.salary_display)}}</td><td>${{date}}<div class="small">ATS comprobado: ${{esc((j.apply_verified_at||'').slice(0,16)||'sin verificar')}}</div></td><td><a href="${{esc(j.apply_url)}}" target="_blank" rel="noopener">Aplicar ↗</a></td><td><button data-id="${{esc(j.fingerprint)}}">${{showHidden?'Restaurar':'Ocultar'}}</button></td>`;
    tr.querySelector('button').onclick=()=>{{ if(showHidden)hidden.delete(j.fingerprint); else hidden.add(j.fingerprint); localStorage.setItem(hiddenKey,JSON.stringify([...hidden])); render(); }};
    tb.appendChild(tr);
  }}
@@ -113,7 +113,7 @@ function render(){{
  $('cVisible').textContent=JOBS.filter(j=>!hidden.has(j.fingerprint)).length;
  $('cHidden').textContent=hidden.size;
  $('c90').textContent=JOBS.filter(j=>!hidden.has(j.fingerprint)&&j.score>=90).length;
- $('c7').textContent=JOBS.filter(j=>!hidden.has(j.fingerprint)&&((ageDays(j)??999)<=7)).length;
+ $('c7').textContent=JOBS.filter(j=>!hidden.has(j.fingerprint)&&((ageDays(j)??999)<=4)).length;
 }}
 for(const id of ['q','minScore','sector','mode','country','source']) $(id).addEventListener(id==='q'?'input':'change',render);
 $('tabActive').onclick=()=>{{showHidden=false;$('tabActive').classList.add('active');$('tabHidden').classList.remove('active');render();}};
