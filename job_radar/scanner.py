@@ -256,6 +256,7 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
             d["first_seen"] = old.get("first_seen", old.get("discovered_at", now))
             # Keep the original discovery timestamp so a no-op scan does not modify the dataset.
             d["discovered_at"] = old.get("discovered_at", d.get("discovered_at", now))
+            d["apply_verified_at"] = old.get("apply_verified_at") or d.get("apply_verified_at", "")
             # A source may disappear temporarily. Clear missing_since only when it returns.
             if old.get("missing_since"):
                 semantic_changed = True
@@ -365,6 +366,30 @@ async def run_scan() -> dict:
         raw_jobs.extend(agg_jobs)
         health.extend(agg_health)
         print(f"[RADAR] Agregadores terminados | {len(agg_jobs)} jobs brutos", flush=True)
+
+        if profile.get("strict_quality_gate", False):
+            from job_radar.v2_quality import passes_strict_gate, verify_application_page
+            max_hours = int(profile.get("max_post_age_hours", 96))
+            prefiltered = [j for j in raw_jobs if passes_strict_gate(j, max_hours=max_hours)]
+            # An active ATS listing alone is not enough. Check the exact
+            # application page before it can enter state/dashboard.
+            verified = await asyncio.gather(
+                *(verify_application_page(http, j) for j in prefiltered),
+                return_exceptions=True,
+            )
+            accepted = []
+            for j, is_open in zip(prefiltered, verified):
+                if is_open is True:
+                    j.apply_verified_at = utcnow_iso()
+                    accepted.append(j)
+            health.append({
+                "company": "v2 application verification",
+                "ok": True, "jobs": len(accepted),
+                "targets": [{"kind": "ATS-page open check"}],
+                "error": f"{len(prefiltered)} candidates before URL check, {len(accepted)} verified",
+            })
+            print(f"[RADAR] V2 quality gate: {len(raw_jobs)} raw, {len(prefiltered)} fresh/eligible, {len(accepted)} applications verified", flush=True)
+            raw_jobs = accepted
     finally:
         await http.close()
 
