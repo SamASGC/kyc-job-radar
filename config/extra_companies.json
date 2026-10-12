@@ -236,11 +236,17 @@
   },
   {
     "name": "Keyrock",
-    "careers_url": "https://keyrock.com/careers/",
+    "careers_url": "https://jobs.ashbyhq.com/keyrock",
     "sector": "Fintech",
     "priority": "P1+",
-    "origin": "2026-10-12 official careers verification",
-    "enabled": true
+    "origin": "Official Ashby ATS confirmed via Keyrock careers link, 2026-10-12",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "keyrock"
+      }
+    ]
   },
   {
     "name": "Elliptic",
@@ -255,7 +261,7 @@
     "careers_url": "https://ondato.com/careers/",
     "sector": "Fintech",
     "priority": "P1+",
-    "origin": "2026-10-12 official careers verification",
+    "origin": "Official careers page links to LinkedIn only; HTTP 403 from GitHub runner; not independently ATS-verified",
     "enabled": true
   },
   {
