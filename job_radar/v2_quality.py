@@ -86,6 +86,58 @@ def location_allowed(job: Job) -> bool:
     }
 
 
+def could_verify_spain_from_job_page(job: Job) -> bool:
+    """A generic Europe/EMEA remote ATS listing may specify Spain in JobPosting.
+
+    These are only *pre-check* candidates, never alerts. Location must be
+    upgraded by matching structured source evidence on the job detail page.
+    """
+    if detect_mode(job) != "Remoto":
+        return False
+    scope = norm_text((job.location or "") + " " + (job.remote_hint or ""))
+    return any(x in scope for x in (
+        "europe", "emea", "worldwide", "global", "european union", "eu remote",
+    ))
+
+
+def jobposting_spain_remote_verified(soup, expected_title: str) -> bool:
+    """Require explicit Spain / ES applicantLocationRequirements for this job."""
+    expected = norm_text(expected_title)
+    for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+        try:
+            payload = json.loads(script.string or script.get_text() or "")
+        except (ValueError, TypeError):
+            continue
+        queue = [payload]
+        while queue:
+            obj = queue.pop()
+            if isinstance(obj, list):
+                queue.extend(obj)
+                continue
+            if not isinstance(obj, dict):
+                continue
+            types = obj.get("@type") or []
+            types = types if isinstance(types, list) else [types]
+            if "JobPosting" in types and norm_text(str(obj.get("title") or "")) == expected:
+                requirements = obj.get("applicantLocationRequirements") or []
+                requirements = requirements if isinstance(requirements, list) else [requirements]
+                for requirement in requirements:
+                    if not isinstance(requirement, dict):
+                        continue
+                    identifiers = [
+                        str(requirement.get("name") or ""),
+                        str(requirement.get("identifier") or ""),
+                    ]
+                    address = requirement.get("address") or {}
+                    if isinstance(address, dict):
+                        identifiers.append(str(address.get("addressCountry") or ""))
+                    if any(norm_text(x) in {"es", "spain", "espana"} for x in identifiers):
+                        return True
+            queue.extend(value for key, value in obj.items()
+                         if key in {"@graph", "mainEntity", "itemListElement"})
+    return False
+
+
 def official_active_listing(job: Job) -> bool:
     """Only current employer ATS lists count as open; aggregator hits are leads.
 
@@ -184,6 +236,13 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
         return False
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(page, "html.parser")
+    # Genuine Remote Europe jobs sometimes specify Spain in JobPosting but
+    # not in their ATS-list location field. Accept only structured evidence.
+    if not location_allowed(job) and could_verify_spain_from_job_page(job):
+        if jobposting_spain_remote_verified(soup, job.title):
+            job.location = "Spain - Remote / " + (job.location or "Europe")
+            job.fingerprint = ""
+            job.finalize()
     exact_date = extract_original_jobposting_date(soup, job.title)
     ats_date = original_posted_at(job.posted_at)
     page_date = original_posted_at(exact_date)
