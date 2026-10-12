@@ -36,7 +36,9 @@ def _official_board(job: Job) -> tuple[str, str] | None:
         return None
     # Board identifiers are taken from configured/discovered first-party ATS,
     # never guessed from the company name.
-    if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", slug):
+    # Real Ashby boards may include dots (e.g. flagright.com); disallow
+    # separators and traversal instead of rejecting valid company slugs.
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", slug) or slug in {".", ".."}:
         return None
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", str(job.external_id or "")):
         return None
