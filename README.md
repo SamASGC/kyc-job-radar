@@ -66,6 +66,20 @@ The existing direct ATS/company sources are still checked normally.
 
 The original EU Digital Finance Platform map lists 4,291 fintech firms, but it is separate crowdsourced/Dealroom-derived data; **the 2,593 imported firms come from Fintechnologica, not a claimed export of the EU map**. A company without a website or compatible ATS does **not** count as an active source. The scanner also discovers ATS boards from eligible public aggregator apply links, verifies the ATS independently and stores successful boards in the persistent state.
 
+### Additional discovery from licensed employer domains
+
+The same job API also documents a **company_domain** filter
+([parameter documentation](https://jobopportunitiesapi.org/docs/api/parameters)).
+The radar rotates **80 attributed employer domains/hour** in batches of 20,
+searching postings from the past five days. This is a discovery lead feed,
+not 80 individually queried career sites and not a guarantee that the API
+indexes those firms. Any result must still be independently verified via
+an official ATS, including original publication time, Spain/Canarias
+eligibility, an accessible application action and historical deduplication.
+
+Country discovery for hybrid/on-site now includes **Lithuania** and does
+**not** treat Malta/Czechia as eligible relocation countries.
+
 Quality tests (the pull-request workflow only runs tests and never deploys):
 
 ```bash
