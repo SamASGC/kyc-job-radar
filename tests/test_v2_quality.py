@@ -62,6 +62,23 @@ class V2AdmissionTests(unittest.TestCase):
         mainland.description += " This position is mainland Spain only."
         self.assertFalse(location_allowed(mainland))
 
+    def test_ats_work_style_precedes_employer_generic_benefits(self):
+        from job_radar.matching import detect_mode
+        remote = job(location="Spain - Remote")
+        remote.description = (
+            "Our company provides hybrid work flexibility. This vacancy is "
+            "fully remote from Spain."
+        )
+        self.assertEqual(detect_mode(remote), "Remoto")
+        self.assertTrue(location_allowed(remote))
+        onsite = job(location="Madrid Spain - On-site")
+        onsite.description = "Support remote customers and collaborate with remote teams."
+        self.assertEqual(detect_mode(onsite), "Presencial")
+        hybrid = job(location="Vilnius Lithuania - Hybrid")
+        hybrid.description = "The company runs fully remote teams too."
+        self.assertEqual(detect_mode(hybrid), "Híbrido")
+        self.assertTrue(location_allowed(hybrid))
+
     def test_hybrid_relocation_scope(self):
         for allowed in ("Tallinn Estonia - Hybrid", "Vilnius Lithuania - Hybrid",
                         "Luxembourg - Hybrid", "Zurich Switzerland - On-site",
