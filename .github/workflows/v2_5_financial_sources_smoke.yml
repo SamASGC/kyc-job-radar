@@ -3,7 +3,6 @@ name: Radar v2.5 — 259 direct financial ATS smoke
 on:
   push:
     branches: ["feat/v2-5-ashby-inventory-259"]
-    paths: [".github/workflows/v2_5_financial_sources_smoke.yml"]
   workflow_dispatch:
 
 permissions:
