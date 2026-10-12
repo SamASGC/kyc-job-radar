@@ -37,8 +37,9 @@ filler.
 ### What the numbers mean
 
 - The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 additional employer career pages/ATS boards** and **Due's investor-maintained Speedinvest page**, bringing the configured employer target list to **192** (not 192 independently verified functional ATS feeds). All **39 of 39** named fintech watchlist companies have an explicit entry, but Due's Getro/Speedinvest site has no unauthenticated official ATS API and Ondato links to LinkedIn only. Those two require alternative verification rather than claiming full ATS monitoring.
-- The open-universe API searches a potentially huge employer dataset but does
-  **not** mean every employer has been checked at its official careers page.
+- The external open-universe API has a potentially huge employer dataset, but
+  **is presently disabled without `JOB_OPPORTUNITIES_API_KEY`** (verified 401).
+  It does **not** mean every employer has been checked at its careers page.
   **New v2 ATS bridge:** discover ATS URLs embedded in aggregator job links,
   independently re-fetch those employers' official ATS feeds (up to 40 new
   boards/hour), and persist successfully reached boards for up to 200
@@ -68,14 +69,19 @@ The original EU Digital Finance Platform map lists 4,291 fintech firms, but it i
 
 ### Additional discovery from licensed employer domains
 
-The same job API also documents a **company_domain** filter
+The employer-search provider advertises a **company_domain** filter
 ([parameter documentation](https://jobopportunitiesapi.org/docs/api/parameters)).
-The radar rotates **80 attributed employer domains/hour** in batches of 20,
-searching postings from the past five days. This is a discovery lead feed,
-not 80 individually queried career sites and not a guarantee that the API
-indexes those firms. Any result must still be independently verified via
-an official ATS, including original publication time, Spain/Canarias
-eligibility, an accessible application action and historical deduplication.
+**IMPORTANT (verified 12 October 2026): listing endpoints `/public/jobs`
+and `/v1/jobs` now return HTTP 401 without an API key.** Therefore the
+entire employer-search API, including the 80-domains/hour option, is
+**automatically disabled in normal scans until** a user obtains a key and
+stores it securely as the GitHub Actions repository secret
+`JOB_OPPORTUNITIES_API_KEY`. The authenticated code uses `/v1/jobs`
+and `Authorization`, but paid/free-plan limits and the domain filter
+must be validated with the user's actual key before declaring them active.
+This integration is NOT currently one of the operational discovery sources.
+When enabled, results are discovery leads only and must still be confirmed
+at the original ATS.
 
 Country discovery for hybrid/on-site now includes **Lithuania** and does
 **not** treat Malta/Czechia as eligible relocation countries.
