@@ -492,6 +492,7 @@ async def run_scan() -> dict:
             from job_radar.v2_quality import (
                 passes_strict_gate, verify_application_page, official_active_listing,
                 location_allowed, within_new_window, original_posted_at,
+                could_verify_spain_from_job_page,
             )
             max_hours = int(profile.get("max_post_age_hours", 96))
             # Undated ATS postings may contain authoritative JobPosting.datePosted
@@ -515,7 +516,7 @@ async def run_scan() -> dict:
                     audit["aggregator_or_generic"] += 1
                     continue
                 audit["official_ats"] += 1
-                if not location_allowed(j):
+                if not location_allowed(j) and not could_verify_spain_from_job_page(j):
                     audit["official_outside_scope"] += 1
                     if len(audit["out_of_scope_examples"]) < 10:
                         audit["out_of_scope_examples"].append({
