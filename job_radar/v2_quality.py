@@ -61,6 +61,20 @@ def location_allowed(job: Job) -> bool:
     if mode == "Remoto":
         if "hybrid" in loc or "hibrid" in loc or "hybrid" in hint:
             return False
+        # Spain-wide can still exclude the Canary Islands in employment terms.
+        eligibility_text = norm_text(" ".join((job.location or "", job.remote_hint or "",
+                                                 job.description or "")))
+        excluded_islands = (
+            r"(?:excluding|except|not available in|cannot be based in|"
+            r"not permitted in|outside) (?:the )?(?:canary islands|canarias)"
+        )
+        if re.search(excluded_islands, eligibility_text) or any(
+            x in eligibility_text for x in (
+                "mainland spain only", "peninsular spain only",
+                "spain mainland only", "solo peninsula",
+            )
+        ):
+            return False
         # Europe, EMEA, Global and Worldwide alone do NOT establish ability
         # to reside and be paid from the Canary Islands.
         return bool(re.search(r"\b(spain|espana|canary islands|canarias)\b", loc + " " + hint))
