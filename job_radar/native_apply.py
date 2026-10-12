@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote, urlsplit
 
-from job_radar.models import Job, norm_text
+from job_radar.models import Job, norm_text, canonical_url
 
 
 def _https_host(url: str, hosts: set[str]) -> bool:
@@ -36,9 +36,7 @@ def _official_board(job: Job) -> tuple[str, str] | None:
         return None
     # Board identifiers are taken from configured/discovered first-party ATS,
     # never guessed from the company name.
-    # Real Ashby boards may include dots (e.g. flagright.com); disallow
-    # separators and traversal instead of rejecting valid company slugs.
-    if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", slug) or slug in {".", ".."}:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", slug):
         return None
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", str(job.external_id or "")):
         return None
@@ -113,7 +111,18 @@ async def native_application_evidence(http, job: Job) -> bool:
     if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
         return False
     for row in payload["jobs"]:
-        if not isinstance(row, dict) or not _same_job(row, job):
+        if not isinstance(row, dict) or norm_text(str(row.get("title") or "")) != norm_text(job.title):
+            continue
+        # Public Ashby Job Postings API documents jobUrl/applyUrl; id
+        # is often absent. Tie the exact posting to its official jobUrl.
+        if row.get("id") not in (None, ""):
+            same_posting = str(row["id"]) == str(job.external_id or "")
+        else:
+            row_url = str(row.get("jobUrl") or "")
+            same_posting = bool(
+                row_url and canonical_url(row_url) == canonical_url(job.apply_url)
+            )
+        if not same_posting:
             continue
         apply_url = row.get("applyUrl") or ""
         if (
