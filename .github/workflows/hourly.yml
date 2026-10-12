@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v2.5 verified: 250 direct sources and localized Workday targets release check.
+    # v2.5 final production verification: 259 direct sources, Ashby IDs + audited direct coverage.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
