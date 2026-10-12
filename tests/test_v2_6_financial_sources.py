@@ -10,7 +10,7 @@ ADDED_ATS = {
     "Carta": ("greenhouse", "carta"),
     "Aztec Group": ("workday", None),
     "Arendt": ("workday", None),
-    "Aspire": ("greenhouse", "aspire"),
+    "AiPrise": ("ashby", "aiprise"),
     "Sayari": ("greenhouse", "sayari"),
     "IMC Trading": ("greenhouse", "imc"),
     "Flow Traders": ("greenhouse", "flowtraders"),
