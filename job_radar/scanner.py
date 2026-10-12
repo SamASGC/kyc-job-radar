@@ -372,6 +372,9 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
 
 async def run_scan() -> dict:
     companies = load_json("config/companies.json")
+    # Snapshot the direct watchlist before adding temporary directory batches.
+    direct_company_names = {norm_text(c.get("name")) for c in companies
+                            if c.get("enabled", True)}
     profile = load_yaml("config/profile.yaml")
     runtime = load_yaml("config/runtime.yaml")
     state = load_state()
@@ -605,7 +608,8 @@ async def run_scan() -> dict:
     if profile.get("strict_quality_gate", False):
         create_rss(jobs)
         build_status(health, state.get("stats", {}))
-        build_source_inventory(enabled_companies, health)
+        build_source_inventory(enabled_companies, health,
+                               direct_company_names=direct_company_names)
         # Separate diagnostic page: never part of verified dashboard/RSS/alerts.
         build_review_page(audit.get("rejected_examples", []),
                           state.get("seen", {}))
