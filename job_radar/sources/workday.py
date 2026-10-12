@@ -24,6 +24,12 @@ async def fetch_workday(http, company: dict, careers_url: str):
         payload["offset"] = offset
         r = await http.post(endpoint, json=payload, headers={"Content-Type": "application/json"})
         if r.status_code >= 400:
+            # An ATS failure on page one is NOT an empty jobs board.
+            # Let the scanner record the error instead of a false healthy board.
+            if offset == 0:
+                r.raise_for_status()
+                raise RuntimeError(f"Workday API HTTP {r.status_code}")
+            # Partial pagination: keep previously retrieved job requisitions.
             break
         data = r.json()
         batch = data.get("jobPostings") or []
