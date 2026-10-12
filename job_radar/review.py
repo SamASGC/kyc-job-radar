@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from job_radar.config import ROOT
 from job_radar.models import norm_text
+from job_radar.v2_quality import within_new_window
 
 RELEVANT_TITLE_TERMS = (
     "kyc", "kyb", "aml", "edd", "cdd", "compliance", "fincrime",
@@ -28,7 +29,7 @@ REASON_NAMES = {
 
 def review_candidates(records: list[dict], seen: dict | None = None,
                       max_count: int = 80) -> list[dict]:
-    from job_radar.v2_quality import original_posted_at, within_new_window
+    from job_radar.v2_quality import original_posted_at
     seen = seen or {}
     out, dedupe = [], set()
     for rec in records:
@@ -82,7 +83,7 @@ def build_review_page(records: list[dict], seen: dict | None = None,
     root = ROOT / out_path if not Path(out_path).is_absolute() else Path(out_path)
     root.parent.mkdir(parents=True, exist_ok=True)
     rows = "\n".join(
-        "<tr><td>" + ("Prioritaria · " if __import__("job_radar.v2_quality", fromlist=["within_new_window"]).within_new_window(rec["posted_at"]) else "") + html.escape(rec["company"]) + "</td><td>" +
+        "<tr><td>" + ("Prioritaria · " if within_new_window(rec["posted_at"]) else "") + html.escape(rec["company"]) + "</td><td>" +
         '<a href="' + html.escape(rec["url"], quote=True) +
         '" target="_blank" rel="noopener noreferrer">' +
         html.escape(rec["title"]) + "</a></td><td>" +
