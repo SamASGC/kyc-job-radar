@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote, urlsplit
 
-from job_radar.models import Job, norm_text
+from job_radar.models import Job, norm_text, canonical_url
 
 
 def _https_host(url: str, hosts: set[str]) -> bool:
@@ -111,7 +111,18 @@ async def native_application_evidence(http, job: Job) -> bool:
     if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
         return False
     for row in payload["jobs"]:
-        if not isinstance(row, dict) or not _same_job(row, job):
+        if not isinstance(row, dict) or norm_text(str(row.get("title") or "")) != norm_text(job.title):
+            continue
+        # Public Ashby Job Postings API documents jobUrl/applyUrl; id
+        # is often absent. Tie the exact posting to its official jobUrl.
+        if row.get("id") not in (None, ""):
+            same_posting = str(row["id"]) == str(job.external_id or "")
+        else:
+            row_url = str(row.get("jobUrl") or "")
+            same_posting = bool(
+                row_url and canonical_url(row_url) == canonical_url(job.apply_url)
+            )
+        if not same_posting:
             continue
         apply_url = row.get("applyUrl") or ""
         if (
