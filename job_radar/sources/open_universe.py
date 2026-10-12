@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import urlsplit
+import json
 
 from job_radar.models import Job
 
@@ -33,11 +36,71 @@ JD_QUERIES = [
 TITLE_FALLBACK_QUERIES = ["kyc", "aml"]
 
 # Onsite/hybrid remains intentionally narrow. Remote discovery is Europe-only.
-ONSITE_COUNTRIES = "ES,LU,CH,EE,CZ,MT"
+ONSITE_COUNTRIES = "ES,LU,CH,EE,LT"
 EUROPE_REMOTE_COUNTRIES = (
     "AL,AT,BE,BA,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IS,IE,IT,LV,LI,LT,LU,MT,ME,"
     "NL,MK,NO,PL,PT,RO,RS,SK,SI,ES,SE,CH,GB"
 )
+
+
+def selected_company_domain_batches(directory: list[dict], hour_bucket: int,
+                                    companies_per_hour: int = 80,
+                                    domains_per_request: int = 20) -> list[list[str]]:
+    """Rotate reliable company websites through employer-domain API queries."""
+    domains, unique = [], set()
+    for entry in directory:
+        try:
+            web = urlsplit(str(entry.get("website") or ""))
+            host = (web.hostname or "").lower().removeprefix("www.")
+        except (ValueError, TypeError, AttributeError):
+            continue
+        if web.scheme != "https" or not host or "." not in host or host in unique:
+            continue
+        unique.add(host)
+        domains.append(host)
+    domains.sort()
+    if not domains or companies_per_hour <= 0 or domains_per_request <= 0:
+        return []
+    n = min(companies_per_hour, len(domains))
+    start = (hour_bucket * n) % len(domains)
+    sampled = [domains[(start + i) % len(domains)] for i in range(n)]
+    return [sampled[i:i + domains_per_request]
+            for i in range(0, len(sampled), domains_per_request)]
+
+
+async def fetch_licensed_employer_domain_jobs(http, directory_path: Path,
+                                               companies_per_hour: int = 80) -> tuple[list[Job], dict]:
+    """Discover leads by employer domains from an attributed/licensed directory.
+
+    The company_domain filter is documented by Job Opportunities API. These
+    are still AGGREGATOR leads, and cannot be delivered without independent
+    official ATS verification later in the pipeline.
+    """
+    if not directory_path.exists():
+        return [], {"queried_domains": 0, "batches": 0, "results": 0, "errors": 0}
+    directory = json.loads(directory_path.read_text(encoding="utf-8"))
+    now = datetime.now(timezone.utc)
+    batches = selected_company_domain_batches(
+        directory, int(now.timestamp() // 3600), companies_per_hour
+    )
+    posted_after = (now - timedelta(days=5)).date().isoformat()
+    results = []
+    errors = 0
+    for domains in batches:
+        params = {
+            "company_domain": ",".join(domains),
+            "limit": 50,
+            "include_description": "true",
+            "posted_after": posted_after,
+        }
+        try:
+            results.extend(await _get_jobopportunities(http, params))
+        except Exception:
+            errors += 1
+    return _dedupe(results), {
+        "queried_domains": sum(len(b) for b in batches),
+        "batches": len(batches), "results": len(results), "errors": errors,
+    }
 
 
 def _dedupe(jobs: list[Job]) -> list[Job]:
