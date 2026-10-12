@@ -294,6 +294,18 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
                 has_cta = True
                 break
     if not (has_form or has_cta):
+        # Some ATS application forms are hydrated only after JavaScript runs.
+        # The provider's *job-specific* published application record can prove
+        # they are still available, but a generic board HTTP 200 cannot.
+        from job_radar.native_apply import native_application_evidence
+        try:
+            if await native_application_evidence(http, job):
+                job.verification_reason = "native_ats_application_confirmed"
+                return True
+        except Exception:
+            # Network errors or unexpected provider schemas are inconclusive,
+            # not evidence of either an open or closed application.
+            pass
         job.verification_reason = "page_200_but_no_visible_apply_action"
         return False
     job.verification_reason = "official_live_page_with_apply_action"
