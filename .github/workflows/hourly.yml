@@ -22,7 +22,9 @@ permissions:
 
 concurrency:
   group: kyc-job-radar-hourly
-  cancel-in-progress: true
+  # Do not cancel a finishing scan just because the next cron or manual run starts.
+  # Runs stay serialized; newer events wait instead of wiping a Pages deployment.
+  cancel-in-progress: false
 
 jobs:
   scan:
@@ -60,12 +62,15 @@ jobs:
           git config user.name "kyc-radar-bot"
           git config user.email "kyc-radar-bot@users.noreply.github.com"
 
+          # health.json is per-run telemetry and changes on every scan.
+          # It must not enter commits: concurrent refreshes otherwise
+          # conflict on rebase even if the canonical jobs have not changed.
+          git restore -- data/health.json
           git add data/state.json public/index.html public/feed.xml
 
           if git diff --cached --quiet; then
             echo "No dataset changes."
           else
-            git add data/health.json
             git commit -m "radar: refresh jobs [skip ci]"
             # Another authorised edit may land in main during this scan.
             # Preserve both commits; never force-push or discard verified state.
