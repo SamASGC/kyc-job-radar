@@ -3,7 +3,6 @@ name: Radar v2.6 — 284 financial sources smoke
 on:
   push:
     branches: ["feat/v2-6-financial-sources-284"]
-    paths: [".github/workflows/v2_6_financial_sources_smoke.yml"]
   workflow_dispatch:
 
 permissions:
