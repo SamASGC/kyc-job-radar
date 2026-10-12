@@ -8,9 +8,6 @@ on:
       - "tests/**"
       - "config/profile.yaml"
       - ".github/workflows/v2_tests.yml"
-  push:
-    branches:
-      - "feat/radar-v2-strict-quality"
   workflow_dispatch:
 
 permissions:
