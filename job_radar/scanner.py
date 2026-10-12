@@ -14,6 +14,7 @@ from job_radar.salary import estimate_salary
 from job_radar.dashboard import build_dashboard
 from job_radar.feed import create_rss
 from job_radar.status import build_status
+from job_radar.source_inventory import build_source_inventory
 from job_radar.review import build_review_page
 from job_radar.sources.generic import fetch_generic
 from job_radar.discovery import ats_target_has_company_identity
@@ -601,6 +602,7 @@ async def run_scan() -> dict:
     if profile.get("strict_quality_gate", False):
         create_rss(jobs)
         build_status(health, state.get("stats", {}))
+        build_source_inventory(enabled_companies, health)
         # Separate diagnostic page: never part of verified dashboard/RSS/alerts.
         build_review_page(audit.get("rejected_examples", []),
                           state.get("seen", {}))
