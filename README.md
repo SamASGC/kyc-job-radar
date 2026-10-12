@@ -1,9 +1,8 @@
 # KYC / KYB / AML Job Radar
 
-## Radar v2 — strict quality (experimental branch; NOT yet deployed)
+## Radar v2 — production (deployed 12 October 2026)
 
-The existing **main** branch and production dashboard remain unchanged until
-this branch has passed both automated tests and a full live-data smoke scan.
+This version is merged into **main** after unit tests and isolated live-data smoke scans. GitHub Actions publishes the verified vacancy dashboard, optional review page and source-health status.
 
 ### Four non-negotiable admission rules
 
@@ -34,7 +33,7 @@ clearing the seen ledger. The HTML shows original dates and timestamps of the
 application-page verification. No matching vacancies = an empty report, not
 filler.
 
-### Two independent outputs (no false alerts)
+### Separate verified alerts, pending review and heartbeat
 
 - `public/index.html` and `public/feed.xml` contain **only** opportunities
   that pass all strict checks. The default HTML order is 100% remote from Spain
@@ -77,11 +76,10 @@ Import a permitted CSV with company/website/sector/country columns:
 python scripts/import_fintech_directory.py ./fintech_directory.csv
 ```
 
-This writes `data/fintech_directory.json`; commit it to the v2 branch only
-after reviewing provenance and duplicates. By default, the scanner tries
+This writes `data/fintech_directory.json`; validate provenance, update cadence and duplicates before adding a new third-party dataset. By default, the scanner tries
 **50 new directory companies per hour**, plus up to **200 previously discovered
 ATS targets per hour**. It rotates batches rather than contacting 4,291
-sites at once. Without an imported directory, this new layer is dormant.
+sites at once. The attributed Fintechnologica directory is already included in main.
 The existing direct ATS/company sources are still checked normally.
 
 The original EU Digital Finance Platform map lists 4,291 fintech firms, but it is separate crowdsourced/Dealroom-derived data; **the 2,593 imported firms come from Fintechnologica, not a claimed export of the EU map**. A company without a website or compatible ATS does **not** count as an active source. The scanner also discovers ATS boards from eligible public aggregator apply links, verifies the ATS independently and stores successful boards in the persistent state.
