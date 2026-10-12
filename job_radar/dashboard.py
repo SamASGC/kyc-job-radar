@@ -86,7 +86,7 @@ const JOBS = {payload};
 const RUN_STATS = {stats_payload};
 const hiddenKey='kycRadar.hidden.v1';
 let hidden=new Set(JSON.parse(localStorage.getItem(hiddenKey)||'[]'));
-let showHidden=false, sortKey='score', sortDir=-1;
+let showHidden=false, sortKey='priority', sortDir=1;
 const $=id=>document.getElementById(id);
 function esc(s){{return String(s??'').replace(/[&<>"']/g,m=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[m]));}}
 function ageDays(j){{
@@ -97,7 +97,17 @@ function selectedJobs(){{
  let arr=JOBS.filter(j=>hidden.has(j.fingerprint)===showHidden);
  arr=arr.filter(j=>j.score>=min && (!sector||j.sector===sector) && (!mode||j.location_mode===mode) && (!country||j.country===country) && (!source||j.source===source));
  if(q)arr=arr.filter(j=>[j.title,j.company,j.sector,j.location,j.location_mode,j.country,j.salary_display,j.score_reason,(j.skills_to_buy||[]).join(' ')].join(' ').toLowerCase().includes(q));
- arr.sort((a,b)=>{{let x=a[sortKey]??'', y=b[sortKey]??''; if(sortKey==='score')return (x-y)*sortDir; return String(x).localeCompare(String(y))*sortDir;}});
+ // Default: Canary-compatible full remote first, then hybrid, then onsite.
+ // Clicking a table header switches to that column's explicit sort.
+ arr.sort((a,b)=>{{
+   if(sortKey==='priority'){{
+     const rank=j=>j.location_mode==='Remoto'?0:j.location_mode==='Híbrido'?1:2;
+     return rank(a)-rank(b) || (b.score-a.score) || String(a.company).localeCompare(String(b.company));
+   }}
+   let x=a[sortKey]??'', y=b[sortKey]??'';
+   if(sortKey==='score')return (x-y)*sortDir;
+   return String(x).localeCompare(String(y))*sortDir;
+ }});
  return arr;
 }}
 function render(){{
