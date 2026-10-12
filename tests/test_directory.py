@@ -51,6 +51,27 @@ class DirectoryTests(unittest.TestCase):
         self.assertEqual(stats["with_website"], 1)
         self.assertTrue(all(r["license"] == "CC BY 4.0" for r in rows))
 
+    def test_missing_job_api_key_disables_entire_domain_discovery_cleanly(self):
+        import asyncio
+        import os
+        from unittest.mock import patch
+        from job_radar.sources.open_universe import (
+            fetch_licensed_employer_domain_jobs,
+            fetch_jobopportunities_open_universe,
+        )
+        class Http:
+            async def get(self, *args, **kwargs):
+                raise AssertionError("No external calls without API key")
+        with patch.dict(os.environ, {"JOB_OPPORTUNITIES_API_KEY": ""}):
+            jobs, status = asyncio.run(fetch_licensed_employer_domain_jobs(
+                Http(), Path("fake_directory.json")
+            ))
+            self.assertEqual(jobs, [])
+            self.assertEqual(status["status"], "skipped_no_api_key")
+            self.assertEqual(status["queried_domains"], 0)
+            with self.assertRaisesRegex(RuntimeError, "API_KEY"):
+                asyncio.run(fetch_jobopportunities_open_universe(Http()))
+
     def test_company_domain_api_batches_rotate_and_skip_missing_websites(self):
         from job_radar.sources.open_universe import selected_company_domain_batches
         entries = [
