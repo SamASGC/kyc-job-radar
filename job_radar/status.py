@@ -17,13 +17,19 @@ def build_status(health: list[dict], stats: dict,
                  out_dir: str = "public", generated_at: str = "") -> dict:
     now = generated_at or utcnow_iso()
     records = [r for r in health if not r.get("company", "").startswith("v2 ")]
-    reachable = sum(bool(x.get("ok")) for x in records)
+    skipped = [r for r in records if any(
+        "disabled" in str(t.get("kind", "")).lower()
+        for t in r.get("targets", []) if isinstance(t, dict)
+    ) or str(r.get("error", "")).startswith(("SKIPPED:", "skipped this hour"))]
+    checked = [r for r in records if r not in skipped]
+    reachable = sum(bool(x.get("ok")) for x in checked)
     productive = sum(bool(x.get("ok")) and int(x.get("jobs", 0)) > 0
-                     for x in records)
-    failed = len(records) - reachable
+                     for x in checked)
+    failed = len(checked) - reachable
     snapshot = {
         "checked_at_utc": now,
-        "source_checks": len(records),
+        "source_checks": len(checked),
+        "source_checks_skipped": len(skipped),
         "reachable_source_checks": reachable,
         "source_checks_with_jobs": productive,
         "source_checks_failed": failed,
@@ -43,7 +49,8 @@ def build_status(health: list[dict], stats: dict,
     )
     fields = [
         ("Última ejecución UTC", now),
-        ("Comprobaciones de fuentes", str(len(records))),
+        ("Comprobaciones de fuentes", str(len(checked))),
+        ("Fuentes omitidas (sin clave/cadencia)", str(len(skipped))),
         ("Fuentes que respondieron", str(reachable)),
         ("Fuentes con vacantes", str(productive)),
         ("Fuentes con error", str(failed)),
