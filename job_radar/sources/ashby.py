@@ -19,6 +19,7 @@ async def fetch_ashby(http, company: dict, slug: str):
             title=x.get("title", ""), location=x.get("location", ""),
             description=x.get("descriptionPlain", "") or x.get("descriptionHtml", "") or "",
             apply_url=x.get("jobUrl") or x.get("applyUrl") or "", external_id=x.get("id", ""),
+            application_api_url=x.get("applyUrl") or "",
             posted_at=x.get("publishedAt", "") or "", salary_text=salary,
             employment_type=x.get("employmentType", "") or "",
         ).finalize())
