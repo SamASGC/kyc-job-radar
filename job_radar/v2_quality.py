@@ -150,50 +150,56 @@ def extract_original_jobposting_date(soup, expected_title: str) -> str:
 
 
 async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
-    """Second check of a fresh ATS posting, against its specific apply page.
+    """Check the exact ATS application page; attach a diagnostic reason.
 
-    Non-200, blocked, removed, or pages without an identifiable application
-    action are withheld. No CAPTCHA bypass, cookies or applicant login.
+    Conservative: failed HTML verification is NOT evidence the position is
+    closed. We record a reason instead of hiding that uncertainty.
     """
+    job.verification_reason = "not_checked"
     if not official_active_listing(job):
+        job.verification_reason = "non_official_or_generic_url"
         return False
     try:
         response = await http.get(job.apply_url)
         if not 200 <= response.status_code < 300:
+            job.verification_reason = f"http_{response.status_code}"
             return False
         page = response.text[:350_000]
-    except Exception:
+    except Exception as exc:
+        job.verification_reason = f"request_error_{type(exc).__name__}"
         return False
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(page, "html.parser")
-    # Cross-check the ATS date against the job-specific schema's datePosted.
-    # The OLDER piece of credible publication evidence wins; a re-post or
-    # updated ATS timestamp must not make an old vacancy look new.
     exact_date = extract_original_jobposting_date(soup, job.title)
     ats_date = original_posted_at(job.posted_at)
     page_date = original_posted_at(exact_date)
     if page_date is not None and (ats_date is None or page_date < ats_date):
         job.posted_at = exact_date
     if not within_new_window(job.posted_at, max_hours=max_hours):
+        job.verification_reason = "original_publication_missing_or_older_than_96h"
         return False
-    text = soup.get_text(" ", strip=True).casefold()
+    visible_text = soup.get_text(" ", strip=True).casefold()
     closed = (
         "no longer accepting applications", "applications are closed",
         "this job is no longer available", "this position has been filled",
         "this posting has expired", "job is closed",
     )
-    if any(phrase in text for phrase in closed):
+    if any(phrase in visible_text for phrase in closed):
+        job.verification_reason = "explicitly_closed"
         return False
-    # Form or explicit job application call-to-action on employer/ATS page.
-    apply_cta = ("apply for this job", "apply for this position", "apply now",
-                 "submit application", "apply for this role",
-                 "apply to this job", "start your application")
+    ctas = ("apply for this job", "apply for this position", "apply now",
+            "submit application", "apply for this role",
+            "apply to this job", "start your application")
     has_form = soup.find("form") is not None
-    has_cta = any(p in text for p in apply_cta)
+    has_cta = any(p in visible_text for p in ctas)
     if not has_cta:
         for a in soup.find_all(["a", "button"]):
             label = a.get_text(" ", strip=True).casefold()
             if label in {"apply", "apply now", "apply here", "apply for this job"}:
                 has_cta = True
                 break
-    return bool(has_form or has_cta)
+    if not (has_form or has_cta):
+        job.verification_reason = "page_200_but_no_visible_apply_action"
+        return False
+    job.verification_reason = "official_live_page_with_apply_action"
+    return True
