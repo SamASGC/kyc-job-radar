@@ -146,4 +146,16 @@ async def fetch_generic(http, company: dict):
             title=x["title"], location="", description="", apply_url=x["url"],
             external_id=x["url"],
         ).finalize())
+    # Investor-maintained portfolio feeds contain multiple unrelated
+    # companies. They are discovery hints and must NEVER masquerade as an
+    # official career page for a single employer.
+    from urllib.parse import urlsplit
+    host = (urlsplit(url).hostname or "").lower()
+    if host in {"careers.speedinvest.com", "jobs.speedinvest.com",
+                "jobs.getro.com", "careers.getro.com"}:
+        for job in jobs:
+            job.source = "Investor job board:" + company["name"]
+            job.source_kind = "aggregator"
+            job.fingerprint = ""
+            job.finalize()
     return jobs, detected, final_url
