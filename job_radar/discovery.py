@@ -122,3 +122,34 @@ def candidate_careers_links(html: str, base_url: str, max_links: int = 2) -> lis
             continue
     return [u for u, _ in sorted(destinations.items(),
                                  key=lambda x: (-x[1], x[0]))[:max_links]]
+
+
+def ats_target_has_company_identity(company: dict, target: dict) -> bool:
+    """Guard automatic ATS discovery against investor-board cross-company links.
+
+    The homepage of a VC portfolio such as Speedinvest links to dozens of
+    other firms' ATS boards. A link on that page is NOT proof that the board
+    belongs to the portfolio company whose job listing we're scanning.
+    Explicitly configured, verified ATS links are handled separately.
+    """
+    from job_radar.models import norm_text
+    def flat(x: str) -> str:
+        return "".join(x for x in norm_text(x) if x.isalnum())
+    brands = [flat(company.get("name") or "")]
+    brands.extend(flat(x) for x in company.get("aliases", []))
+    brands = [x for x in brands if len(x) >= 3]
+    if not brands:
+        return False
+    identifier = flat(target.get("slug") or "")
+    if not identifier:
+        from urllib.parse import urlsplit
+        p = urlsplit(target.get("url") or "")
+        identifier = flat((p.hostname or "").split(".")[0])
+    if len(identifier) < 3:
+        return False
+    return any(
+        identifier == brand or
+        (len(brand) >= 5 and brand in identifier) or
+        (len(identifier) >= 5 and identifier in brand)
+        for brand in brands
+    )
