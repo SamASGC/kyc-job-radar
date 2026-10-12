@@ -22,7 +22,7 @@ jobs:
       - name: Live Wikidata provider probe (no production writes)
         shell: bash
         run: |
-          python -m scripts.enrich_missing_websites --limit 10 || echo "ENRICHMENT_PROVIDER_UNAVAILABLE"
+          python -m scripts.enrich_missing_websites --limit 60 || echo "ENRICHMENT_PROVIDER_UNAVAILABLE"
       - name: Known-brand entity validation (Qonto, Revolut Ltd)
         run: |
           python -m scripts.enrich_missing_websites --focus-name Qonto --limit 1 || true
