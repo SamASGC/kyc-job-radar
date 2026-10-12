@@ -54,6 +54,14 @@ class V2AdmissionTests(unittest.TestCase):
         for rejected in ("Germany - Remote", "Remote EMEA", "Remote Global", "Europe - Remote", "Barcelona - Hybrid"):
             self.assertFalse(location_allowed(job(location=rejected)), rejected)
 
+    def test_spain_remote_is_rejected_when_canary_islands_excluded(self):
+        excluded = job(location="Spain - Remote")
+        excluded.description += " Employees may work from Spain, excluding Canary Islands."
+        self.assertFalse(location_allowed(excluded))
+        mainland = job(location="Spain - Remote")
+        mainland.description += " This position is mainland Spain only."
+        self.assertFalse(location_allowed(mainland))
+
     def test_hybrid_relocation_scope(self):
         for allowed in ("Tallinn Estonia - Hybrid", "Vilnius Lithuania - Hybrid",
                         "Luxembourg - Hybrid", "Zurich Switzerland - On-site",
