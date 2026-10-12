@@ -1,0 +1,66 @@
+# Independent release smoke: never pushes state or deploys Pages.
+name: Radar v2.4 — native ATS and banking sources smoke
+
+on:
+  push:
+    branches: ["feat/v2-4-native-apply-evidence"]
+    paths: [".github/workflows/v2_4_native_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m compileall -q radar.py job_radar tests
+      - run: python -m unittest discover -s tests -v
+      - name: Live isolated scan with exact ATS applications
+        run: python radar.py scan
+      - name: Validate outputs and retain historical ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          inventory=json.loads(Path("public/sources.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          assert inventory["total_configured_checked_or_scheduled"] >= 242
+          assert len(state["seen"]) >= 305
+          assert inventory["ats_explicit"] >= 64
+          assert Path("public/index.html").exists()
+          assert Path("public/review.html").exists()
+          assert Path("public/status.html").exists()
+          assert Path("public/feed.xml").exists()
+          print("COVERAGE",json.dumps({
+              "configured":inventory["total_configured_checked_or_scheduled"],
+              "ats_explicit":inventory["ats_explicit"],
+              "reached":inventory["reached"],"errors":inventory["errors"],
+              "feeds_with_jobs":inventory["with_jobs"],
+              "by_platform":inventory.get("by_ats_platform"),
+          }))
+          print("QUALITY",json.dumps({
+              "candidates":audit["prefiltered_candidates"],
+              "verified":audit["official_apply_page_verified"],
+              "reasons":audit["verification_reasons"],
+              "seen":len(state["seen"]),
+          }))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-4-native-ats-smoke
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
