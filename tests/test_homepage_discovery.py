@@ -50,6 +50,23 @@ class HomepageToCareersTests(unittest.TestCase):
         self.assertEqual(ats,[{"kind":"ashby","slug":"realbank"}])
         self.assertEqual(final_url,"https://realbank.example/careers")
 
+    def test_investor_portfolio_does_not_steal_unrelated_ats_jobs(self):
+        from job_radar.discovery import ats_target_has_company_identity
+        due={"name":"Due","aliases":["Due Network"]}
+        for external in ("bitpanda","dialpad","gigs","trawa","cylib-gmbh"):
+            self.assertFalse(ats_target_has_company_identity(
+                due,{"kind":"greenhouse","slug":external}
+            ),external)
+        self.assertTrue(ats_target_has_company_identity(
+            {"name":"Finary"}, {"kind":"ashby","slug":"finary"}
+        ))
+        self.assertTrue(ats_target_has_company_identity(
+            {"name":"Scalable Capital"}, {"kind":"smartrecruiters","slug":"ScalableCapital"}
+        ))
+        self.assertFalse(ats_target_has_company_identity(
+            {"name":"ComplyAdvantage"}, {"kind":"greenhouse","slug":"embed"}
+        ))
+
     def test_no_crawl_of_external_non_ats_careers(self):
         self.assertEqual(
             candidate_careers_links(
