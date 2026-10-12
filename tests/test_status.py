@@ -15,11 +15,15 @@ class PublicHealthTests(unittest.TestCase):
             {"company":"NewPay","ok":True,"jobs":0},
             {"company":"DeadFeed","ok":False,"jobs":0},
             {"company":"v2 application verification","ok":True,"jobs":1},
+            {"company":"Job Opportunities API", "ok":True, "jobs":0,
+             "targets":[{"kind":"disabled — API key required"}],
+             "error":"SKIPPED: no JOB_OPPORTUNITIES_API_KEY"},
         ]
         with tempfile.TemporaryDirectory() as td:
             snap=build_status(checks, {"active_dashboard":1,"seen_forever":304},
                               out_dir=td,generated_at="2026-10-12T17:00:00+00:00")
             self.assertEqual(snap["source_checks"],3)
+            self.assertEqual(snap["source_checks_skipped"],1)
             self.assertEqual(snap["reachable_source_checks"],2)
             self.assertEqual(snap["source_checks_with_jobs"],1)
             self.assertEqual(snap["source_checks_failed"],1)
