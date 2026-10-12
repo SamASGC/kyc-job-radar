@@ -79,3 +79,101 @@ def discover_aggregator_ats(
         if len(result) >= limit:
             break
     return result
+
+
+# These sites are discovery leads, NOT proof that an opening is active.
+# Never fetch arbitrary private/internal hosts from untrusted feed records.
+AGGREGATOR_DOMAINS = {
+    "jobicy.com", "remotive.com", "himalayas.app",
+    "remoteok.com", "arbeitnow.com", "weworkremotely.com",
+    "remotelanders.com",
+}
+
+
+def approved_feed_url(url: str) -> bool:
+    try:
+        p = urlsplit(url or "")
+        host = (p.hostname or "").casefold()
+        return (
+            p.scheme == "https"
+            and not p.username
+            and any(host == domain or host == "www." + domain
+                    for domain in AGGREGATOR_DOMAINS)
+        )
+    except (ValueError, TypeError):
+        return False
+
+
+async def extract_ats_from_aggregator_page(http, lead: Job) -> dict | None:
+    """One request to a known job-board result; follow *public* Apply links.
+
+    Returning an ATS board does not verify this specific advertised vacancy.
+    The subsequent official ATS re-fetch and strict gates remain mandatory.
+    """
+    if not approved_feed_url(lead.apply_url):
+        return None
+    try:
+        response = await http.get(lead.apply_url)
+        if response.status_code != 200:
+            return None
+        direct = ats_target_from_url(str(response.url))
+        if direct:
+            return direct
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(response.text[:220_000], "html.parser")
+        from urllib.parse import urljoin
+        for a in soup.find_all("a", href=True):
+            label = norm_text(a.get_text(" ", strip=True) + " "
+                              + str(a.get("aria-label") or ""))
+            if not any(token in label for token in (
+                "apply", "application", "original job", "company website",
+            )):
+                continue
+            dest = urljoin(str(response.url), a["href"])
+            target = ats_target_from_url(dest)
+            if target:
+                return target
+    except Exception:
+        return None
+    return None
+
+
+async def discover_ats_via_aggregator_pages(
+    http, jobs: list[Job], known_names: set[str],
+    max_pages: int = 24, hour_bucket: int = 0,
+) -> list[tuple[dict, dict]]:
+    """Conservatively enrich official ATS source coverage over successive runs."""
+    import asyncio
+    known = {norm_text(x) for x in known_names}
+    relevant = ("kyc", "kyb", "aml", "edd", "cdd", "sanctions",
+                "financial crime", "transaction monitoring",
+                "merchant risk", "fraud investigation", "compliance")
+    leads = [j for j in jobs
+             if j.source_kind == "aggregator"
+             and norm_text(j.company) not in known
+             and any(x in norm_text(j.title) for x in relevant)
+             and approved_feed_url(j.apply_url)]
+    leads.sort(key=lambda j: (norm_text(j.company), norm_text(j.title)))
+    if not leads or max_pages <= 0:
+        return []
+    limit = min(max_pages, len(leads))
+    start = (hour_bucket * limit) % len(leads)
+    sample = [leads[(start + i) % len(leads)] for i in range(limit)]
+    results = await asyncio.gather(
+        *(extract_ats_from_aggregator_page(http, j) for j in sample),
+        return_exceptions=True,
+    )
+    out, seen_targets = [], set()
+    for lead, target in zip(sample, results):
+        if not isinstance(target, dict):
+            continue
+        key = (target["kind"], target["slug"].casefold())
+        if key in seen_targets:
+            continue
+        seen_targets.add(key)
+        out.append(({
+            "name": lead.company, "sector": lead.sector or "Fintech",
+            "careers_url": lead.apply_url, "enabled": True,
+            "priority": "discovered ATS from aggregator",
+        }, target))
+    return out
