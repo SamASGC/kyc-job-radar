@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 import json
+import os
 
 from job_radar.models import Job
 
@@ -76,8 +77,13 @@ async def fetch_licensed_employer_domain_jobs(http, directory_path: Path,
     are still AGGREGATOR leads, and cannot be delivered without independent
     official ATS verification later in the pipeline.
     """
+    if not has_jobopportunities_api_key():
+        return [], {
+            "queried_domains": 0, "batches": 0, "results": 0, "errors": 0,
+            "status": "skipped_no_api_key",
+        }
     if not directory_path.exists():
-        return [], {"queried_domains": 0, "batches": 0, "results": 0, "errors": 0}
+        return [], {"queried_domains": 0, "batches": 0, "results": 0, "errors": 0, "status": "no_directory"}
     directory = json.loads(directory_path.read_text(encoding="utf-8"))
     now = datetime.now(timezone.utc)
     batches = selected_company_domain_batches(
@@ -151,24 +157,38 @@ def _jobopportunities_row(x: dict) -> Job:
     ).finalize()
 
 
+def has_jobopportunities_api_key() -> bool:
+    return bool(os.environ.get("JOB_OPPORTUNITIES_API_KEY", "").strip())
+
+
 async def _get_jobopportunities(http, params: dict) -> list[Job]:
-    url = "https://api.jobopportunitiesapi.org/public/jobs"
-    # Keyless traffic is documented around 40 requests/minute. We serialize deliberately.
+    """Authenticated external API; public listings require a key as of 2026-10-12."""
+    token = os.environ.get("JOB_OPPORTUNITIES_API_KEY", "").strip()
+    if not token:
+        raise RuntimeError(
+            "Job Opportunities API is disabled: JOB_OPPORTUNITIES_API_KEY required "
+            "(both /public/jobs and /v1/jobs return HTTP 401 without credentials)"
+        )
+    url = "https://api.jobopportunitiesapi.org/v1/jobs"
+    headers = {"Accept": "application/json", "Authorization": token}
     await asyncio.sleep(0.78)
-    r = await http.get(url, params=params, headers={"Accept": "application/json"})
+    r = await http.get(url, params=params, headers=headers)
     if r.status_code == 429:
         try:
             wait = min(15, max(1, int(r.headers.get("Retry-After") or "2")))
         except ValueError:
             wait = 2
         await asyncio.sleep(wait)
-        r = await http.get(url, params=params, headers={"Accept": "application/json"})
+        r = await http.get(url, params=params, headers=headers)
     r.raise_for_status()
     data = r.json()
     return [_jobopportunities_row(x) for x in data.get("data", []) if isinstance(x, dict)]
 
 
 async def fetch_jobopportunities_open_universe(http) -> list[Job]:
+    if not has_jobopportunities_api_key():
+        raise RuntimeError("Job Opportunities API skipped: no GitHub Actions secret JOB_OPPORTUNITIES_API_KEY configured.")
+
     """Search full JDs across an open employer universe, restricted to Europe.
 
     For every signal we search remote jobs whose published country is European, plus
