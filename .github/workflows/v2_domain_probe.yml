@@ -1,0 +1,42 @@
+name: Radar v2 — Employer domain API probe
+
+on:
+  push:
+    branches:
+      - "feat/radar-v2-strict-quality"
+    paths:
+      - ".github/workflows/v2_domain_probe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check httpx==0.28.1
+      - name: Check public vs authenticated employer domain endpoints
+        run: |
+          python - <<'PY'
+          import httpx
+          hosts=[
+            ("public_baseline","https://api.jobopportunitiesapi.org/public/jobs",{"limit":1}),
+            ("public_company_domain","https://api.jobopportunitiesapi.org/public/jobs",{"company_domain":"stripe.com","limit":2}),
+            ("authenticated_v1_company_domain","https://api.jobopportunitiesapi.org/v1/jobs",{"company_domain":"stripe.com","limit":2}),
+          ]
+          with httpx.Client(timeout=12.0,follow_redirects=True) as client:
+              for label,url,params in hosts:
+                  try:
+                      resp=client.get(url,params=params,headers={"Accept":"application/json"})
+                      print(label, "HTTP",resp.status_code,
+                            "Content-Type",resp.headers.get("content-type",""),
+                            "Preview",resp.text[:350].replace(chr(10)," "))
+                  except Exception as exc:
+                      print(label,type(exc).__name__,str(exc)[:250])
+          PY
