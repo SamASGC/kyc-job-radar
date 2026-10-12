@@ -1,0 +1,47 @@
+name: Radar v2.2 — website enrichment smoke (isolated)
+on:
+  push:
+    branches: ["feat/v2-2-web-enrichment"]
+    paths: [".github/workflows/v2_web_enrichment_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Live Wikidata provider probe (no production writes)
+        shell: bash
+        run: |
+          python -m scripts.enrich_missing_websites --limit 10 || echo "ENRICHMENT_PROVIDER_UNAVAILABLE"
+      - name: Show statistics and staged candidates
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=Path('data/verified_company_websites.json')
+          b=Path('data/enrichment_state.json')
+          good=json.loads(a.read_text()) if a.exists() else []
+          state=json.loads(b.read_text()) if b.exists() else {}
+          print("SAMPLED_COMPANIES",len(state.get("attempted",{})))
+          print("VERIFIED_NEW_WEBSITES",len(good))
+          print("CANDIDATES",json.dumps(good[:10],ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: enrichment-live-probe
+          path: |
+            data/enrichment_state.json
+            data/verified_company_websites.json
+          if-no-files-found: warn
