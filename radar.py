@@ -29,6 +29,7 @@ from job_radar.sources.open_universe import (
 )
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
+from job_radar.feed import create_rss
 
 
 _BASE_LOAD_JSON = scanner_module.load_json
@@ -238,7 +239,8 @@ def cmd_build(args):
     jobs = list(state.get("jobs", {}).values())
     jobs.sort(key=lambda x: (-int(x.get("score", 0)), x.get("company", ""), x.get("title", "")))
     build_dashboard(jobs, state.get("stats", {}), "public/index.html", state.get("dataset_updated_at", ""))
-    print(f"Built: {ROOT / 'public/index.html'}")
+    create_rss(jobs)
+    print(f"Built: {ROOT / 'public/index.html'} + feed.xml")
 
 
 def cmd_health(args):
