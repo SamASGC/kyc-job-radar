@@ -184,6 +184,24 @@ def find_known_company(job: Job, lookup: dict[str, dict]) -> dict | None:
     return None
 
 
+def declared_ats_owners(companies: list[dict]) -> dict[tuple[str, str], dict]:
+    """Canonical owner when an ATS slug is explicitly configured by a company.
+
+    Some former firms redirect their careers site to an acquirer. That is
+    not evidence that the acquired firm itself is hiring.
+    """
+    lookup = {}
+    for company in companies:
+        for target in company.get("ats", []):
+            kind = str(target.get("kind") or "").casefold()
+            slug = str(target.get("slug") or "").casefold()
+            if kind and slug:
+                # Lever EU and global may share the same API source prefix.
+                kind = "lever" if kind == "lever_eu" else kind
+                lookup.setdefault((kind, slug), company)
+    return lookup
+
+
 def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dict], profile: dict, skip_missing_sources: set[str] | None = None) -> tuple[dict, dict]:
     lookup = known_company_lookup(companies)
     skip_missing_sources = skip_missing_sources or set()
@@ -227,8 +245,18 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
             semantic_changed = True
 
     # Cross-source dedupe before scoring, preferring official sources.
+    # Correct redirect/ATS-owner mismatches before calculating fingerprints.
+    owners = declared_ats_owners(companies)
     merged: dict[str, Job] = {}
     for j in raw_jobs:
+        parts = str(j.source or "").split(":", 1)
+        if j.source_kind == "official ATS" and len(parts) == 2:
+            kind, slug = parts[0].casefold(), parts[1].casefold()
+            owner = owners.get((kind, slug))
+            if owner and norm_text(j.company) != norm_text(owner["name"]):
+                j.company = owner["name"]
+                j.fingerprint = ""
+                j.finalize()
         known = find_known_company(j, lookup)
         if known:
             j.company = known["name"]
