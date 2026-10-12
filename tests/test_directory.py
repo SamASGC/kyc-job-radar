@@ -29,6 +29,43 @@ class DirectoryTests(unittest.TestCase):
         self.assertEqual(stats["discovered_ats"], 1)
         self.assertEqual(stats["directory_rows"], 3)
 
+    def test_two_half_hour_runs_cover_every_accessible_company(self):
+        from job_radar.directory import rotate_company_directory
+        rows = [{"name": f"NewFintech-{i:03d}",
+                 "website": f"https://newfintech{i}.example.org",
+                 "priority": 20} for i in range(322)]
+        early, e = rotate_company_directory(
+            rows, {}, set(), hour=100, cold_per_hour=180, hot_per_hour=250,
+        )
+        later, l = rotate_company_directory(
+            rows, {}, set(), hour=101, cold_per_hour=180, hot_per_hour=250,
+        )
+        early_names = {x["name"] for x in early}
+        later_names = {x["name"] for x in later}
+        self.assertEqual(len(early_names), 180)
+        self.assertEqual(len(later_names), 180)
+        self.assertEqual(len(early_names | later_names), 322)
+        self.assertEqual(e["sampled_this_run"],180)
+        self.assertEqual(l["sampled_this_run"],180)
+
+    def test_real_scanner_halfhour_bucket_advances_selection(self):
+        import json
+        from job_radar.directory import load_directory_batch
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "fintech.json"
+            entries = [{"name":f"FinTech {i}", "website":f"https://fintech{i}.org",
+                        "priority": 50} for i in range(20)]
+            path.write_text(json.dumps(entries),encoding="utf-8")
+            a, _ = load_directory_batch(
+                path, {}, set(), cold_per_hour=10, hot_per_hour=0,
+                now=datetime(2026,10,12,12,17,tzinfo=timezone.utc),
+            )
+            b, _ = load_directory_batch(
+                path, {}, set(), cold_per_hour=10, hot_per_hour=0,
+                now=datetime(2026,10,12,12,47,tzinfo=timezone.utc),
+            )
+            self.assertEqual(len({x["name"] for x in a+b}),20)
+
     def test_does_not_revisit_normal_watchlist_names(self):
         data = [
             {"name": "Finom", "website": "https://finom.co"},

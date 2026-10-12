@@ -5,7 +5,7 @@ import json
 import re
 from bs4 import BeautifulSoup
 
-from job_radar.discovery import detect_ats, generic_job_links
+from job_radar.discovery import detect_ats, generic_job_links, candidate_careers_links
 from job_radar.models import Job
 
 
@@ -96,6 +96,28 @@ async def fetch_generic(http, company: dict):
     final_url = str(r.url)
     detected = detect_ats(html, final_url)
     links = generic_job_links(html, final_url)
+    standalone = []
+
+    # A regulator's fintech register generally lists the company homepage,
+    # not the careers page. Follow ONE clearly labelled official careers link.
+    # Never crawl arbitrarily beyond it or follow unapproved external domains.
+    if not detected and not any(STRONG_TITLE.search(x.get("title", "")) for x in links):
+        for career_link in candidate_careers_links(html, final_url, max_links=1):
+            try:
+                rr = await http.get(career_link)
+                rr.raise_for_status()
+                career_html, career_url = rr.text, str(rr.url)
+                detected = detect_ats(career_html, career_url)
+                career_links = generic_job_links(career_html, career_url)
+                if _jsonld_job(BeautifulSoup(career_html, "html.parser")):
+                    standalone.append(parse_generic_job_page(
+                        career_html, career_url, company, fallback_title="Job posting"
+                    ))
+                links.extend(career_links)
+                if detected or career_links or standalone:
+                    final_url = career_url
+            except Exception:
+                pass
 
     # Enrich only links whose title already looks relevant. This raises coverage for
     # custom career sites/Teamtailor-like pages without hammering every job detail page.
@@ -114,7 +136,7 @@ async def fetch_generic(http, company: dict):
             if isinstance(job,Job):
                 enriched[job.apply_url]=job
 
-    jobs=[]
+    jobs=list(standalone)
     for x in links:
         if x["url"] in enriched:
             jobs.append(enriched[x["url"]]); continue

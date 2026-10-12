@@ -311,11 +311,18 @@
   },
   {
     "name": "WeTravel",
-    "careers_url": "https://careers.wetravel.com/careers",
+    "careers_url": "https://jobs.ashbyhq.com/wetravel",
     "sector": "Payments",
     "priority": "P1+",
     "origin": "2026-10-12 official careers subdomain",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "wetravel"
+      }
+    ],
+    "ats_evidence": "Official ATS published current payment-operations job, 2026-10-12"
   },
   {
     "name": "Satispay",
@@ -343,5 +350,159 @@
       "Due Payments"
     ],
     "notes": "Getro board requires authentication for programmatic API; public page may hide jobs in client JavaScript. Do not claim full automated ATS verification."
+  },
+  {
+    "name": "Binance",
+    "careers_url": "https://jobs.lever.co/binance",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "binance"
+      }
+    ]
+  },
+  {
+    "name": "Yuno",
+    "careers_url": "https://jobs.lever.co/yuno",
+    "sector": "Payments",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "yuno"
+      }
+    ]
+  },
+  {
+    "name": "FYST",
+    "careers_url": "https://jobs.ashbyhq.com/fyst",
+    "sector": "Payments",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "fyst"
+      }
+    ]
+  },
+  {
+    "name": "Glia",
+    "careers_url": "https://jobs.ashbyhq.com/glia",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "glia"
+      }
+    ]
+  },
+  {
+    "name": "bunch",
+    "careers_url": "https://jobs.ashbyhq.com/bunch",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "bunch"
+      }
+    ]
+  },
+  {
+    "name": "Invopop",
+    "careers_url": "https://jobs.ashbyhq.com/invopop",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "invopop"
+      }
+    ]
+  },
+  {
+    "name": "Checker",
+    "careers_url": "https://jobs.lever.co/checker",
+    "sector": "Payments",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "checker"
+      }
+    ]
+  },
+  {
+    "name": "Hopper",
+    "careers_url": "https://jobs.ashbyhq.com/hopper",
+    "sector": "Payments",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "hopper"
+      }
+    ]
+  },
+  {
+    "name": "Affirm",
+    "careers_url": "https://job-boards.greenhouse.io/affirm",
+    "sector": "Payments",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "affirm"
+      }
+    ]
+  },
+  {
+    "name": "OnHires",
+    "careers_url": "https://jobs.ashbyhq.com/onhires",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "onhires"
+      }
+    ]
+  },
+  {
+    "name": "Pragmatike",
+    "careers_url": "https://jobs.ashbyhq.com/pragmatike",
+    "sector": "Fintech",
+    "priority": "P2",
+    "origin": "2026-10-12 direct ATS discovery: public current job posting",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "pragmatike"
+      }
+    ]
   }
 ]

@@ -25,8 +25,8 @@ def rotate_company_directory(
     discovered: dict,
     configured_names: set[str],
     hour: int,
-    cold_per_hour: int = 50,
-    hot_per_hour: int = 200,
+    cold_per_hour: int = 180,
+    hot_per_hour: int = 250,
 ) -> tuple[list[dict], dict]:
     """Choose previously discovered ATS targets first, plus rotating prospects."""
     seen = {n.casefold().strip() for n in configured_names}
@@ -63,6 +63,7 @@ def rotate_company_directory(
         "directory_rows": len(rows),
         "with_valid_websites": len(candidates),
         "discovered_ats": len(hot),
+        "sampled_this_run": len(chosen_hot) + len(chosen_cold),
         "sampled_this_hour": len(chosen_hot) + len(chosen_cold),
     }
 
@@ -71,8 +72,8 @@ def load_directory_batch(
     path: Path,
     discovered: dict,
     configured_names: set[str],
-    cold_per_hour: int = 50,
-    hot_per_hour: int = 200,
+    cold_per_hour: int = 180,
+    hot_per_hour: int = 250,
     now: datetime | None = None,
 ) -> tuple[list[dict], dict]:
     if not path.exists():
@@ -82,6 +83,8 @@ def load_directory_batch(
     if not isinstance(data, list):
         raise ValueError("Directory must contain a list of companies")
     now = now or datetime.now(timezone.utc)
-    hour = int(now.timestamp() // 3600)
-    return rotate_company_directory(data, discovered, configured_names, hour,
+    # Main workflow runs at :17 and :47, so successive half-hour slots
+    # should inspect different businesses, not the same hourly slice twice.
+    scan_slot = int(now.timestamp() // 1800)
+    return rotate_company_directory(data, discovered, configured_names, scan_slot,
                                     cold_per_hour, hot_per_hour)

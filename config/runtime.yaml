@@ -20,9 +20,11 @@ aggregator_cadence_hours:
   Himalayas: 24
 
 
-# Long-tail discovery from the licensed directory (NOT 2593 independent ATS).
-directory_cold_per_hour: 50
-directory_hot_per_hour: 200
+# Long-tail discovery: :17 and :47 scan disjoint ~180-firm batches; 2x180
+# covers every company with an available HTTPS site within an hour.
+# The other 2255 directory entries have no usable URL and are NOT scanned.
+directory_cold_per_hour: 180
+directory_hot_per_hour: 250
 directory_domain_queries_per_hour: 80
 
 # Public job-board links are untrusted leads; they must resolve to ATS feeds.

@@ -52,6 +52,33 @@ filler.
   a supported ATS, but must expose a defensible original date and visible
   apply/form evidence. A merely indexed/generic careers home page does not count.
 
+### Radar v2.1 — hourly source coverage (12 October 2026)
+
+- **203 directly configured financial-service/fintech employers**, including 11 additional
+  verified public ATS boards (Binance, Yuno, FYST, Affirm, Glia, bunch, Invopop,
+  Checker, Hopper, OnHires and Pragmatike). Existing Paymentology, SwissBorg,
+  MoonPay and WeTravel entries now fetch their public ATS directly.
+- **322 additional company URLs** in the attributed 2,593-company register
+  after removing the overlap with the 203 configured employers.
+  Two independent scheduled sweeps at **:17 and :47 UTC** check 180 URLs
+  per run. The half-hour rotation makes their combined union include all
+  322 **once per scheduled hour**, rather than repeating the same 50 websites
+  twice within an hour. Actual scheduling is subject to GitHub Actions delays.
+- That is **525 distinct target companies with a usable web/ATS entry**, NOT
+  525 functioning independent ATS feeds. Others in the licensed register
+  (**2,255 with no usable URL**) cannot be claimed as monitored job sources.
+- Company homepage discovery now follows **at most one** high-confidence
+  same-company careers link or recognized public ATS link. No general-purpose
+  web crawling; final alerts still require the exact original date ≤96h and
+  an open official application page.
+- [Isolated 12 Oct 2026 benchmark](https://github.com/SamASGC/kyc-job-radar/actions/runs/38302046202):
+  383 employer targets attempted in one run; 392 source checks including feeds,
+  of which 345 succeeded, with 242 yielding jobs. Collected 6,568 raw postings;
+  after strict filters, zero *new* eligible notifications. The end-to-end scan
+  finished in approximately 2m10s and generated verified dashboard, manual
+  review, status and RSS. A successful technical scan is not a guarantee
+  of exhaustive coverage or real-time provider posting dates.
+
 ### What the numbers mean
 
 - The v1.3 repository listed **174 direct employer targets**. This v2 branch adds **17 additional employer career pages/ATS boards** and **Due's investor-maintained Speedinvest page**, bringing the configured employer target list to **192** (not 192 independently verified functional ATS feeds). All **39 of 39** named fintech watchlist companies have an explicit entry, but Due's Getro/Speedinvest site has no unauthenticated official ATS API and Ondato links to LinkedIn only. Those two require alternative verification rather than claiming full ATS monitoring.
