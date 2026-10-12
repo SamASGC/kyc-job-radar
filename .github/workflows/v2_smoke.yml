@@ -1,3 +1,4 @@
+# Validate 2593 licensed firm directory imported and 96h-funnel diagnostics
 # Final source-bridge isolated smoke verification - October 2026
 # Final v2 quality checkpoint 2026-10-12 (isolated; no production publishing)
 name: Radar v2 isolated live smoke
@@ -41,4 +42,5 @@ jobs:
           path: |
             public/index.html
             data/health.json
+            data/quality_audit.json
           if-no-files-found: warn
