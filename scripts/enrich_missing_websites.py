@@ -20,7 +20,7 @@ import httpx
 
 from job_radar.website_enrichment import (
     COUNTRY_ITEM, acceptable_official_url, entity_candidates,
-    homepage_identity_matches, registry_key,
+    homepage_identity_matches, registry_key, normalized_business_name,
 )
 
 API = "https://www.wikidata.org/w/api.php"
@@ -29,14 +29,17 @@ RETRY_DAYS = 30
 
 
 def candidates_to_research(directory: list[dict], attempted: dict,
-                           limit: int, now: datetime) -> list[dict]:
+                           limit: int, now: datetime,
+                           existing_watchlist: set[str] | None = None) -> list[dict]:
     candidates = []
     unique = set()
+    known = {normalized_business_name(n) for n in (existing_watchlist or set())}
     for row in directory:
         name, country = str(row.get("name", "")), str(row.get("country", "")).upper()
         key = registry_key(name, country)
         if (not name or not country or country not in COUNTRY_ITEM
-                or row.get("website") or key in unique):
+                or row.get("website") or key in unique
+                or normalized_business_name(name) in known):
             continue
         unique.add(key)
         checked = attempted.get(key, {})
@@ -115,9 +118,11 @@ async def verify_site(client: httpx.AsyncClient, site: str,
 
 
 async def enrich(directory: list[dict], attempted: dict, verified: list[dict],
-                 limit: int = 20, now: datetime | None = None) -> dict:
+                 limit: int = 20, now: datetime | None = None,
+                 existing_watchlist: set[str] | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
-    sample = candidates_to_research(directory, attempted, limit, now)
+    sample = candidates_to_research(directory, attempted, limit, now,
+                                   existing_watchlist)
     stats = {"missing_total": sum(not x.get("website") for x in directory),
              "selected": len(sample), "queried": 0, "matched_entities": 0,
              "new_verified_websites": 0, "held_for_manual_review": 0,
@@ -188,19 +193,35 @@ def main() -> None:
         ]
         if not directory:
             parser.error("No matching licensed legal entity found")
+    known_names = set()
+    if not args.focus_name:
+        for f in (Path("config/companies.json"), Path("config/extra_companies.json")):
+            if f.exists():
+                for company in json.loads(f.read_text(encoding="utf-8")):
+                    known_names.add(company.get("name", ""))
+                    known_names.update(company.get("aliases", []))
     data = json.loads(args.state.read_text(encoding="utf-8")) if args.state.exists() else {}
     attempted = data.get("attempted", {})
     verified = json.loads(args.verified.read_text(encoding="utf-8")) if args.verified.exists() else []
-    stats = asyncio.run(enrich(directory, attempted, verified, limit=args.limit))
+    stats = asyncio.run(enrich(
+        directory, attempted, verified, limit=args.limit,
+        existing_watchlist=known_names,
+    ))
     args.state.parent.mkdir(parents=True, exist_ok=True)
     args.verified.parent.mkdir(parents=True, exist_ok=True)
-    args.state.write_text(json.dumps({"attempted": attempted},indent=2,ensure_ascii=False)+"\n",
-                          encoding="utf-8")
+    args.state.write_text(json.dumps({
+        "attempted": attempted,
+        "last_run_at": datetime.now(timezone.utc).isoformat(),
+        "last_run_status": stats["status"],
+        "last_run_stats": stats,
+    },indent=2,ensure_ascii=False)+"\n", encoding="utf-8")
     args.verified.write_text(json.dumps(verified,indent=2,ensure_ascii=False)+"\n",
                              encoding="utf-8")
     print(json.dumps(stats,ensure_ascii=False))
+    # A provider outage is not a false "no firms found"; record it,
+    # but do not cause hourly GitHub failure-notification spam.
     if stats["status"] != "ok":
-        raise RuntimeError(stats["status"])
+        print("PROVIDER_UNAVAILABLE:", stats["status"])
 
 
 if __name__ == "__main__":
