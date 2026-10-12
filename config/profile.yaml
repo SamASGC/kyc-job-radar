@@ -1,21 +1,22 @@
 # No PII is stored here. This is a scoring profile distilled from the CV.
 minimum_score: 62
-# Prefer <=7 days; keep up to 14 days to increase coverage without filling the radar with stale roles.
-max_post_age_days: 14
-stale_after_hours: 72
+# Strict v2: original posting <=96h; missing or unreliable dates are never alerted.
+max_post_age_days: 4
+max_post_age_hours: 96
+strict_quality_gate: true
+stale_after_hours: 24
 
-# Onsite/hybrid: ONLY these countries. Barcelona is explicitly in scope as part of Spain.
+# Onsite/hybrid shortlist only. Barcelona is excluded in v2.
 onsite_hybrid_countries:
   - Spain
   - Luxembourg
   - Switzerland
   - Estonia
-  - Czechia
-  - Malta
+  - Lithuania
 
-# Remote: Europe only. Europe/EMEA/global postings remain eligible when a European candidate is allowed,
-# but country-locked remote jobs outside Europe (US, Mexico, Canada, LATAM, etc.) are rejected.
-remote_scope: Europe
+# Remote must explicitly include Spain/Canary Islands in a structured ATS location.
+# Europe/EMEA/Global alone does NOT establish permission to work from Canarias.
+remote_scope: Spain
 
 profile_summary:
   years_relevant: 3
