@@ -86,8 +86,8 @@ class HomepageToCareersTests(unittest.TestCase):
             "careers_url":"https://careers.speedinvest.com/companies/due-2"
         }
         jobs,_,_=asyncio.run(fetch_generic(FakeHTTP(),due))
-        self.assertTrue(jobs)
-        self.assertTrue(all(j.source_kind=="aggregator" for j in jobs))
+        # Investor page cards are not company-specific ATS job records.
+        self.assertEqual(jobs,[])
 
     def test_no_crawl_of_external_non_ats_careers(self):
         self.assertEqual(
