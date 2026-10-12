@@ -1,0 +1,42 @@
+name: Radar v2 isolated live smoke
+
+on:
+  push:
+    branches:
+      - "feat/radar-v2-strict-quality"
+    paths:
+      - ".github/workflows/v2_smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Test one full live scan (no git push and no Pages deployment)
+        run: python radar.py scan
+      - name: Source health and output sizes
+        if: always()
+        run: |
+          python radar.py health
+          python -c "import json; d=json.load(open('data/state.json')); print('v2 active:',len(d.get('jobs',{})), 'historical seen:',len(d.get('seen',{})))"
+      - name: Archive HTML and health for manual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-isolated-smoke
+          path: |
+            public/index.html
+            data/health.json
+          if-no-files-found: warn
