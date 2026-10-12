@@ -65,7 +65,7 @@ jobs:
           assert inv["direct_configured"] == 284
           assert len(state["seen"]) >= 305
           assert inv["ats_explicit"] >= 78
-          for name in ("Aztec Group","Arendt","Aspire","Euroclear","BNY"):
+          for name in ("Aztec Group","Arendt","AiPrise","Euroclear","BNY"):
               rows=[x for x in health["sources"] if x.get("company")==name]
               print("ATS_RESULT",json.dumps({
                   "name":name,
