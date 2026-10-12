@@ -329,6 +329,27 @@ async def run_scan() -> dict:
     profile = load_yaml("config/profile.yaml")
     runtime = load_yaml("config/runtime.yaml")
     state = load_state()
+    if profile.get("strict_quality_gate", False):
+        # ChatGPT radar + manually delivered HTML reports use the SAME lifetime
+        # no-repeat ledger as this external scanner, seeded once and idempotent.
+        import hashlib
+        try:
+            already_told = load_json("config/previously_presented.json")
+        except FileNotFoundError:
+            already_told = []
+        seen = state.setdefault("seen", {})
+        for rec in already_told:
+            company, title = str(rec.get("company", "")), str(rec.get("title", ""))
+            if not company or not title:
+                continue
+            key = "external-alert:" + hashlib.sha256(
+                (norm_text(company) + "|" + norm_text(title)).encode("utf-8")
+            ).hexdigest()[:24]
+            seen.setdefault(key, {
+                "company": company, "title": title,
+                "first_seen": "2026-10-12T00:00:00+00:00",
+                "source": "ChatGPT and manual radar delivery",
+            })
     directory_health = {}
     if profile.get("strict_quality_gate", False):
         from job_radar.directory import load_directory_batch
