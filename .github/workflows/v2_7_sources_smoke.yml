@@ -1,0 +1,87 @@
+name: Radar v2.7 — 310 financial sources smoke
+
+on:
+  push:
+    branches: ["feat/v2-7-financial-employers-310"]
+    paths: [".github/workflows/v2_7_sources_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full real scan, isolated without publishing
+        run: python radar.py scan
+      - name: Validate coverage, ATS identities, history and quality
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path(".")
+          inv = json.loads((root/"public/sources.json").read_text())
+          audit = json.loads((root/"data/quality_audit.json").read_text())
+          health = json.loads((root/"data/health.json").read_text())
+          state = json.loads((root/"data/state.json").read_text())
+          assert inv["direct_configured"] == 310, inv["direct_configured"]
+          assert inv["ats_explicit"] >= 92, inv["ats_explicit"]
+          assert len(state["seen"]) >= 305, len(state["seen"])
+          ats=["Convera","Permira","Telcoin","Bybit","Dotfile",
+               "Merge Money","TaxBit","INFINIT","Factor","Allfunds",
+               "Fin (Payments)","Thera","Astra Payments","Latitude Global"]
+          banks=["ING Bank","Standard Chartered","Danske Bank","KBC Bank",
+                 "Intesa Sanpaolo","Commerzbank","Bank of America",
+                 "Bank of Ireland","Rabobank","Société Générale",
+                 "NatWest Group","Bankinter"]
+          sources = {x["company"]: x for x in inv["sources"]}
+          checks = {x["company"]: x for x in health["sources"]}
+          assert all(x in sources for x in ats+banks)
+          print("NEW_ATS_HEALTH",json.dumps({
+             n:{"status":sources[n]["result"],
+                "jobs":sources[n]["jobs_found"],
+                "error":str(checks[n].get("error",""))[:200]}
+             for n in ats
+          }))
+          print("NEW_BANK_SITE_HEALTH",json.dumps({
+             n:{"status":sources[n]["result"],"jobs":sources[n]["jobs_found"]}
+             for n in banks
+          }))
+          print("COVERAGE",json.dumps({
+             "direct":inv["direct_configured"],"ats":inv["ats_explicit"],
+             "total_swept":inv["total_configured_checked_or_scheduled"],
+             "rotating":inv["rotating_checked"],"reached":inv["reached"],
+             "errors":inv["errors"],"raw_productive":inv["with_jobs"]
+          }))
+          print("QUALITY",json.dumps({
+             "raw":audit["raw_total"],
+             "prefiltered":audit["prefiltered_candidates"],
+             "verified":audit["official_apply_page_verified"],
+             "reasons":audit["verification_reasons"],
+             "seen":len(state["seen"])
+          }))
+          for filename in ("index.html","sources.html","review.html",
+                           "status.html","feed.xml"):
+              assert (root/"public"/filename).is_file(), filename
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-7-source-and-quality-audit
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
