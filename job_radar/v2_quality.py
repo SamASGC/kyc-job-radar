@@ -151,7 +151,15 @@ def official_active_listing(job: Job) -> bool:
     if url.scheme != "https" or not url.netloc:
         return False
     path = (url.path or "").rstrip("/")
-    if not path or path in {"/careers", "/jobs", "/join-us"}:
+    from urllib.parse import parse_qsl
+    from job_radar.models import JOB_SELECTOR_PARAMS
+    has_job_selector = any(
+        key.casefold() in JOB_SELECTOR_PARAMS and value
+        for key, value in parse_qsl(url.query)
+    )
+    if not path and not has_job_selector:
+        return False
+    if path in {"/careers", "/jobs", "/join-us"} and not has_job_selector:
         return False
     return True
 
