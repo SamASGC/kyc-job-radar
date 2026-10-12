@@ -1,0 +1,54 @@
+name: Radar v2.7 — blocked bank portal alternatives
+
+on:
+  push:
+    branches: ["feat/v2-7-financial-employers-310"]
+    paths: [".github/workflows/v2_7_bank_portal_probe.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Test read-only official bank alternatives
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          urls = {
+            "Rabobank standard": "https://rabobank.jobs/en/jobs/",
+            "Rabobank FEC": "https://rabobank.jobs/en/expertise/financial-economic-crime/",
+            "NatWest main": "https://www.natwestgroupcareers.com/",
+            "NatWest search": "https://jobs.natwestgroup.com/search/natwest-group/jobs",
+            "Bankinter English": "https://www.bankinter.com/webcorporativa/en/corporate-information/about-bankinter/work-with-us",
+            "Bankinter blog": "https://www.bankinter.com/blog/noticias-bankinter/trabajar",
+            "Gemini alternate ATS": "https://job-boards.greenhouse.io/gemini",
+            "Cubist alternate ATS": "https://jobs.ashbyhq.com/cubist",
+          }
+          async def main():
+            http = Http(concurrency=6, timeout=16)
+            async def visit(name,url):
+              try:
+                response=await http.get(url)
+                return {"source":name,"status":response.status_code,
+                        "final":str(response.url),
+                        "content_len":len(response.text)}
+              except Exception as exc:
+                return {"source":name,"error":type(exc).__name__,
+                        "detail":str(exc)[:120]}
+            data=await asyncio.gather(*(visit(n,u) for n,u in urls.items()))
+            for rec in data:
+              print("BANK_SOURCE_PROBE",json.dumps(rec))
+            await http.close()
+          asyncio.run(main())
+          PY
