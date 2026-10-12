@@ -38,6 +38,10 @@ def review_candidates(records: list[dict], seen: dict | None = None,
         normalized_title = norm_text(title)
         if not company or not any(word in normalized_title for word in RELEVANT_TITLE_TERMS):
             continue
+        # An unconfirmed "remote Europe" hint is not valid Spain/Canaries
+        # eligibility, and London office jobs must never appear here.
+        if rec.get("geography_verified") is not True:
+            continue
         reason = str(rec.get("reason") or "")
         # Confirmed old/closed postings must not slip into this side list.
         if reason == "explicitly_closed":
