@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import re
 import unicodedata
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
 
 def utcnow_iso() -> str:
@@ -21,12 +21,29 @@ def norm_text(value: str | None) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+# Keep job selectors: some companies host all vacancies at /careers?gh_jid=...
+# Removing those parameters turns a working Apply link into a generic page.
+JOB_SELECTOR_PARAMS = frozenset({
+    "gh_jid", "job", "jobid", "job_id", "job-id", "jid", "id",
+    "requisition", "requisitionid", "requisition_id", "reqid", "req_id",
+    "position", "positionid", "position_id", "postingid", "posting_id",
+    "opening", "openingid", "roleid", "ashby_jid", "oid", "rid",
+})
+
+
 def canonical_url(url: str) -> str:
     try:
         p = urlsplit(url)
-        # Drop tracking query/fragment for dedupe, preserve path.
-        return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", ""))
-    except Exception:
+        # Drop ad/campaign tracking, NOT requisition selectors needed to apply.
+        selectors = [
+            (key, value) for key, value in parse_qsl(p.query, keep_blank_values=True)
+            if key.casefold() in JOB_SELECTOR_PARAMS and value
+        ]
+        return urlunsplit((
+            p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"),
+            urlencode(sorted(selectors)), ""
+        ))
+    except (ValueError, TypeError):
         return url
 
 
