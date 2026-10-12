@@ -32,7 +32,9 @@ jobs:
           inventory=json.loads(Path("public/sources.json").read_text())
           audit=json.loads(Path("data/quality_audit.json").read_text())
           state=json.loads(Path("data/state.json").read_text())
+          assert inventory["direct_configured"] == 242, inventory["direct_configured"]
           assert inventory["total_configured_checked_or_scheduled"] >= 242
+          assert inventory["rotating_checked"] >= 0
           assert len(state["seen"]) >= 305
           names=["Paytm","Aspora","LHV Bank","Wolt","Bondora","Boku","Apron","Seccl","Creem"]
           actual={x["company"]: x for x in inventory["sources"]}
@@ -48,7 +50,9 @@ jobs:
              "known_seen":len(state["seen"]),
           }))
           print("TOTAL",json.dumps({
-             "configured":inventory["total_configured_checked_or_scheduled"],
+             "configured_in_sweep":inventory["total_configured_checked_or_scheduled"],
+             "direct_configured":inventory["direct_configured"],
+             "rotating":inventory["rotating_checked"],
              "ats_explicit":inventory["ats_explicit"],"reached":inventory["reached"],
              "errors":inventory["errors"],"with_jobs":inventory["with_jobs"],
           }))
