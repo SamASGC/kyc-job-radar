@@ -80,6 +80,24 @@ class IndirectATSDiscoveryTests(unittest.IsolatedAsyncioTestCase):
         bad = lead("RealPay", "https://mybank.internal.local/jobs")
         self.assertIsNone(await extract_ats_from_aggregator_page(HTTP(), bad))
 
+    async def test_apply_redirect_is_followed_only_from_approved_board(self):
+        from job_radar.source_bridge import extract_ats_from_aggregator_page
+        class Response:
+            def __init__(self, url, content):
+                self.url=url
+                self.status_code=200
+                self.text=content
+        class HTTP:
+            async def get(self, url):
+                if url == "https://jobicy.com/jobs/1234":
+                    return Response(url, '<a href="/jobs/1234/apply">Apply now</a>')
+                if url == "https://jobicy.com/jobs/1234/apply":
+                    return Response("https://jobs.lever.co/realpay/job123", "")
+                raise AssertionError(url)
+        j=lead("RealPay", "https://jobicy.com/jobs/1234")
+        self.assertEqual(await extract_ats_from_aggregator_page(HTTP(),j),
+                         {"kind":"lever", "slug":"realpay"})
+
     async def test_unknown_source_does_not_launch_any_fetch(self):
         from job_radar.source_bridge import discover_ats_via_aggregator_pages
         class HTTP:
