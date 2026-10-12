@@ -1,0 +1,81 @@
+name: Radar v2.5 financial employer sources smoke
+
+on:
+  push:
+    branches: ["feat/v2-5-financial-sector-direct-sources"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m compileall -q radar.py job_radar tests
+      - name: All regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Check source inventory and deduplication baseline
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          companies=[]
+          for path in ("config/companies.json","config/extra_companies.json"):
+              companies.extend(json.loads(Path(path).read_text(encoding="utf-8")))
+          assert len(companies) == 250, len(companies)
+          assert len({x["name"].casefold() for x in companies}) == 250
+          direct_ats = sum(bool(x.get("ats")) for x in companies)
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          assert len(state["seen"]) >= 305, "Unexpected historical dedupe loss"
+          print("COVERAGE",{"direct_employers":len(companies),
+                            "ats_configured":direct_ats,
+                            "seen_ledger":len(state["seen"])})
+          PY
+      - name: Isolated real source scan — no production commit or deploy
+        run: python radar.py scan
+      - name: Validate coverage and quality audit
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("data/quality_audit.json")
+          if p.exists():
+              a=json.loads(p.read_text(encoding="utf-8"))
+              print("QUALITY_FUNNEL",json.dumps({
+                  k:v for k,v in a.items() if not isinstance(v,list)
+              },ensure_ascii=False))
+              assert a["official_apply_page_verified"] <= a["prefiltered_candidates"]
+          p=Path("public/sources.json")
+          if p.exists():
+              s=json.loads(p.read_text(encoding="utf-8"))
+              print("SOURCE_INVENTORY",json.dumps({
+                  "configured":s.get("total_configured_checked_or_scheduled"),
+                  "ats":s.get("ats_explicit"),
+                  "reached":s.get("reached"),
+                  "with_jobs":s.get("with_jobs"),
+                  "errors":s.get("errors"),
+              }))
+          for path in ("public/index.html","public/review.html",
+                       "public/status.html","public/sources.html",
+                       "public/feed.xml"):
+              assert Path(path).exists(), path
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-5-financial-sources-live-smoke
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/status.json
+            public/sources.json
+          if-no-files-found: warn

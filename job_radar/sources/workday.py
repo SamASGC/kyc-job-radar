@@ -11,7 +11,11 @@ async def fetch_workday(http, company: dict, careers_url: str):
     if not host or "myworkdayjobs.com" not in host or not parts:
         return []
     tenant = host.split('.')[0]
-    site = parts[0]
+    # Career URLs may include a locale before the board site, e.g.
+    # /en-US/External. Workday's public CXS API uses "External", not "en-US".
+    site = (parts[1] if len(parts) > 1 and re.fullmatch(
+        r"[a-z]{2}(?:-[A-Z]{2})?", parts[0]
+    ) else parts[0])
     endpoint = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
     payload = {"appliedFacets": {}, "limit": 100, "offset": 0, "searchText": ""}
     jobs = []
