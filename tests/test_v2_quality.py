@@ -101,5 +101,53 @@ class V2AdmissionTests(unittest.TestCase):
         self.assertEqual(stats["new_this_scan"], 0)
 
 
+
+class V2LiveATSChecks(unittest.IsolatedAsyncioTestCase):
+    async def test_original_date_recovered_from_matching_official_schema(self):
+        from job_radar.v2_quality import verify_application_page
+        from datetime import datetime, timezone
+        latest = datetime.now(timezone.utc).isoformat()
+        html = ('<html><script type="application/ld+json">'
+                '{"@context":"https://schema.org","@type":"JobPosting",'
+                '"title":"KYB Analyst","datePosted":"' + latest + '"}'
+                '</script><h1>KYB Analyst</h1><button>Apply now</button></html>')
+        class Response:
+            status_code = 200
+            text = html
+        class Http:
+            async def get(self, url):
+                return Response()
+        j = job()
+        j.posted_at = ""
+        self.assertTrue(await verify_application_page(Http(), j))
+        self.assertEqual(j.posted_at, latest)
+
+    async def test_wrong_job_date_or_closed_form_does_not_pass(self):
+        from job_radar.v2_quality import verify_application_page
+        latest = datetime.now(timezone.utc).isoformat()
+        class Http:
+            def __init__(self, page):
+                self.page = page
+            async def get(self, url):
+                class Response:
+                    status_code = 200
+                r = Response()
+                r.text = self.page
+                return r
+        old_date = "2026-01-01T00:00:00Z"
+        j = job()
+        j.posted_at = ""
+        wrong = ('<script type="application/ld+json">'
+                 '{"@type":"JobPosting","title":"Software Engineer",'
+                 '"datePosted":"' + latest + '"}</script><button>Apply now</button>')
+        self.assertFalse(await verify_application_page(Http(wrong), j))
+        old = ('<script type="application/ld+json">'
+               '{"@type":"JobPosting","title":"KYB Analyst",'
+               '"datePosted":"' + old_date + '"}</script><button>Apply now</button>')
+        self.assertFalse(await verify_application_page(Http(old), job()))
+        closed = '<p>No longer accepting applications</p><button>Apply now</button>'
+        self.assertFalse(await verify_application_page(Http(closed), job()))
+
+
 if __name__ == "__main__":
     unittest.main()
