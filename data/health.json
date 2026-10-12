@@ -8,6 +8,13 @@
       "targets": []
     },
     {
+      "company": "Alpian",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Klarna",
       "error": "",
       "jobs": 0,
@@ -27,16 +34,11 @@
       ]
     },
     {
-      "company": "MONEI",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "monei"
-        }
-      ]
+      "company": "Clear Junction",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
       "company": "Equals Money",
@@ -58,25 +60,23 @@
       "targets": []
     },
     {
-      "company": "Clear Junction",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://clearjunction.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Alma",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Moneycorp",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://jobs.moneycorp.com/search/jobs'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
+    },
+    {
+      "company": "MONEI",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "monei"
+        }
+      ]
     },
     {
       "company": "NomuPay",
@@ -98,35 +98,23 @@
       ]
     },
     {
-      "company": "MoonPay",
+      "company": "Scalapay",
       "error": "",
-      "jobs": 24,
+      "jobs": 12,
       "ok": true,
       "targets": [
         {
-          "kind": "lever",
-          "slug": "moonpay"
+          "kind": "greenhouse",
+          "slug": "scalapaysrl"
         }
       ]
     },
     {
-      "company": "PPRO",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.ppro.com/about-us/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "neon Switzerland",
+      "error": "",
       "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Payrails",
-      "error": "",
-      "jobs": 2,
       "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "payrails"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "Paymentology",
@@ -141,8 +129,39 @@
       ]
     },
     {
-      "company": "PayPal",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.pypl.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "Payrails",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "payrails"
+        }
+      ]
+    },
+    {
+      "company": "Alma",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://almapay.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Raisin",
+      "error": "",
+      "jobs": 41,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "raisin"
+        }
+      ]
+    },
+    {
+      "company": "PPRO",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.ppro.com/about-us/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -160,52 +179,40 @@
       ]
     },
     {
-      "company": "Raisin",
-      "error": "",
-      "jobs": 41,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "raisin"
-        }
-      ]
-    },
-    {
-      "company": "Scalapay",
-      "error": "",
-      "jobs": 12,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "scalapaysrl"
-        }
-      ]
-    },
-    {
-      "company": "emerchantpay",
-      "error": "",
+      "company": "PayPal",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.pypl.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
     },
     {
-      "company": "neon Switzerland",
+      "company": "Featurespace",
       "error": "",
       "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Mambu",
-      "error": "",
-      "jobs": 2,
       "ok": true,
       "targets": []
     },
     {
       "company": "LemFi",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Taptap Send",
+      "error": "",
+      "jobs": 34,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "TaptapSend"
+        }
+      ]
+    },
+    {
+      "company": "emerchantpay",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -224,6 +231,25 @@
       ]
     },
     {
+      "company": "Mambu",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MoonPay",
+      "error": "",
+      "jobs": 24,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "moonpay"
+        }
+      ]
+    },
+    {
       "company": "Billie",
       "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.billie.io/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 0,
@@ -231,11 +257,16 @@
       "targets": []
     },
     {
-      "company": "Featurespace",
+      "company": "seQura",
       "error": "",
-      "jobs": 0,
+      "jobs": 13,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "recruitee",
+          "slug": "sequra"
+        }
+      ]
     },
     {
       "company": "Teya",
@@ -257,44 +288,6 @@
       "targets": []
     },
     {
-      "company": "TerraPay",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.terrapay.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Trust Payments",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Taptap Send",
-      "error": "",
-      "jobs": 34,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "TaptapSend"
-        }
-      ]
-    },
-    {
-      "company": "seQura",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "recruitee",
-          "slug": "sequra"
-        }
-      ]
-    },
-    {
       "company": "SwissBorg",
       "error": "",
       "jobs": 3,
@@ -307,8 +300,34 @@
       ]
     },
     {
+      "company": "Bitpanda",
+      "error": "",
+      "jobs": 29,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "bitpanda"
+        }
+      ]
+    },
+    {
+      "company": "Trust Payments",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Tuum",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://tuum.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "TerraPay",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.terrapay.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -321,14 +340,14 @@
       "targets": []
     },
     {
-      "company": "Bitpanda",
+      "company": "Salv",
       "error": "",
-      "jobs": 29,
+      "jobs": 3,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "bitpanda"
+          "kind": "personio",
+          "slug": "salv"
         }
       ]
     },
@@ -347,13 +366,6 @@
       "targets": []
     },
     {
-      "company": "Finom",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Monzo",
       "error": "",
       "jobs": 66,
@@ -362,18 +374,6 @@
         {
           "kind": "greenhouse",
           "slug": "monzo"
-        }
-      ]
-    },
-    {
-      "company": "Salv",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "personio",
-          "slug": "salv"
         }
       ]
     },
@@ -397,6 +397,34 @@
       ]
     },
     {
+      "company": "Lemonway",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "dLocal",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Zimpler",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Finom",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Unzer",
       "error": "",
       "jobs": 8,
@@ -407,27 +435,6 @@
           "slug": "unzer"
         }
       ]
-    },
-    {
-      "company": "Lemonway",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Global Payments",
-      "error": "",
-      "jobs": 11,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Zimpler",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "BVNK",
@@ -442,6 +449,13 @@
       ]
     },
     {
+      "company": "Trade Republic",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Revolut",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.revolut.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -449,7 +463,14 @@
       "targets": []
     },
     {
-      "company": "Trade Republic",
+      "company": "Global Payments",
+      "error": "",
+      "jobs": 11,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Nickel",
       "error": "",
       "jobs": 1,
       "ok": true,
@@ -463,13 +484,6 @@
       "targets": []
     },
     {
-      "company": "dLocal",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Ebury",
       "error": "",
       "jobs": 145,
@@ -478,18 +492,6 @@
         {
           "kind": "greenhouse",
           "slug": "ebury"
-        }
-      ]
-    },
-    {
-      "company": "Upvest",
-      "error": "",
-      "jobs": 15,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "upvest"
         }
       ]
     },
@@ -506,14 +508,45 @@
       ]
     },
     {
-      "company": "Qonto",
+      "company": "Upvest",
       "error": "",
-      "jobs": 53,
+      "jobs": 15,
       "ok": true,
       "targets": [
         {
-          "kind": "lever",
-          "slug": "qonto"
+          "kind": "ashby",
+          "slug": "upvest"
+        }
+      ]
+    },
+    {
+      "company": "Trading 212",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.trading212.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "GoCardless",
+      "error": "",
+      "jobs": 29,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "gocardless"
+        }
+      ]
+    },
+    {
+      "company": "payabl.",
+      "error": "",
+      "jobs": 29,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "payabl"
         }
       ]
     },
@@ -530,49 +563,6 @@
       ]
     },
     {
-      "company": "GoCardless",
-      "error": "",
-      "jobs": 29,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "gocardless"
-        }
-      ]
-    },
-    {
-      "company": "Trading 212",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.trading212.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "payabl.",
-      "error": "",
-      "jobs": 29,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "payabl"
-        }
-      ]
-    },
-    {
-      "company": "Zopa",
-      "error": "",
-      "jobs": 34,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "zopa"
-        }
-      ]
-    },
-    {
       "company": "Payhawk",
       "error": "",
       "jobs": 52,
@@ -583,13 +573,6 @@
           "slug": "payhawkio"
         }
       ]
-    },
-    {
-      "company": "Nickel",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
     },
     {
       "company": "Pleo",
@@ -611,11 +594,59 @@
       "targets": []
     },
     {
+      "company": "Zopa",
+      "error": "",
+      "jobs": 34,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "zopa"
+        }
+      ]
+    },
+    {
+      "company": "Qonto",
+      "error": "",
+      "jobs": 53,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "qonto"
+        }
+      ]
+    },
+    {
+      "company": "Unlimit",
+      "error": "",
+      "jobs": 61,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "unlimit"
+        }
+      ]
+    },
+    {
       "company": "Currencycloud (Visa)",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Form3",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "541"
+        }
+      ]
     },
     {
       "company": "BCB Group",
@@ -626,6 +657,18 @@
         {
           "kind": "greenhouse",
           "slug": "bcbgroup"
+        }
+      ]
+    },
+    {
+      "company": "Copper.co",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "copperco"
         }
       ]
     },
@@ -644,28 +687,11 @@
       "targets": []
     },
     {
-      "company": "Copper.co",
+      "company": "Monavate",
       "error": "",
-      "jobs": 3,
+      "jobs": 1,
       "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "copperco"
-        }
-      ]
-    },
-    {
-      "company": "Form3",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "541"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "Griffin",
@@ -687,27 +713,6 @@
       "targets": []
     },
     {
-      "company": "Monavate",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Bnext",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Papara",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.papara.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Sardine",
       "error": "",
       "jobs": 35,
@@ -718,6 +723,20 @@
           "slug": "sardine"
         }
       ]
+    },
+    {
+      "company": "ThetaRay",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://thetaray.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Papara",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.papara.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
     },
     {
       "company": "Plaid",
@@ -732,20 +751,6 @@
       ]
     },
     {
-      "company": "Alloy",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.alloy.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "ThetaRay",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://thetaray.com/careers/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
       "company": "Veriff",
       "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.veriff.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
@@ -753,28 +758,11 @@
       "targets": []
     },
     {
-      "company": "Squads / Altitude",
+      "company": "Bnext",
       "error": "",
-      "jobs": 6,
+      "jobs": 1,
       "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "squads"
-        }
-      ]
-    },
-    {
-      "company": "Ballinger Group",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "ballingerco"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "Fenergo",
@@ -789,28 +777,14 @@
       ]
     },
     {
-      "company": "Moneybase",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.moneybase.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Napier AI",
+      "company": "Squads / Altitude",
       "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Keyrock",
-      "error": "",
-      "jobs": 10,
+      "jobs": 6,
       "ok": true,
       "targets": [
         {
           "kind": "ashby",
-          "slug": "keyrock"
+          "slug": "squads"
         }
       ]
     },
@@ -827,33 +801,28 @@
       ]
     },
     {
-      "company": "Transak",
+      "company": "Alloy",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.alloy.com/careers'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Ballinger Group",
       "error": "",
-      "jobs": 8,
+      "jobs": 13,
       "ok": true,
       "targets": [
         {
-          "kind": "breezy",
-          "slug": "transak-inc"
+          "kind": "workable",
+          "slug": "ballingerco"
         }
       ]
     },
     {
-      "company": "WeTravel",
+      "company": "Napier AI",
       "error": "",
-      "jobs": 24,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "wetravel"
-        }
-      ]
-    },
-    {
-      "company": "Triple-A",
-      "error": "",
-      "jobs": 10,
+      "jobs": 1,
       "ok": true,
       "targets": []
     },
@@ -865,14 +834,21 @@
       "targets": []
     },
     {
-      "company": "Rain",
+      "company": "Triple-A",
       "error": "",
-      "jobs": 42,
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Transak",
+      "error": "",
+      "jobs": 8,
       "ok": true,
       "targets": [
         {
-          "kind": "ashby",
-          "slug": "rain"
+          "kind": "breezy",
+          "slug": "transak-inc"
         }
       ]
     },
@@ -889,6 +865,54 @@
       ]
     },
     {
+      "company": "Zero Hash",
+      "error": "",
+      "jobs": 26,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "breezy",
+          "slug": "zero-hash"
+        }
+      ]
+    },
+    {
+      "company": "WeTravel",
+      "error": "",
+      "jobs": 24,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "wetravel"
+        }
+      ]
+    },
+    {
+      "company": "Rain",
+      "error": "",
+      "jobs": 42,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "rain"
+        }
+      ]
+    },
+    {
+      "company": "Keyrock",
+      "error": "",
+      "jobs": 10,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "keyrock"
+        }
+      ]
+    },
+    {
       "company": "bunch",
       "error": "",
       "jobs": 38,
@@ -897,18 +921,6 @@
         {
           "kind": "ashby",
           "slug": "bunch"
-        }
-      ]
-    },
-    {
-      "company": "Glia",
-      "error": "",
-      "jobs": 20,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "glia"
         }
       ]
     },
@@ -925,14 +937,14 @@
       ]
     },
     {
-      "company": "Satispay",
+      "company": "Glia",
       "error": "",
-      "jobs": 102,
+      "jobs": 20,
       "ok": true,
       "targets": [
         {
           "kind": "ashby",
-          "slug": "satispay"
+          "slug": "glia"
         }
       ]
     },
@@ -949,78 +961,6 @@
       ]
     },
     {
-      "company": "Finary",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "finary"
-        }
-      ]
-    },
-    {
-      "company": "Affirm",
-      "error": "",
-      "jobs": 201,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "greenhouse",
-          "slug": "affirm"
-        }
-      ]
-    },
-    {
-      "company": "Checker",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "checker"
-        }
-      ]
-    },
-    {
-      "company": "Solidgate , SG Digital Assets",
-      "error": "",
-      "jobs": 53,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "solidgate"
-        }
-      ]
-    },
-    {
-      "company": "Hopper",
-      "error": "",
-      "jobs": 19,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "hopper"
-        }
-      ]
-    },
-    {
-      "company": "Solidgate",
-      "error": "",
-      "jobs": 53,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "ashby",
-          "slug": "solidgate"
-        }
-      ]
-    },
-    {
       "company": "Pragmatike",
       "error": "",
       "jobs": 72,
@@ -1029,18 +969,6 @@
         {
           "kind": "ashby",
           "slug": "pragmatike"
-        }
-      ]
-    },
-    {
-      "company": "Binance",
-      "error": "",
-      "jobs": 33,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "binance"
         }
       ]
     },
@@ -1057,26 +985,57 @@
       ]
     },
     {
-      "company": "BitGo Europe GmbH",
+      "company": "Satispay",
       "error": "",
-      "jobs": 52,
+      "jobs": 102,
       "ok": true,
       "targets": [
         {
-          "kind": "greenhouse",
-          "slug": "bitgo"
+          "kind": "ashby",
+          "slug": "satispay"
         }
       ]
     },
     {
-      "company": "Zero Hash",
+      "company": "Finary",
       "error": "",
-      "jobs": 26,
+      "jobs": 7,
       "ok": true,
       "targets": [
         {
-          "kind": "breezy",
-          "slug": "zero-hash"
+          "kind": "ashby",
+          "slug": "finary"
+        }
+      ]
+    },
+    {
+      "company": "Moneybase",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://careers.moneybase.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Binance",
+      "error": "",
+      "jobs": 33,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "binance"
+        }
+      ]
+    },
+    {
+      "company": "Hopper",
+      "error": "",
+      "jobs": 19,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "hopper"
         }
       ]
     },
@@ -1093,11 +1052,83 @@
       ]
     },
     {
-      "company": "DESKOIN",
-      "error": "",
+      "company": "IQ-EQ",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://iqeq.com/careers/vacancies/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
+    },
+    {
+      "company": "Checker",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "checker"
+        }
+      ]
+    },
+    {
+      "company": "Affirm",
+      "error": "",
+      "jobs": 201,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "affirm"
+        }
+      ]
+    },
+    {
+      "company": "Yuno",
+      "error": "",
+      "jobs": 36,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "yuno"
+        }
+      ]
+    },
+    {
+      "company": "Solidgate",
+      "error": "",
+      "jobs": 53,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "solidgate"
+        }
+      ]
+    },
+    {
+      "company": "BitGo Europe GmbH",
+      "error": "",
+      "jobs": 52,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "greenhouse",
+          "slug": "bitgo"
+        }
+      ]
+    },
+    {
+      "company": "Solidgate , SG Digital Assets",
+      "error": "",
+      "jobs": 53,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "ashby",
+          "slug": "solidgate"
+        }
+      ]
     },
     {
       "company": "zerohash europe",
@@ -1112,34 +1143,6 @@
       ]
     },
     {
-      "company": "OP Digital",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "EU Internet Ventures |EUIV|BNXA",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://axnab.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "ELECTROCOIN",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Everest",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Smartbroker AG",
       "error": "",
       "jobs": 11,
@@ -1152,154 +1155,9 @@
       ]
     },
     {
-      "company": "DLT Securities GmbH",
+      "company": "TMF Group",
       "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FEEL MINING / WIGL ET OTHILA",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FAZIL CRYPTO",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "EUWAX AG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Deutsche Bank Aktiengesellschaft",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FF Digital",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Fels wealth GmbH",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Dietrich & Richter Private Asset Management AG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FIRI AS",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "flatexDEGIRO Bank AG",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.flatexdegiro.com/de/flatexdegiro-bank/login'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "OpenPayd",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "OpenPayd"
-        }
-      ]
-    },
-    {
-      "company": "Hodli",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Digital Assist",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "DonauCapital Wertpapier GmbH",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Gate",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "GateHub Exchange",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "HEXARQ",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FUMBI",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Deutsche WertpapierService Bank AG (dwpbank)",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "GOIN",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Ilirika",
-      "error": "",
-      "jobs": 0,
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
@@ -1311,16 +1169,9 @@
       "targets": []
     },
     {
-      "company": "Donau-Iller-Bank eG",
+      "company": "Nordea",
       "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Hodleris",
-      "error": "",
-      "jobs": 0,
+      "jobs": 9,
       "ok": true,
       "targets": []
     },
@@ -1332,14 +1183,21 @@
       "targets": []
     },
     {
-      "company": "GG Digital, a.s.",
+      "company": "SIX Group",
+      "error": "",
+      "jobs": 8,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Ilirika",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "HPB d.d.",
+      "company": "Incrementum",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1353,21 +1211,7 @@
       "targets": []
     },
     {
-      "company": "Hannoversche Volksbank eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "ILAVO GROUP a.s.",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Hercle",
+      "company": "ISF Institut Deutsch-Schweizer Finanzdienstleistungen GmbH",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1381,35 +1225,28 @@
       "targets": []
     },
     {
-      "company": "ISF Institut Deutsch-Schweizer Finanzdienstleistungen GmbH",
+      "company": "Ihre Volksbank eG Neckar Odenwald Main Tauber",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Joh. Berenberg, Gossler & Co. KG",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Frankfurter Volksbank Rhein/Main eG",
+      "company": "K33 MARKETS as",
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Hauck Aufhäuser Digital Custody GmbH",
-      "error": "career page: HTTPStatusError: Server error '503 Service Unavailable' for url 'https://www.abnamro.de/de/asset-servicing/digital-assets/verwahrung-von-kryptowerten.html'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503",
-      "jobs": 0,
-      "ok": false,
       "targets": []
     },
     {
       "company": "Lightspark Payments Europe AS",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MEATAL GEAR",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1423,21 +1260,14 @@
       "targets": []
     },
     {
-      "company": "Ihre Volksbank eG Neckar Odenwald Main Tauber",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Legend Trading",
+      "company": "Joh. Berenberg, Gossler & Co. KG",
       "error": "",
       "jobs": 1,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Incrementum",
+      "company": "ILAVO GROUP a.s.",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1451,13 +1281,6 @@
       "targets": []
     },
     {
-      "company": "K33 MARKETS as",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "KUTXABANK",
       "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://portal.kutxabank.es/cs/%20Satellite/kb/es/particulares'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
       "jobs": 0,
@@ -1465,7 +1288,14 @@
       "targets": []
     },
     {
-      "company": "MEATAL GEAR",
+      "company": "Legend Trading",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MipSoftware s.r.o.",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1486,26 +1316,7 @@
       "targets": []
     },
     {
-      "company": "justTRADE",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Unlimit",
-      "error": "",
-      "jobs": 61,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "unlimit"
-        }
-      ]
-    },
-    {
-      "company": "MipSoftware s.r.o.",
+      "company": "KRYPTO KNIGHT",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1519,19 +1330,14 @@
       "targets": []
     },
     {
-      "company": "Yuno",
+      "company": "Orcabay",
       "error": "",
-      "jobs": 36,
+      "jobs": 0,
       "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "yuno"
-        }
-      ]
+      "targets": []
     },
     {
-      "company": "KRYPTO KNIGHT",
+      "company": "justTRADE",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1539,20 +1345,6 @@
     },
     {
       "company": "PAYTOP",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Push / Aave Push",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://push.co'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Orcabay",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1573,14 +1365,28 @@
       "targets": []
     },
     {
-      "company": "Pluso a.s.",
+      "company": "Myriad Capital",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "PROSEGUR CRYPTO",
+      "company": "QWARKS",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Push / Aave Push",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://push.co'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Plutos Vermögensverwaltung AG",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1594,14 +1400,14 @@
       "targets": []
     },
     {
-      "company": "Partners Banka, a.s.",
+      "company": "Pluso a.s.",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Plutos Vermögensverwaltung AG",
+      "company": "Partners Banka, a.s.",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1622,21 +1428,56 @@
       "targets": []
     },
     {
-      "company": "Myriad Capital",
+      "company": "SafeLynx",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Raiffeisebank Auerbach-Freihung eG",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "NAGA X",
+      "company": "Raiffeisenbank Aidlingen eG",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "QWARKS",
+      "company": "PM MTF LTD",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mtf.perpetuals.com/,%20http:/eu.barriers.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Raiffeisenbank Goldener Steig-Dreisessel eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Skrill, NETELLER",
+      "error": "career page: ConnectError: [Errno -2] Name or service not known",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Raiffeisenbank Falkenstein-Wörth",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "RIV-Digital",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1650,37 +1491,21 @@
       "targets": []
     },
     {
-      "company": "Alpian",
-      "error": "career page: ReadTimeout: ",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "PM MTF LTD",
-      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://mtf.perpetuals.com/,%20http:/eu.barriers.com/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Skrill, NETELLER",
-      "error": "career page: ConnectError: [Errno -2] Name or service not known",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "SafeLynx",
+      "company": "OpenPayd",
       "error": "",
-      "jobs": 1,
+      "jobs": 13,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "OpenPayd"
+        }
+      ]
     },
     {
-      "company": "Socios.com",
+      "company": "RCUBE ASSET MANAGEMENT",
       "error": "",
-      "jobs": 2,
+      "jobs": 0,
       "ok": true,
       "targets": []
     },
@@ -1692,28 +1517,14 @@
       "targets": []
     },
     {
-      "company": "Viva.com",
-      "error": "career page: ReadTimeout: ",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "RIV-Digital",
+      "company": "NAGA X",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Sygnum Europe",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.sygnum.com/eu'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Simple Coin s.r.o.",
+      "company": "PROSEGUR CRYPTO",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1727,10 +1538,17 @@
       "targets": []
     },
     {
-      "company": "StoneX",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.stonex.com/en-us/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "Socios.com",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Simple Coin s.r.o.",
+      "error": "",
       "jobs": 0,
-      "ok": false,
+      "ok": true,
       "targets": []
     },
     {
@@ -1741,22 +1559,15 @@
       "targets": []
     },
     {
-      "company": "Stable Mint Ltd.",
-      "error": "",
+      "company": "StoneX",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.stonex.com/en-us/'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
     },
     {
-      "company": "Raiffeisenbank Goldener Steig-Dreisessel eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Tradevest Markets AG",
-      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.tradevest.ai/de'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "company": "Sygnum Europe",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.sygnum.com/eu'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
       "ok": false,
       "targets": []
@@ -1769,77 +1580,14 @@
       "targets": []
     },
     {
-      "company": "Raiffeisenbank Aidlingen eG",
-      "error": "",
+      "company": "Tradevest Markets AG",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://www.tradevest.ai/de'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
       "jobs": 0,
-      "ok": true,
+      "ok": false,
       "targets": []
     },
     {
-      "company": "RCUBE ASSET MANAGEMENT",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "sino Aktiengesellschaft",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Raiffeisebank Auerbach-Freihung eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Sutor Bank GmbH",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Raiffeisenbank Falkenstein-Wörth",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "TÝR MARKETS AS",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Raiffeisenbank Isar-Loisachtal eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Unlimit Crypto Ltd (ex Stable Defi Ltd)",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Raiffeisenbank Kreis Kelheim eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Raiffeisenbank Schwaben Mitte eG",
+      "company": "Stable Mint Ltd.",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1853,128 +1601,42 @@
       "targets": []
     },
     {
-      "company": "Traders Place GmbH & Co. KGaA",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Spar- und Kreditbank Rheinstetten eG",
+      "company": "Sutor Bank GmbH",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "V-Bank AG",
+      "company": "Raiffeisenbank Isar-Loisachtal eG",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Brite Payments",
-      "error": "",
-      "jobs": 27,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Fourthline",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Curve",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Bitvavo",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Crypto.com",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Vereinigte Volksbank Raiffeisenbank eG, Reinheim",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Vermögensbutler GmbH",
+      "company": "sino Aktiengesellschaft",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Vereinigte VR Bank eG",
+      "company": "Raiffeisenbank Schwaben Mitte eG",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Trustly",
-      "error": "",
-      "jobs": 28,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "lever",
-          "slug": "trustly"
-        },
-        {
-          "kind": "ashby",
-          "slug": "trustly"
-        }
-      ]
-    },
-    {
-      "company": "Volksbank Euskirchen eG",
+      "company": "TÝR MARKETS AS",
       "error": "",
       "jobs": 0,
       "ok": true,
       "targets": []
     },
     {
-      "company": "VBU Volksbank im Unterland eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volksbank Heiden eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volksbank Baumberge eG",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volksbank Beilstein-Ilsfeld-Abstatt eG",
+      "company": "Unlimit Crypto Ltd (ex Stable Defi Ltd)",
       "error": "",
       "jobs": 0,
       "ok": true,
@@ -1988,6 +1650,76 @@
       "targets": []
     },
     {
+      "company": "Raiffeisenbank Kreis Kelheim eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "V-Bank AG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Viva.com",
+      "error": "career page: ReadTimeout: ",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Raiffeisenbank Oberbayern Südost eG",
+      "error": "career page: ConnectError: [Errno -2] Name or service not known",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Raiffeisenbank Dachau eG",
+      "error": "career page: ConnectError: All connection attempts failed",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Vermögensbutler GmbH",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Vereinigte Volksbank Raiffeisenbank eG, Reinheim",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VBU Volksbank im Unterland eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Spar- und Kreditbank Rheinstetten eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Alb eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Volksbank eG - Die Gestalterbank",
       "error": "",
       "jobs": 0,
@@ -1995,16 +1727,347 @@
       "targets": []
     },
     {
-      "company": "Mondu",
+      "company": "Vereinigte VR Bank eG",
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "mondu"
-        }
-      ]
+      "targets": []
+    },
+    {
+      "company": "Volksbank Backnang eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Baumberge eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Raiffeisenbank Bayern Mitte eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Mittlerer Schwarzwald eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Euskirchen eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Heiden eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Olpe-Wenden-Drolshagen eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Beilstein-Ilsfeld-Abstatt eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Sauerland eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Traders Place GmbH & Co. KGaA",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Raiffeisenbank Würzburg eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Banking Circle",
+      "error": "career page: ReadTimeout: ",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Xcoins",
+      "error": "career page: HTTPStatusError: Client error '403 Forbidden' for url 'https://xcoins.com/en'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Webot",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "WOORTON",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "wBTCb.cz, s.r.o.",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Schwarzwald-Donau-Neckar eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR Bank Ihre Heimatbank eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volksbank Zollernalb eG",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "WHITE TECH LTD",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Webull | Webull Europe",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "WhiteBIT EU",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ZBX",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Brite Payments",
+      "error": "",
+      "jobs": 27,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR-Bank Landau-Mengkofen eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Wyden Capital AG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ZEUS Anstalt für Vermögensverwaltung",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR-Bank Rottal-Inn eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Westerwald Bank eG Volks- und Raiffeisenbank",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR Bank Schleswig-Holstein Mitte eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Curve",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "wSw PortfolioManagement AG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ALPHACAP",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR-Bank Erding eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR-Bank Mittelfranken Mitte eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR Bank München Land eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR Bank Südpfalz eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR TeilhaberBank Metropolregion Nürnberg eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR-Bank Augsburg-Ostallgäu eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "VR Bank Ried-Überwald eG",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "AnCeKa Vermögensbetreuungs Aktiengesellschaft",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Amdax B.V.|Amdax Group|Novelist",
+      "error": "career page: HTTPStatusError: Client error '404 Not Found' for url 'https://www.amdax.com/en/nl%20|%20https://www.getnovelist.nl/en'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Paysafe",
+      "error": "",
+      "jobs": 24,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Crypto.com",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Fourthline",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Bitvavo",
+      "error": "",
+      "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Altarius Asset Management Limited",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Uphold",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
     },
     {
       "company": "Mastercard",
@@ -2019,49 +2082,16 @@
       ]
     },
     {
-      "company": "Dojo",
-      "error": "",
-      "jobs": 24,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Nuvei",
-      "error": "",
-      "jobs": 8,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Lunar",
-      "error": "",
-      "jobs": 18,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Uphold",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Bitstamp / Robinhood",
+      "company": "AlphaRoute",
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": [
-        {
-          "kind": "workable",
-          "slug": "bitstamp"
-        }
-      ]
+      "targets": []
     },
     {
-      "company": "Monese / Pockit",
+      "company": "Marqeta",
       "error": "",
-      "jobs": 11,
+      "jobs": 48,
       "ok": true,
       "targets": []
     },
@@ -2078,37 +2108,65 @@
       ]
     },
     {
-      "company": "Fiserv",
+      "company": "Trustly",
+      "error": "",
+      "jobs": 29,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "lever",
+          "slug": "trustly"
+        },
+        {
+          "kind": "ashby",
+          "slug": "trustly"
+        }
+      ]
+    },
+    {
+      "company": "Nuvei",
       "error": "",
       "jobs": 8,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Volksbank Alb eG",
+      "company": "Northern Trust",
+      "error": "career page: ReadTimeout: ",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Monese / Pockit",
+      "error": "",
+      "jobs": 11,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Lunar",
+      "error": "",
+      "jobs": 18,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Bitstamp / Robinhood",
       "error": "",
       "jobs": 0,
       "ok": true,
-      "targets": []
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "bitstamp"
+        }
+      ]
     },
     {
-      "company": "Marqeta",
+      "company": "Dojo",
       "error": "",
-      "jobs": 48,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "bunq",
-      "error": "",
-      "jobs": 30,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volksbank Backnang eG",
-      "error": "",
-      "jobs": 0,
+      "jobs": 24,
       "ok": true,
       "targets": []
     },
@@ -2120,65 +2178,9 @@
       "targets": []
     },
     {
-      "company": "PayDo",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/paydo/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/paydo'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 0,
-      "ok": false,
-      "targets": []
-    },
-    {
-      "company": "Kroo Bank",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Airwallex",
-      "error": "",
-      "jobs": 27,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Kantox",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Atom Bank",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Adyen",
-      "error": "",
-      "jobs": 37,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "eToro",
       "error": "",
       "jobs": 47,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Starling",
-      "error": "",
-      "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "N26",
-      "error": "",
-      "jobs": 12,
       "ok": true,
       "targets": []
     },
@@ -2190,9 +2192,58 @@
       "targets": []
     },
     {
-      "company": "ClearBank",
+      "company": "PayDo",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/paydo/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 | rediscovery: HTTPStatusError: Client error '404 Not Found' for url 'https://job-boards.greenhouse.io/paydo'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 0,
+      "ok": false,
+      "targets": []
+    },
+    {
+      "company": "Kantox",
       "error": "",
-      "jobs": 2,
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Fiserv",
+      "error": "",
+      "jobs": 8,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Airwallex",
+      "error": "",
+      "jobs": 27,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Adyen",
+      "error": "",
+      "jobs": 37,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "bunq",
+      "error": "",
+      "jobs": 30,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Starling",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Atom Bank",
+      "error": "",
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -2204,9 +2255,23 @@
       "targets": []
     },
     {
-      "company": "Checkout.com",
+      "company": "Kroo Bank",
       "error": "",
-      "jobs": 10,
+      "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ClearBank",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "N26",
+      "error": "",
+      "jobs": 12,
       "ok": true,
       "targets": []
     },
@@ -2218,16 +2283,23 @@
       "targets": []
     },
     {
-      "company": "Modulr",
+      "company": "Quantexa",
       "error": "",
-      "jobs": 5,
+      "jobs": 16,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Quantexa",
+      "company": "Remitly",
       "error": "",
       "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Checkout.com",
+      "error": "",
+      "jobs": 10,
       "ok": true,
       "targets": []
     },
@@ -2239,37 +2311,9 @@
       "targets": []
     },
     {
-      "company": "EPI / Wero",
-      "error": "",
-      "jobs": 19,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Moss",
-      "error": "",
-      "jobs": 22,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Volt",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Solaris",
+      "company": "Modulr",
       "error": "",
       "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Paysend",
-      "error": "",
-      "jobs": 4,
       "ok": true,
       "targets": []
     },
@@ -2281,9 +2325,16 @@
       "targets": []
     },
     {
-      "company": "Rapyd",
+      "company": "Stripe",
       "error": "",
-      "jobs": 11,
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Swan",
+      "error": "",
+      "jobs": 6,
       "ok": true,
       "targets": []
     },
@@ -2304,16 +2355,16 @@
       ]
     },
     {
-      "company": "Remitly",
+      "company": "Moss",
       "error": "",
-      "jobs": 16,
+      "jobs": 22,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Stripe",
+      "company": "Solaris",
       "error": "",
-      "jobs": 4,
+      "jobs": 5,
       "ok": true,
       "targets": []
     },
@@ -2332,20 +2383,6 @@
       "targets": []
     },
     {
-      "company": "Banking Circle",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Paysafe",
-      "error": "",
-      "jobs": 24,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Wallester",
       "error": "",
       "jobs": 2,
@@ -2358,9 +2395,30 @@
       ]
     },
     {
-      "company": "Swan",
+      "company": "Rapyd",
       "error": "",
-      "jobs": 6,
+      "jobs": 11,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Paysend",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "PaySet",
+      "error": "",
+      "jobs": 10,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Volt",
+      "error": "",
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -2379,9 +2437,9 @@
       "targets": []
     },
     {
-      "company": "PaySet",
+      "company": "EPI / Wero",
       "error": "",
-      "jobs": 10,
+      "jobs": 19,
       "ok": true,
       "targets": []
     },
@@ -2389,34 +2447,6 @@
       "company": "Railsr",
       "error": "",
       "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Sumsub",
-      "error": "",
-      "jobs": 27,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Hawk AI",
-      "error": "",
-      "jobs": 19,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Worldline",
-      "error": "",
-      "jobs": 13,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Treezor",
-      "error": "",
-      "jobs": 14,
       "ok": true,
       "targets": []
     },
@@ -2435,16 +2465,37 @@
       "targets": []
     },
     {
-      "company": "Swipelux",
+      "company": "Trulioo",
       "error": "",
-      "jobs": 12,
+      "jobs": 14,
       "ok": true,
       "targets": []
     },
     {
-      "company": "OKX",
+      "company": "Sumsub",
       "error": "",
-      "jobs": 3,
+      "jobs": 27,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Worldline",
+      "error": "",
+      "jobs": 13,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Treezor",
+      "error": "",
+      "jobs": 14,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Swipelux",
+      "error": "",
+      "jobs": 12,
       "ok": true,
       "targets": []
     },
@@ -2456,9 +2507,9 @@
       "targets": []
     },
     {
-      "company": "Trulioo",
+      "company": "OKX",
       "error": "",
-      "jobs": 14,
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -2468,32 +2519,6 @@
       "jobs": 7,
       "ok": true,
       "targets": []
-    },
-    {
-      "company": "ESTO Group",
-      "error": "",
-      "jobs": 23,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Tink (Visa)",
-      "error": "",
-      "jobs": 7,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Corpay",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "workday",
-          "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"
-        }
-      ]
     },
     {
       "company": "Ramp Network",
@@ -2508,6 +2533,39 @@
       ]
     },
     {
+      "company": "Corpay",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workday",
+          "url": "https://corpay.wd103.myworkdayjobs.com/Ext_001"
+        }
+      ]
+    },
+    {
+      "company": "Hawk AI",
+      "error": "",
+      "jobs": 19,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Tink (Visa)",
+      "error": "",
+      "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Bleap",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "FYST",
       "error": "",
       "jobs": 0,
@@ -2520,9 +2578,30 @@
       ]
     },
     {
-      "company": "MoonPay Europe B.V.",
-      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/moonpay/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 1,
+      "company": "UBS",
+      "error": "",
+      "jobs": 21,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Azets",
+      "error": "",
+      "jobs": 7,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "ESTO Group",
+      "error": "",
+      "jobs": 23,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "LGT Group",
+      "error": "",
+      "jobs": 18,
       "ok": true,
       "targets": []
     },
@@ -2530,20 +2609,6 @@
       "company": "Mercuryo",
       "error": "",
       "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "e Toro",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "MyInvestor",
-      "error": "",
-      "jobs": 0,
       "ok": true,
       "targets": []
     },
@@ -2562,55 +2627,6 @@
       "targets": []
     },
     {
-      "company": "Bleap",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FalconX",
-      "error": "",
-      "jobs": 0,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FLOWDESK EUROPE",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Firefish",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FIPTO",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "FINCTEK",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "GCEX|GC Exchange",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "Invity Finance s.r.o.",
       "error": "",
       "jobs": 2,
@@ -2618,35 +2634,7 @@
       "targets": []
     },
     {
-      "company": "Fiat Republic Netherlands B.V.",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "DZ BANK AG Deutsche Zentral-Genossenschaftsbank",
-      "error": "",
-      "jobs": 12,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Scalable Capital Bank GmbH",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Hidden Road Partners CIV NL B.V.",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "IQANA TECHNOLOGIES S.L.",
+      "company": "State Street",
       "error": "",
       "jobs": 1,
       "ok": true,
@@ -2660,9 +2648,93 @@
       "targets": []
     },
     {
-      "company": "Gemini",
+      "company": "SEB",
       "error": "",
-      "jobs": 2,
+      "jobs": 9,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Brown Brothers Harriman",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Vistra",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Deutsche Bank",
+      "error": "",
+      "jobs": 54,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "OP Digital",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MoonPay Europe B.V.",
+      "error": "greenhouse: HTTPStatusError: Client error '404 Not Found' for url 'https://boards-api.greenhouse.io/v1/boards/moonpay/jobs?content=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "IQANA TECHNOLOGIES S.L.",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "KPMG Luxembourg",
+      "error": "",
+      "jobs": 12,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Pictet",
+      "error": "",
+      "jobs": 27,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Deloitte Luxembourg",
+      "error": "",
+      "jobs": 19,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "MyInvestor",
+      "error": "",
+      "jobs": 0,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "CACEIS",
+      "error": "",
+      "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Scalable Capital Bank GmbH",
+      "error": "",
+      "jobs": 4,
       "ok": true,
       "targets": []
     },
@@ -2674,35 +2746,49 @@
       "targets": []
     },
     {
-      "company": "Floin AG",
+      "company": "Alter Domus",
       "error": "",
-      "jobs": 1,
+      "jobs": 31,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Hyphe Markets GmbH",
+      "company": "Luminor",
       "error": "",
-      "jobs": 1,
+      "jobs": 24,
       "ok": true,
       "targets": []
     },
     {
-      "company": "DekaBank Deutsche Girozentrale",
+      "company": "Avaloq",
       "error": "",
-      "jobs": 2,
+      "jobs": 4,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Legion",
+      "company": "Swedbank",
       "error": "",
-      "jobs": 2,
+      "jobs": 25,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "HSBC",
+      "error": "",
+      "jobs": 30,
       "ok": true,
       "targets": []
     },
     {
       "company": "Lightyear Europe AS",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "NBX",
       "error": "",
       "jobs": 3,
       "ok": true,
@@ -2716,27 +2802,6 @@
       "targets": []
     },
     {
-      "company": "J2TX Ltd",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Finst B.V.",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "NBX",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
       "company": "NOEMON TECH LTD",
       "error": "",
       "jobs": 1,
@@ -2744,56 +2809,7 @@
       "targets": []
     },
     {
-      "company": "Paybis",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Ripple Payments Europe S.A.",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Payhound",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Nexdesk",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Simplex",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Newrails",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "KRIPTOMAT",
-      "error": "",
-      "jobs": 1,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "MERIA",
+      "company": "Legion",
       "error": "",
       "jobs": 2,
       "ok": true,
@@ -2807,49 +2823,49 @@
       "targets": []
     },
     {
-      "company": "Robinhood",
+      "company": "Payhound",
       "error": "",
-      "jobs": 4,
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Huddlestock GmbH",
-      "error": "",
-      "jobs": 5,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Lang & Schwarz TradeCenter AG & Co. KG",
+      "company": "J2TX Ltd",
       "error": "",
       "jobs": 1,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Nodu Digital",
+      "company": "Nexdesk",
       "error": "",
       "jobs": 1,
       "ok": true,
       "targets": []
     },
     {
-      "company": "Penning",
+      "company": "Kraken, Kraken Digital Asset Exchange",
       "error": "",
-      "jobs": 1,
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
     {
-      "company": "PAYMIUM",
+      "company": "Citadele Bank",
       "error": "",
-      "jobs": 1,
+      "jobs": 9,
       "ok": true,
       "targets": []
     },
     {
-      "company": "FIDUS Finanz AG",
+      "company": "MERIA",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "KRIPTOMAT",
       "error": "",
       "jobs": 1,
       "ok": true,
@@ -2863,30 +2879,58 @@
       "targets": []
     },
     {
-      "company": "Interactive Brokers Ireland Limited",
-      "error": "",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Safello AB",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Monflo",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Trade Republic Bank GmbH",
+      "company": "Newrails",
       "error": "",
       "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Nodu Digital",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Paybis",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Lang & Schwarz TradeCenter AG & Co. KG",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Penning",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Ripple Payments Europe S.A.",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "PAYMIUM",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Simplex",
+      "error": "",
+      "jobs": 2,
       "ok": true,
       "targets": []
     },
@@ -2898,7 +2942,21 @@
       "targets": []
     },
     {
-      "company": "Kraken Digital Asset Exchange (Kraken)",
+      "company": "Robinhood",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Trade Republic Bank GmbH",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "KuCoin EU",
       "error": "",
       "jobs": 3,
       "ok": true,
@@ -2912,63 +2970,14 @@
       "targets": []
     },
     {
-      "company": "Kraken, Kraken Digital Asset Exchange",
+      "company": "Monflo",
       "error": "",
       "jobs": 3,
       "ok": true,
       "targets": []
     },
     {
-      "company": "OakNorth",
-      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 6,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Twino",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "TEROXX DIGITAL ASSET LTD",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "KuCoin EU",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Ronin EM Ltd",
-      "error": "",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Vivid Money B.V.",
-      "error": "",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Kraken",
-      "error": "ashby: HTTPStatusError: Client error '404 Not Found' for url 'https://api.ashbyhq.com/posting-api/job-board/kraken?includeCompensation=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 3,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "KBC",
+      "company": "Kraken Digital Asset Exchange (Kraken)",
       "error": "",
       "jobs": 3,
       "ok": true,
@@ -2982,9 +2991,128 @@
       "targets": []
     },
     {
+      "company": "Ronin EM Ltd",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Interactive Brokers Ireland Limited",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "TEROXX DIGITAL ASSET LTD",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Safello AB",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Trading.com",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "AK JENSEN NORWAY AS",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "21bitcoin",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "PELICAN EXCHANGE EUROPE (CY) LTD",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Zebedee Europe B.V.",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Zodia",
+      "error": "",
+      "jobs": 5,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Twino",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Young Platform",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Tangany GmbH",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "SMART VALOR",
       "error": "",
       "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Acheron | Acheron Trading",
+      "error": "",
+      "jobs": 16,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Vivid Money B.V.",
+      "error": "",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Validvent",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Alaric Securities",
+      "error": "",
+      "jobs": 4,
       "ok": true,
       "targets": []
     },
@@ -2996,9 +3124,44 @@
       "targets": []
     },
     {
-      "company": "Spendesk",
+      "company": "Altcoins",
       "error": "",
-      "jobs": 30,
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "tothemoon",
+      "error": "",
+      "jobs": 2,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Kraken",
+      "error": "ashby: HTTPStatusError: Client error '404 Not Found' for url 'https://api.ashbyhq.com/posting-api/job-board/kraken?includeCompensation=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Payfuture",
+      "error": "workable: HTTPStatusError: Client error '404 Not Found' for url 'https://apply.workable.com/api/v1/widget/accounts/payfuture?details=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "XTB Limited",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Crossmint",
+      "error": "",
+      "jobs": 11,
       "ok": true,
       "targets": []
     },
@@ -3015,44 +3178,9 @@
       ]
     },
     {
-      "company": "Payfuture",
-      "error": "workable: HTTPStatusError: Client error '404 Not Found' for url 'https://apply.workable.com/api/v1/widget/accounts/payfuture?details=true'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
-      "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Validvent",
+      "company": "KBC",
       "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Crossmint",
-      "error": "",
-      "jobs": 11,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "PELICAN EXCHANGE EUROPE (CY) LTD",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Trading.com",
-      "error": "",
-      "jobs": 2,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "tothemoon",
-      "error": "",
-      "jobs": 2,
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -3064,9 +3192,30 @@
       "targets": []
     },
     {
+      "company": "OakNorth",
+      "error": "lever: HTTPStatusError: Client error '404 Not Found' for url 'https://api.lever.co/v0/postings/oaknorth?mode=json'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404",
+      "jobs": 6,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "360 Treasury Systems AG",
+      "error": "",
+      "jobs": 3,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "Neverless",
       "error": "",
       "jobs": 4,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "APLO",
+      "error": "",
+      "jobs": 3,
       "ok": true,
       "targets": []
     },
@@ -3078,11 +3227,30 @@
       "targets": []
     },
     {
-      "company": "TRIA BRIDGE",
+      "company": "Spendesk",
       "error": "",
-      "jobs": 1,
+      "jobs": 30,
       "ok": true,
       "targets": []
+    },
+    {
+      "company": "Vontobel",
+      "error": "",
+      "jobs": 39,
+      "ok": true,
+      "targets": []
+    },
+    {
+      "company": "Mondu",
+      "error": "",
+      "jobs": 6,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "workable",
+          "slug": "mondu"
+        }
+      ]
     },
     {
       "company": "Saxo",
@@ -3101,6 +3269,13 @@
       ]
     },
     {
+      "company": "TRIA BRIDGE",
+      "error": "",
+      "jobs": 1,
+      "ok": true,
+      "targets": []
+    },
+    {
       "company": "AMINA Bank",
       "error": "",
       "jobs": 13,
@@ -3116,13 +3291,6 @@
       "company": "Kaiser Partner Privatbank",
       "error": "",
       "jobs": 4,
-      "ok": true,
-      "targets": []
-    },
-    {
-      "company": "Tangany GmbH",
-      "error": "",
-      "jobs": 2,
       "ok": true,
       "targets": []
     },
@@ -3151,6 +3319,18 @@
       ]
     },
     {
+      "company": "AMINA EU",
+      "error": "",
+      "jobs": 13,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "personio",
+          "slug": "amina"
+        }
+      ]
+    },
+    {
       "company": "amnis",
       "error": "",
       "jobs": 1,
@@ -3163,16 +3343,11 @@
       ]
     },
     {
-      "company": "AMINA EU",
+      "company": "Lombard Odier",
       "error": "",
-      "jobs": 13,
+      "jobs": 14,
       "ok": true,
-      "targets": [
-        {
-          "kind": "personio",
-          "slug": "amina"
-        }
-      ]
+      "targets": []
     },
     {
       "company": "American Express",
@@ -3588,17 +3763,6 @@
       ]
     },
     {
-      "company": "Remote OK",
-      "error": "skipped this hour by source cadence",
-      "jobs": 0,
-      "ok": true,
-      "targets": [
-        {
-          "kind": "cadence 2h"
-        }
-      ]
-    },
-    {
       "company": "Himalayas",
       "error": "skipped this hour by source cadence",
       "jobs": 0,
@@ -3623,7 +3787,18 @@
     {
       "company": "Arbeitnow",
       "error": "",
-      "jobs": 1401,
+      "jobs": 1397,
+      "ok": true,
+      "targets": [
+        {
+          "kind": "aggregator"
+        }
+      ]
+    },
+    {
+      "company": "Remote OK",
+      "error": "",
+      "jobs": 99,
       "ok": true,
       "targets": [
         {
