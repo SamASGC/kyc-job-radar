@@ -1,0 +1,67 @@
+name: Radar v2.5 — financial ATS coverage smoke
+
+on:
+  push:
+    branches: ["feat/v2-5-financial-ats-coverage"]
+    paths: [".github/workflows/v2_5_financial_sources_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m compileall -q radar.py job_radar tests
+      - run: python -m unittest discover -s tests -v
+      - name: Run actual scan without pushes or Pages deployment
+        run: python radar.py scan
+      - name: Report confirmed source health and quality
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inventory=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          assert inventory["total_configured_checked_or_scheduled"] >= 242
+          assert len(state["seen"]) >= 305
+          names=["Paytm","Aspora","LHV Bank","Wolt","Bondora","Boku","Apron","Seccl","Creem"]
+          actual={x["company"]: x for x in inventory["sources"]}
+          print("NEW_SOURCE_HEALTH",json.dumps({
+             n: {"result":actual[n]["result"],"jobs":actual[n]["jobs_found"]}
+             for n in names
+          }))
+          print("FUNNEL",json.dumps({
+             "raw":audit["raw_total"],
+             "candidates":audit["prefiltered_candidates"],
+             "verified":audit["official_apply_page_verified"],
+             "reasons":audit["verification_reasons"],
+             "known_seen":len(state["seen"]),
+          }))
+          print("TOTAL",json.dumps({
+             "configured":inventory["total_configured_checked_or_scheduled"],
+             "ats_explicit":inventory["ats_explicit"],"reached":inventory["reached"],
+             "errors":inventory["errors"],"with_jobs":inventory["with_jobs"],
+          }))
+          for name in ("index.html","sources.html","status.html","review.html","feed.xml"):
+              assert (Path("public")/name).exists(),name
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-5-sources-and-quality
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
