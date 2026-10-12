@@ -24,6 +24,8 @@ class ExpandedSourcesTests(unittest.TestCase):
             "SEB","Swedbank","Nordea","Deutsche Bank","HSBC","State Street",
             "Northern Trust","IQ-EQ","Alter Domus","Vistra","Azets",
             "Deloitte Luxembourg","KPMG Luxembourg",
+            "CACEIS","SIX Group","Luminor","Citadele Bank","Avaloq",
+            "TMF Group","Brown Brothers Harriman",
         }
         by_name={c["name"]:c for c in rows}
         for name in wanted:
