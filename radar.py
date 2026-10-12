@@ -26,6 +26,7 @@ from job_radar.sources.open_universe import (
     fetch_jobopportunities_open_universe,
     fetch_remote_landers,
     fetch_licensed_employer_domain_jobs,
+    has_jobopportunities_api_key,
 )
 from job_radar.state import load_state
 from job_radar.dashboard import build_dashboard
@@ -131,10 +132,17 @@ async def _fetch_aggregators_with_open_universe(http, config):
     """Keep the original feeds and add broad employer-direct discovery surfaces."""
     jobs, health, skipped = await _BASE_FETCH_AGGREGATORS(http, config)
 
-    specs = [
-        ("Job Opportunities API", fetch_jobopportunities_open_universe),
-        ("Remote Landers", fetch_remote_landers),
-    ]
+    specs = [("Remote Landers", fetch_remote_landers)]
+    if has_jobopportunities_api_key():
+        specs.append(("Job Opportunities API", fetch_jobopportunities_open_universe))
+    else:
+        health.append({
+            "company": "Job Opportunities API",
+            "ok": True,
+            "jobs": 0,
+            "targets": [{"kind": "disabled — API key required"}],
+            "error": "SKIPPED: no JOB_OPPORTUNITIES_API_KEY; public listings endpoint returned HTTP 401",
+        })
     results = await asyncio.gather(*(func(http) for _, func in specs), return_exceptions=True)
     for (name, _), result in zip(specs, results):
         if isinstance(result, Exception):
@@ -167,7 +175,11 @@ async def _fetch_aggregators_with_open_universe(http, config):
             "company": "Licensed employer-domain discovery",
             "ok": stats.get("errors", 0) == 0,
             "jobs": len(rows),
-            "targets": [{"kind": "company-domain API rotation"}],
+            "targets": [{
+                "kind": "disabled — API key required"
+                if stats.get("status") == "skipped_no_api_key"
+                else "company-domain API rotation"
+            }],
             "error": str(stats),
         })
     except Exception as exc:
