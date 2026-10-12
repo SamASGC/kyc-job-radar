@@ -31,6 +31,8 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Test one full live scan (no git push and no Pages deployment)
         run: python radar.py scan
+        env:
+          JOB_OPPORTUNITIES_API_KEY: ${{ secrets.JOB_OPPORTUNITIES_API_KEY }}
       - name: Source health and output sizes
         if: always()
         run: |
