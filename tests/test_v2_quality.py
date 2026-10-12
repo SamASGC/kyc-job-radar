@@ -161,6 +161,45 @@ class V2LiveATSChecks(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(await verify_application_page(Http(), j))
         self.assertEqual(j.posted_at, latest)
 
+    async def test_europe_remote_with_structured_spain_requirements_passes(self):
+        from job_radar.v2_quality import verify_application_page, could_verify_spain_from_job_page
+        latest = datetime.now(timezone.utc).isoformat()
+        class HTTP:
+            async def get(self, url):
+                class Response:
+                    status_code = 200
+                p=Response()
+                p.text = ('<html><script type="application/ld+json">'
+                          '{"@type":"JobPosting","title":"KYB Analyst",'
+                          '"jobLocationType":"TELECOMMUTE",'
+                          '"applicantLocationRequirements":[{"@type":"Country","name":"Spain"}],'
+                          '"datePosted":"' + latest + '"}</script>'
+                          '<h1>KYB Analyst</h1><button>Apply now</button></html>')
+                return p
+        j = job(location="Remote EMEA")
+        j.posted_at = ""
+        self.assertTrue(could_verify_spain_from_job_page(j))
+        self.assertTrue(await verify_application_page(HTTP(), j))
+        self.assertTrue(location_allowed(j))
+
+    async def test_no_spain_structured_requirements_stays_excluded(self):
+        from job_radar.v2_quality import verify_application_page, location_allowed
+        latest = datetime.now(timezone.utc).isoformat()
+        class HTTP:
+            async def get(self, url):
+                class Response:
+                    status_code=200
+                p=Response()
+                p.text=('<script type="application/ld+json">'
+                        '{"@type":"JobPosting","title":"KYB Analyst",'
+                        '"applicantLocationRequirements":{"name":"Germany"},'
+                        '"datePosted":"' + latest + '"}</script>'
+                        '<button>Apply now</button>')
+                return p
+        j=job(location="Remote EMEA")
+        self.assertTrue(await verify_application_page(HTTP(),j))
+        self.assertFalse(location_allowed(j))
+
     async def test_wrong_job_date_or_closed_form_does_not_pass(self):
         from job_radar.v2_quality import verify_application_page
         latest = datetime.now(timezone.utc).isoformat()
