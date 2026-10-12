@@ -37,7 +37,7 @@ jobs:
           assert inv["direct_configured"] == 284, inv["direct_configured"]
           assert inv["ats_explicit"] >= 78, inv["ats_explicit"]
           assert len(state["seen"]) >= 305, len(state["seen"])
-          names = ["Capco","Carta","Aztec Group","Arendt","Aspire",
+          names = ["Capco","Carta","Aztec Group","Arendt","AiPrise",
                    "Sayari","IMC Trading","Flow Traders","BNY",
                    "Mirabaud Group","J. Safra Sarasin","Banque Cantonale Vaudoise",
                    "Zürcher Kantonalbank","Maples Group","Ocorian","Waystone",
