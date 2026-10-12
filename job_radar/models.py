@@ -53,6 +53,7 @@ class Job:
     country: str = ""
     salary_display: str = ""
     fingerprint: str = ""
+    apply_verified_at: str = ""
 
     def finalize(self) -> "Job":
         if not self.discovered_at:
