@@ -76,6 +76,13 @@ class V2AdmissionTests(unittest.TestCase):
         self.assertFalse(passes_strict_gate(job(posted_at="posted today")))
         self.assertTrue(passes_strict_gate(job()))
 
+    def test_distinct_ats_requisitions_have_distinct_fingerprints(self):
+        a = job(company="TestPay", title="KYB Analyst", external_id="123")
+        b = job(company="TestPay", title="KYB Analyst", external_id="456")
+        self.assertNotEqual(a.fingerprint, b.fingerprint)
+        repost = job(company="TestPay", title="KYB Analyst - French", external_id="123")
+        self.assertEqual(a.fingerprint, repost.fingerprint)
+
     def test_already_presented_never_realerted(self):
         j = job(title="Senior KYB Analyst", external_id="128")
         old = {"first_seen": "2026-10-08", "company": "TestPay",
