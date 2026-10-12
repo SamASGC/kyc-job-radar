@@ -11,6 +11,7 @@ import job_radar.scanner as scanner_module
 import job_radar.matching as matching_module
 import job_radar.fit_adjustments as fit_adjustments_module
 from job_radar.fit_adjustments import apply_fit_adjustments
+from job_radar.v2_quality import passes_strict_gate
 from job_radar.precision import (
     contains_any,
     required_near,
@@ -111,7 +112,11 @@ def _score_job_with_must_have_gaps(job, profile, known_company=False):
     if irrelevant_profession_title(job.title):
         return job, False
     scored, ok = _BASE_SCORE_JOB(job, profile, known_company=known_company)
-    return apply_fit_adjustments(scored, profile, ok)
+    scored, ok = apply_fit_adjustments(scored, profile, ok)
+    if profile.get("strict_quality_gate", False):
+        if not passes_strict_gate(scored, max_hours=int(profile.get("max_post_age_hours", 96))):
+            return scored, False
+    return scored, ok
 
 
 async def _fetch_target_with_oracle(http, company, target):
