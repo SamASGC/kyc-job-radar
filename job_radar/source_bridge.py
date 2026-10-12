@@ -122,6 +122,7 @@ async def extract_ats_from_aggregator_page(http, lead: Job) -> dict | None:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(response.text[:220_000], "html.parser")
         from urllib.parse import urljoin
+        redirect_candidates = []
         for a in soup.find_all("a", href=True):
             label = norm_text(a.get_text(" ", strip=True) + " "
                               + str(a.get("aria-label") or ""))
@@ -131,6 +132,17 @@ async def extract_ats_from_aggregator_page(http, lead: Job) -> dict | None:
                 continue
             dest = urljoin(str(response.url), a["href"])
             target = ats_target_from_url(dest)
+            if target:
+                return target
+            if dest != str(response.url) and approved_feed_url(dest):
+                redirect_candidates.append(dest)
+        # Some portals use an /apply link that redirects to the employer ATS.
+        # Follow a maximum of two known-portal CTA links, without crawling.
+        for link in redirect_candidates[:2]:
+            next_page = await http.get(link)
+            if next_page.status_code != 200:
+                continue
+            target = ats_target_from_url(str(next_page.url))
             if target:
                 return target
     except Exception:
