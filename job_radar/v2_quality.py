@@ -7,6 +7,7 @@ role/fit scoring, never in place of it.
 from __future__ import annotations
 
 import re
+import json
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
@@ -120,7 +121,35 @@ def previously_presented(job: Job, seen: dict) -> bool:
     return False
 
 
-async def verify_application_page(http, job: Job) -> bool:
+def extract_original_jobposting_date(soup, expected_title: str) -> str:
+    """Only schema.org JobPosting.datePosted for THIS exact role is trusted."""
+    title_expected = norm_text(expected_title)
+    for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+        try:
+            document = json.loads(script.string or script.get_text() or "")
+        except (ValueError, TypeError):
+            continue
+        queue = [document]
+        while queue:
+            item = queue.pop()
+            if isinstance(item, list):
+                queue.extend(item)
+                continue
+            if not isinstance(item, dict):
+                continue
+            types = item.get("@type", [])
+            types = types if isinstance(types, list) else [types]
+            if "JobPosting" in types:
+                actual_title = norm_text(str(item.get("title") or ""))
+                if actual_title and actual_title == title_expected:
+                    date = item.get("datePosted") or ""
+                    if original_posted_at(date) is not None:
+                        return str(date)
+            queue.extend(v for k, v in item.items() if k in {"@graph", "mainEntity", "itemListElement"})
+    return ""
+
+
+async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
     """Second check of a fresh ATS posting, against its specific apply page.
 
     Non-200, blocked, removed, or pages without an identifiable application
@@ -137,6 +166,14 @@ async def verify_application_page(http, job: Job) -> bool:
         return False
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(page, "html.parser")
+    # Use embedded original JobPosting.datePosted only if ATS did not expose
+    # an original publication date. Never use updated/first-seen timestamps.
+    if original_posted_at(job.posted_at) is None:
+        exact_date = extract_original_jobposting_date(soup, job.title)
+        if exact_date:
+            job.posted_at = exact_date
+    if not within_new_window(job.posted_at, max_hours=max_hours):
+        return False
     text = soup.get_text(" ", strip=True).casefold()
     closed = (
         "no longer accepting applications", "applications are closed",
