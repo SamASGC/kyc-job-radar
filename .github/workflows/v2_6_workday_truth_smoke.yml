@@ -1,0 +1,94 @@
+name: Radar v2.6 — Workday status and final live smoke
+
+on:
+  push:
+    branches: ["feat/v2-6-financial-sources-284"]
+    paths: [".github/workflows/v2_6_workday_truth_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: python -m compileall -q radar.py job_radar tests
+      - run: python -m unittest discover -s tests -v
+      - name: Probe Workday native list endpoints read-only
+        run: |
+          python - <<'PY'
+          import asyncio, json
+          from job_radar.http import Http
+          async def run():
+              http=Http(concurrency=3,timeout=15)
+              sources=[
+                ("Aztec Group","aztecgroup.wd103.myworkdayjobs.com","aztecgroup","External"),
+                ("Arendt","arendt.wd3.myworkdayjobs.com","arendt","jobopportunities"),
+              ]
+              for name,host,tenant,site in sources:
+                  url=f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
+                  try:
+                      r=await http.post(url,json={"appliedFacets":{},"limit":20,
+                                                 "offset":0,"searchText":""},
+                                        headers={"Content-Type":"application/json"})
+                      print("WORKDAY_ENDPOINT",json.dumps({
+                        "company":name,"http":r.status_code,
+                        "content_type":r.headers.get("content-type",""),
+                        "response_prefix":r.text[:110],
+                      }))
+                  except Exception as e:
+                      print("WORKDAY_ENDPOINT",json.dumps({
+                        "company":name,"error":type(e).__name__
+                      }))
+              await http.close()
+          asyncio.run(run())
+          PY
+      - name: Scan live ATS and official employers in isolation
+        run: python radar.py scan
+      - name: Assert release source count and historical ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          health=json.loads(Path("data/health.json").read_text())
+          assert inv["direct_configured"] == 284
+          assert len(state["seen"]) >= 305
+          assert inv["ats_explicit"] >= 78
+          for name in ("Aztec Group","Arendt","Aspire","Euroclear","BNY"):
+              rows=[x for x in health["sources"] if x.get("company")==name]
+              print("ATS_RESULT",json.dumps({
+                  "name":name,
+                  "checks":[{"ok":r["ok"],"jobs":r["jobs"],
+                             "error":r.get("error","")[:350]} for r in rows]
+              }))
+          print("FINAL_QUALITY",json.dumps({
+            "configured":inv["direct_configured"],
+            "reached":inv["reached"],
+            "with_raw_jobs":inv["with_jobs"],
+            "candidates":audit["prefiltered_candidates"],
+            "verified":audit["official_apply_page_verified"],
+            "reasons":audit["verification_reasons"],
+            "seen":len(state["seen"])
+          }))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-6-workday-probe-and-live-smoke
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
