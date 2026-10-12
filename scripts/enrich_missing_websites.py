@@ -176,10 +176,18 @@ def main() -> None:
     parser.add_argument("--state", type=Path, default=Path("data/enrichment_state.json"))
     parser.add_argument("--verified", type=Path, default=Path("data/verified_company_websites.json"))
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--focus-name", help="For isolated testing: only the matching legal entity")
     args = parser.parse_args()
     if not 1 <= args.limit <= 60:
         parser.error("--limit must be 1 to 60")
     directory = json.loads(args.directory.read_text(encoding="utf-8"))
+    if args.focus_name:
+        directory = [
+            row for row in directory
+            if str(row.get("name", "")).casefold().strip() == args.focus_name.casefold().strip()
+        ]
+        if not directory:
+            parser.error("No matching licensed legal entity found")
     data = json.loads(args.state.read_text(encoding="utf-8")) if args.state.exists() else {}
     attempted = data.get("attempted", {})
     verified = json.loads(args.verified.read_text(encoding="utf-8")) if args.verified.exists() else []
