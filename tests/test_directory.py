@@ -51,6 +51,25 @@ class DirectoryTests(unittest.TestCase):
         self.assertEqual(stats["with_website"], 1)
         self.assertTrue(all(r["license"] == "CC BY 4.0" for r in rows))
 
+    def test_bad_job_api_key_rejects_explicitly(self):
+        import asyncio
+        import os
+        from unittest.mock import patch
+        from job_radar.sources.open_universe import (
+            _get_jobopportunities, JobAPIAuthenticationError,
+        )
+        class Http:
+            async def get(self, *args, **kwargs):
+                class Response:
+                    status_code=401
+                    headers={}
+                    def raise_for_status(self):
+                        raise AssertionError("Authentication status should be reported first")
+                return Response()
+        with patch.dict(os.environ, {"JOB_OPPORTUNITIES_API_KEY":"invalid-test-key"}):
+            with self.assertRaises(JobAPIAuthenticationError):
+                asyncio.run(_get_jobopportunities(Http(), {"limit":1}))
+
     def test_missing_job_api_key_disables_entire_domain_discovery_cleanly(self):
         import asyncio
         import os
