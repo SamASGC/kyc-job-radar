@@ -195,6 +195,14 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
     raw_count = len(raw_jobs)
     semantic_changed = False
 
+    # Migration: preserve the lifetime 'seen' ledger, but do not present
+    # any pre-v2 vacancy as a new v2 notification.
+    if profile.get("strict_quality_gate", False) and not state.get("strict_v2_baseline"):
+        if current:
+            current.clear()
+        state["strict_v2_baseline"] = now
+        semantic_changed = True
+
     # Revalidate every currently visible vacancy against today's rules before processing
     # fresh fetches. This makes preference/scoring fixes take effect immediately instead
     # of leaving old out-of-scope rows visible for the stale timeout (e.g. London hybrid).
@@ -260,14 +268,18 @@ def update_state_with_jobs(state: dict, raw_jobs: list[Job], companies: list[dic
             seen.setdefault(fp, {"first_seen": d["first_seen"], "company": scored.company, "title": scored.title, "location": scored.location})
             continue
 
-        # Never re-surface a previously presented vacancy after it left the active dashboard.
+        # Lifetime deduplication: persisted fingerprint AND historical role identity.
         if fp in seen:
             continue
+        if profile.get("strict_quality_gate", False):
+            from job_radar.v2_quality import previously_presented
+            if previously_presented(scored, seen):
+                continue
 
         d = scored.to_dict()
         d["first_seen"] = now
         current[fp] = d
-        seen[fp] = {"first_seen": now, "company": scored.company, "title": scored.title, "location": scored.location, "source": scored.source}
+        seen[fp] = {"first_seen": now, "company": scored.company, "title": scored.title, "location": scored.location, "source": scored.source, "external_id": scored.external_id, "apply_url": scored.apply_url}
         new_count += 1
         semantic_changed = True
 
