@@ -62,5 +62,32 @@ class ATSBridgeTests(unittest.TestCase):
         ], set()))
 
 
+class IndirectATSDiscoveryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_extract_apply_link_only_from_approved_public_board(self):
+        from job_radar.source_bridge import extract_ats_from_aggregator_page
+        class Response:
+            status_code = 200
+            url = "https://jobicy.com/jobs/1234"
+            text = ('<html><a href="https://jobs.ashbyhq.com/realpay/abc-123">'
+                    'Apply now</a><a href="https://jobs.lever.co/other/456">'
+                    'Related openings</a></html>')
+        class HTTP:
+            async def get(self, url):
+                return Response()
+        j = lead("RealPay", "https://jobicy.com/jobs/1234")
+        self.assertEqual(await extract_ats_from_aggregator_page(HTTP(), j),
+                         {"kind": "ashby", "slug": "realpay"})
+        bad = lead("RealPay", "https://mybank.internal.local/jobs")
+        self.assertIsNone(await extract_ats_from_aggregator_page(HTTP(), bad))
+
+    async def test_unknown_source_does_not_launch_any_fetch(self):
+        from job_radar.source_bridge import discover_ats_via_aggregator_pages
+        class HTTP:
+            async def get(self, url):
+                raise AssertionError("No fetch must occur")
+        rows = [lead("Test", "https://example.org/unknown/123")]
+        self.assertEqual(await discover_ats_via_aggregator_pages(HTTP(), rows, set()), [])
+
+
 if __name__ == "__main__":
     unittest.main()
