@@ -82,6 +82,14 @@ def load_directory_batch(
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError("Directory must contain a list of companies")
+    # Enrichment records are independently verified leads; preserve the
+    # attributed upstream licensed register byte-for-byte.
+    overlay_path = path.parent / "verified_company_websites.json"
+    if overlay_path.exists():
+        from job_radar.website_enrichment import overlay_directory
+        overlay = json.loads(overlay_path.read_text(encoding="utf-8"))
+        if isinstance(overlay, list):
+            data = overlay_directory(data, overlay)
     now = now or datetime.now(timezone.utc)
     # Main workflow runs at :17 and :47, so successive half-hour slots
     # should inspect different businesses, not the same hourly slice twice.

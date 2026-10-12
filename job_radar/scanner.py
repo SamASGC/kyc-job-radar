@@ -16,6 +16,7 @@ from job_radar.feed import create_rss
 from job_radar.status import build_status
 from job_radar.review import build_review_page
 from job_radar.sources.generic import fetch_generic
+from job_radar.discovery import ats_target_has_company_identity
 from job_radar.sources.greenhouse import fetch_greenhouse
 from job_radar.sources.lever import fetch_lever
 from job_radar.sources.ashby import fetch_ashby
@@ -66,7 +67,13 @@ async def fetch_target(http: Http, company: dict, target: dict) -> list[Job]:
 async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Job], dict]:
     health = {"company": company["name"], "ok": True, "jobs": 0, "targets": [], "error": ""}
     discovery = state.setdefault("discovery", {}).get(company["name"], {})
-    targets = company.get("ats") or discovery.get("targets") or []
+    # Always trust explicitly configured employer ATS boards first.
+    # Old saved auto-discovery can contain unrelated venture-fund portfolio
+    # targets (e.g. Due -> Bitpanda); drop them conservatively.
+    targets = company.get("ats") or [
+        t for t in (discovery.get("targets") or [])
+        if ats_target_has_company_identity(company, t)
+    ]
     jobs: list[Job] = []
     errors = []
 
@@ -83,6 +90,8 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
             try:
                 generic_jobs, detected, final_url = await fetch_generic(http, company)
                 jobs.extend(generic_jobs)
+                detected = [t for t in detected
+                            if ats_target_has_company_identity(company, t)]
                 if detected:
                     prev_disc = state["discovery"].get(company["name"], {})
                     if prev_disc.get("targets") != detected or prev_disc.get("final_url") != final_url:
@@ -93,6 +102,8 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
         try:
             generic_jobs, detected, final_url = await fetch_generic(http, company)
             jobs.extend(generic_jobs)
+            detected = [t for t in detected
+                        if ats_target_has_company_identity(company, t)]
             if detected:
                 prev_disc = state["discovery"].get(company["name"], {})
                 if prev_disc.get("targets") != detected or prev_disc.get("final_url") != final_url:

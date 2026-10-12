@@ -52,6 +52,45 @@ filler.
   a supported ATS, but must expose a defensible original date and visible
   apply/form evidence. A merely indexed/generic careers home page does not count.
 
+### Radar v2.2 — hourly evidence-based website enrichment (12 October 2026)
+
+The existing hourly direct-employer + licensed-register sweeps continue unchanged.
+This branch adds **five verified employer ATS boards** for **Finary** (Ashby),
+**Solidgate** (Ashby), **Smartbroker AG** (Personio), **Strike** (Greenhouse)
+and **BitGo** (Greenhouse), and upgrades **Scalable Capital** to its working
+SmartRecruiters board. Direct employer target coverage grows from **203 to 208**.
+It is still not 208 proven job-relevant, continuously reachable feeds.
+
+A separate scheduled enrichment job at **:05 UTC every hour** examines up to
+**20 distinct licensed financial-company legal names** whose regulator
+register entry has no website. The website can be activated for ATS discovery
+ONLY when all independent conditions hold:
+
+- Wikidata's public entity search supplies an exact normalized legal name or
+  alias, country P17/P495 matching the register country code, and an explicit
+  P856 official website; multiple conflicting matches are held back.
+- That HTTPS company homepage responds and displays a matching company brand
+  in the title or identifiable company branding. External redirects, unsafe
+  URLs and insufficient evidence are withheld.
+- Companies already in the direct-employer watchlist and websites already in
+  the attributed registry are skipped. The original CC BY 4.0 register is never
+  edited. A separate checked ledger and verified website overlay are committed
+  to main for reuse by the two existing career scans.
+
+**Reality check:** a live pilot of 60 previously unmonitored legal entities
+found **zero** strict matches. A targeted Qonto (already directly monitored)
+check **did** confirm a correct site. This is a conservative supplementary
+enrichment source, NOT proof that the remaining ~2,255 entities will all be
+discoverable. Source outages are saved as a status, not falsely counted as
+successful discoveries or spammy hourly workflow failures.
+
+**Investor portfolio safety:** older auto-discovery could pick up other firms'
+ATS boards on Due's Speedinvest page (e.g. Bitpanda, Dialpad). Unrelated boards
+are now filtered by company identity; investor-hosted listings are aggregator
+leads only, not verified official company job listings. The historical
+notified-requisition ledger remains intact, and alerts still need original
+posting age <=96h and active application confirmation.
+
 ### Radar v2.1 — hourly source coverage (12 October 2026)
 
 - **203 directly configured financial-service/fintech employers**, including 11 additional

@@ -50,6 +50,45 @@ class HomepageToCareersTests(unittest.TestCase):
         self.assertEqual(ats,[{"kind":"ashby","slug":"realbank"}])
         self.assertEqual(final_url,"https://realbank.example/careers")
 
+    def test_investor_portfolio_does_not_steal_unrelated_ats_jobs(self):
+        from job_radar.discovery import ats_target_has_company_identity
+        due={"name":"Due","aliases":["Due Network"]}
+        for external in ("bitpanda","dialpad","gigs","trawa","cylib-gmbh"):
+            self.assertFalse(ats_target_has_company_identity(
+                due,{"kind":"greenhouse","slug":external}
+            ),external)
+        self.assertTrue(ats_target_has_company_identity(
+            {"name":"Finary"}, {"kind":"ashby","slug":"finary"}
+        ))
+        self.assertTrue(ats_target_has_company_identity(
+            {"name":"Scalable Capital"}, {"kind":"smartrecruiters","slug":"ScalableCapital"}
+        ))
+        self.assertFalse(ats_target_has_company_identity(
+            {"name":"ComplyAdvantage"}, {"kind":"greenhouse","slug":"embed"}
+        ))
+
+    def test_investor_job_board_is_never_own_company_official_career(self):
+        import asyncio
+        class Response:
+            def __init__(self,url,html):
+                self.url=url
+                self.text=html
+            def raise_for_status(self):
+                return None
+        class FakeHTTP:
+            async def get(self,url):
+                if url.startswith("https://careers.speedinvest.com/"):
+                    return Response(url,
+                       '<a href="https://jobs.example.org/careers/kyb">KYB Analyst</a>')
+                return Response(url,"<h1>KYB Analyst</h1>")
+        due={
+            "name":"Due", "sector":"Payments",
+            "careers_url":"https://careers.speedinvest.com/companies/due-2"
+        }
+        jobs,_,_=asyncio.run(fetch_generic(FakeHTTP(),due))
+        # Investor page cards are not company-specific ATS job records.
+        self.assertEqual(jobs,[])
+
     def test_no_crawl_of_external_non_ats_careers(self):
         self.assertEqual(
             candidate_careers_links(
