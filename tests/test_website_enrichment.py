@@ -92,6 +92,17 @@ class LicensedWebsiteEnrichmentTests(unittest.TestCase):
             self.assertEqual(batch[0]["careers_url"],"https://acetransfer.com")
             self.assertEqual(json.loads(directory.read_text()),rows)
 
+    def test_enrichment_never_claims_duplicate_of_existing_direct_watchlist(self):
+        now=datetime(2026,10,12,tzinfo=timezone.utc)
+        rows=[
+            {"name":"Qonto","country":"FR","website":""},
+            {"name":"New Licensed Pay","country":"LT","website":""},
+        ]
+        sample=candidates_to_research(
+            rows,{},20,now,existing_watchlist={"Qonto","Qonto SA"},
+        )
+        self.assertEqual([row["name"] for row in sample],["New Licensed Pay"])
+
     def test_selection_skips_recently_attempted(self):
         now=datetime(2026,10,12,tzinfo=timezone.utc)
         rows=[{"name":"ACE Ltd","country":"GB","website":""},
