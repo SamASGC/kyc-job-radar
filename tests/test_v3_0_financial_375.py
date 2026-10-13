@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 ROOT=Path(__file__).resolve().parents[1]
 ATS={
 "Clear Street":("greenhouse","clearstreet"),
-"TRM Labs":("greenhouse","trmlabs"),
+"Virtu Financial":("greenhouse","virtu"),
 "FalconX":("greenhouse","falconx"),
 "GSR Markets":("greenhouse","gsrmarkets"),
 "DigitalBridge":("greenhouse","digitalbridge"),
