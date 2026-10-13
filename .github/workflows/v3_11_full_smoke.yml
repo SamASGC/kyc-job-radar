@@ -1,0 +1,60 @@
+name: v3.11 - full 500 employer source repair acceptance
+on:
+  push:
+    branches: ["fix/v3-11-priority-source-reliability"]
+    paths: [".github/workflows/v3_11_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile sources and run all regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Actual live scan, isolated from production branch and state
+        run: python radar.py scan
+      - name: Require nonempty real job sources and untouched user gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          audit=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in inv["sources"]}
+          focus=("Euroclear","Shift4","PayDo","Revolut","Kutxabank",
+                 "Schaffhauser Kantonalbank","Swiss Prime Site Solutions",
+                 "Berner Kantonalbank","SME Bank Lithuania")
+          print("V311_FOCUS",json.dumps({n:{"status":by[n]["result"],
+              "raw_records":by[n]["jobs_found"]} for n in focus},ensure_ascii=False))
+          print("V311_COVERAGE",json.dumps({k:inv[k] for k in (
+              "direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V311_SEEN",len(state["seen"]))
+          print("V311_FUNNEL",json.dumps({k:v for k,v in audit.items()
+              if not isinstance(v,list)},ensure_ascii=False))
+          assert inv["direct_configured"]==500
+          assert inv["ats_explicit"]==172
+          assert len(state["seen"])>=306
+          assert by["Euroclear"]["result"]=="ok" and by["Euroclear"]["jobs_found"]>=25
+          assert by["Shift4"]["result"]=="ok" and by["Shift4"]["jobs_found"]>=20
+          assert by["PayDo"]["result"]=="ok" and by["PayDo"]["jobs_found"]>=7
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-11-official-source-diagnostics-and-quality
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
