@@ -174,23 +174,23 @@ LANGUAGES = (
     "czech", "slovak", "hungarian", "romanian", "greek", "turkish",
     "arabic", "russian", "ukrainian", "french", "spanish", "english",
 )
-_LANGUAGE_PATTERN = re.compile(r"\\b(?:" + "|".join(LANGUAGES) + r")\\b", re.I)
-_MANDATORY_CUE = re.compile(r"\\b(required|mandatory|essential|must|necessar(?:y|ily)|obligator(?:y|io|ia)|exig(?:e|ido|ida)|erforderlich|erforderliche)\\b", re.I)
+_LANGUAGE_PATTERN = re.compile(r"\b(?:" + "|".join(LANGUAGES) + r")\b", re.I)
+_MANDATORY_CUE = re.compile(r"\b(required|mandatory|essential|must|necessar(?:y|ily)|obligator(?:y|io|ia)|exig(?:e|ido|ida)|erforderlich|erforderliche)\b", re.I)
 _OPTIONAL_CUE = re.compile(
-    r"\\b(preferred|advantage|advantageous|plus|nice to have|optional|"
-    r"desirable|not required|not mandatory|nicht erforderlich|wunschenswert)\\b", re.I
+    r"\b(preferred|advantage|advantageous|plus|nice to have|optional|"
+    r"desirable|not required|not mandatory|nicht erforderlich|wunschenswert)\b", re.I
 )
 _LANGUAGE_SKILL_CUE = re.compile(
-    r"\\b(fluent|fluency|fluently|native|proficien(?:t|cy)|bilingual|"
+    r"\b(fluent|fluency|fluently|native|proficien(?:t|cy)|bilingual|"
     r"speak|speaking|spoken|written|communication|language|linguistic|"
     r"kenntnisse|sprachkenntnisse|sprache|idioma|nivel|niveau|level|"
-    r"command of|knowledge of|kenntnis|verbal)\\b", re.I
+    r"command of|knowledge of|kenntnis|verbal)\b", re.I
 )
 _LANGUAGE_DIRECT_REQUIREMENT = re.compile(
-    r"\\b(?:" + "|".join(LANGUAGES) +
-    r")(?:\\s+(?:[abc][12]\\s*(?:level|niveau)?|language|skills|kenntnisse))?"
-    r"\\s+(?:is|are|(?:would be))?\\s*(?:required|mandatory|essential|"
-    r"erforderlich|exigido|obligatorio)\\b", re.I
+    r"\b(?:" + "|".join(LANGUAGES) +
+    r")(?:\s+(?:[abc][12]\s*(?:level|niveau)?|language|skills|kenntnisse))?"
+    r"\s+(?:is|are|(?:would be))?\s*(?:required|mandatory|essential|"
+    r"erforderlich|exigido|obligatorio)\b", re.I
 )
 
 
@@ -210,7 +210,7 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
     from bs4 import BeautifulSoup
     desc = BeautifulSoup(job.description or "", "html.parser").get_text(" ; ", strip=True)
     verified_text = getattr(job, "_verified_page_text", "")
-    clauses = re.split(r"[.;\\n]+", desc + " ; " + verified_text)
+    clauses = re.split(r"[.;\n]+", desc + " ; " + verified_text)
     missing = set()
     for clause in clauses:
         clause = norm_text(clause)
@@ -222,10 +222,10 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
         if not (_LANGUAGE_SKILL_CUE.search(clause)
                 or _LANGUAGE_DIRECT_REQUIREMENT.search(clause)):
             continue
-        if re.search(r"\\b(?:no|not)\\s+(?:language\\s+)?(?:is\\s+)?required\\b", clause):
+        if re.search(r"\b(?:no|not)\s+(?:language\s+)?(?:is\s+)?required\b", clause):
             continue
         # Alternative languages: one proven language satisfies this clause.
-        if re.search(r"\\b(?:or|either|ou|oder|o)\\b", clause) and present & known:
+        if re.search(r"\b(?:or|either|ou|oder|o)\b", clause) and present & known:
             continue
         missing.update(present - known)
     return sorted(missing)
