@@ -1,0 +1,66 @@
+name: v3.10 - audit official workday ashby greenhouse endpoints
+on:
+  push:
+    branches: ["fix/v3-10-recover-paypal-trading212-trulioo"]
+    paths: [".github/workflows/v3_10_provider_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Probe official public employers and explicitly report failures
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.workday import fetch_workday
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          from job_radar.sources.generic import fetch_generic
+          async def run():
+            http=Http(concurrency=10,timeout=13)
+            cases=[
+              ("Trading212 Ashby",lambda:fetch_ashby(http,{"name":"Trading 212","sector":"Fintech"},"trading212")),
+              ("Trulioo Ashby",lambda:fetch_ashby(http,{"name":"Trulioo","sector":"Fintech"},"trulioo")),
+              ("PayPal Workday",lambda:fetch_workday(http,{"name":"PayPal","sector":"Fintech"},"https://paypal.wd1.myworkdayjobs.com/en-US/jobs")),
+              ("PayDo old GH",lambda:fetch_greenhouse(http,{"name":"PayDo","sector":"Fintech"},"paydo")),
+              ("Shift4 GH",lambda:fetch_greenhouse(http,{"name":"Shift4","sector":"Fintech"},"shift4")),
+              ("Tuum generic",lambda:fetch_generic(http,{"name":"Tuum","sector":"Fintech","careers_url":"https://tuum.com/careers/"})),
+            ]
+            async def check(name,fn):
+              try:
+                out=await asyncio.wait_for(fn(), timeout=40)
+                jobs=out[0] if isinstance(out,tuple) else out
+                print("ATS_PROBE",json.dumps({"name":name,"ok":True,"jobs":len(jobs),
+                     "sample":[{"title":j.title,"url":j.apply_url[:160],"posted":j.posted_at} for j in jobs[:2]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("ATS_PROBE",json.dumps({"name":name,"ok":False,"error":type(e).__name__+": "+str(e)[:180]}),flush=True)
+            await asyncio.gather(*(check(n,f) for n,f in cases))
+            for url in [
+              "https://boards-api.eu.greenhouse.io/v1/boards/paydo/jobs?content=true",
+              "https://boards-api.greenhouse.io/v1/boards/paydo/jobs?content=true",
+              "https://job-boards.eu.greenhouse.io/paydo",
+              "https://job-boards.greenhouse.io/paydo",
+              "https://jobs.ashbyhq.com/trading212",
+              "https://jobs.ashbyhq.com/trulioo",
+              "https://paypal.wd1.myworkdayjobs.com/en-US/jobs"
+            ]:
+              try:
+                r=await http.get(url)
+                d=r.json() if "json" in r.headers.get("content-type","") else {}
+                jobs=d.get("jobs",d.get("jobPostings",[])) if isinstance(d,dict) else []
+                print("URL_PROBE",json.dumps({"url":url,"status":r.status_code,"final":str(r.url),
+                    "content_type":r.headers.get("content-type",""),"jobs":len(jobs),"bytes":len(r.content)}),flush=True)
+              except Exception as e:
+                print("URL_PROBE",json.dumps({"url":url,"error":type(e).__name__+": "+str(e)[:140]}),flush=True)
+            await http.close()
+          asyncio.run(run())
+          PY
