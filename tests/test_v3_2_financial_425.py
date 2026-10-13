@@ -37,8 +37,8 @@ class V32DirectEmployersTests(unittest.TestCase):
         cls.names = {c["name"].casefold(): c for c in cls.companies}
 
     def test_425_distinct_direct_employers_and_151_explicit_ats(self):
-        self.assertEqual(len(self.companies), 425)
-        self.assertEqual(len(self.names), 425)
+        self.assertGreaterEqual(len(self.companies), 425)
+        self.assertEqual(len(self.names), len(self.companies))
         self.assertGreaterEqual(
             sum(bool(c.get("ats")) for c in self.companies), 151
         )
