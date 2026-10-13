@@ -33,8 +33,8 @@ jobs:
           inv=json.loads(Path("public/sources.json").read_text())
           state=json.loads(Path("data/state.json").read_text())
           audit=json.loads(Path("data/quality_audit.json").read_text())
-          names={"BBVA","CaixaBank","ABANCA","Ibercaja Banco","Andbank",
-                 "ConnectPay","NEO Finance","Bank of Lithuania","CSSF Luxembourg",
+          names={"BBVA","CaixaBank","ABANCA","Ibercaja Banco","Grupo Cooperativo Cajamar",
+                 "Unicaja Banco","NEO Finance","Bank of Lithuania","CSSF Luxembourg",
                  "FINMA","Swiss National Bank","Banco de España"}
           indexed={x["company"]:x for x in inv["sources"]}
           assert inv["direct_configured"]==462,inv["direct_configured"]
