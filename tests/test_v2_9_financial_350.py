@@ -24,7 +24,7 @@ ATS = {
 }
 BANKS = {
     "Artea Bank", "VP Bank Group", "Arab Bank Switzerland",
-    "EFG International", "Banque Internationale à Luxembourg", "Bank Frick",
+    "Banque Internationale à Luxembourg", "Bank Frick",
 }
 
 
@@ -35,10 +35,10 @@ class DirectFinancial350Tests(unittest.TestCase):
                     json.loads((ROOT/"config/extra_companies.json").read_text()))
         cls.by_name = {x["name"].casefold(): x for x in cls.rows}
 
-    def test_350_unique_direct_sources_and_126_ats(self):
+    def test_350_unique_direct_sources_and_127_ats(self):
         self.assertEqual(len(self.rows), 350)
         self.assertEqual(len(self.by_name), 350)
-        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.rows), 126)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.rows), 127)
 
     def test_exact_provider_origin_and_board_identifier(self):
         for name, (kind, slug) in ATS.items():
@@ -59,7 +59,7 @@ class DirectFinancial350Tests(unittest.TestCase):
                 self.assertEqual(url.path.strip("/"), slug)
                 self.assertEqual(proof.path.strip("/").split("/")[0], slug)
 
-    def test_six_official_bank_portals_not_mislabelled_ats(self):
+    def test_five_official_bank_portals_not_mislabelled_ats(self):
         for name in BANKS:
             with self.subTest(name=name):
                 c = self.by_name[name.casefold()]
@@ -71,9 +71,25 @@ class DirectFinancial350Tests(unittest.TestCase):
                 self.assertEqual(urlsplit(c["careers_url"]).scheme, "https")
                 self.assertIn(c["careers_url"], c["origin"])
 
+    def test_efg_oracle_first_party_with_confirmed_cx_site(self):
+        efg = self.by_name["efg international"]
+        expected = ("https://fa-eqai-saasfaprod1.fa.ocs.oraclecloud.com"
+                    "/hcmUI/CandidateExperience/en/sites/CX_1001")
+        self.assertEqual(efg["careers_url"], expected)
+        self.assertEqual(
+            efg["ats"],
+            [{"kind": "oracle_hcm", "url": expected, "site": "CX_1001",
+              "language": "en"}],
+        )
+        self.assertEqual(
+            efg["verification_level"],
+            "official_oracle_hcm_job_api_confirmed_34_requisitions",
+        )
+        self.assertIn(expected, efg["origin"])
+
     def test_no_existing_employer_identity_collisions(self):
         self.assertEqual(len(ATS), 14)
-        self.assertEqual(len(BANKS), 6)
+        self.assertEqual(len(BANKS), 5)
         self.assertTrue(set(n.casefold() for n in ATS).isdisjoint(
             set(n.casefold() for n in BANKS)
         ))
