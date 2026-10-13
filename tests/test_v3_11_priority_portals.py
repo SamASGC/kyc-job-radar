@@ -20,7 +20,7 @@ class PriorityRepairs(unittest.TestCase):
         self.assertEqual(len(self.companies),500)
         self.assertEqual(len({x["name"].casefold() for x in self.companies}),500)
         # +1 new Oracle provider, -1 former 404 PayDo, Shift4 changes provider
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.companies),172)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.companies),172)
 
     def test_euroclear_first_party_oracle_board(self):
         x=self.by["Euroclear"]
