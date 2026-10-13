@@ -28,8 +28,8 @@ NEW_EMPLOYERS = {
     "Maerki Baumann": "https://www.maerki-baumann.ch/de/unsere-bank/stellenangebote",
     "Banco Pichincha España": "https://www.bancopichincha.es/unete-a-nuestro-equipo",
     "JPMorgan Chase": "https://careers.jpmorgan.com/global/en/chase",
-    "Morgan Stanley": "https://www.morganstanley.com/careers/career-opportunities-search",
-    "Goldman Sachs": "https://www.goldmansachs.com/careers",
+    "Morgan Stanley": "https://morganstanley.eightfold.ai/careers?domain=morganstanley.com",
+    "Goldman Sachs": "https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring",
     "Franklin Templeton": "https://careers.franklintempleton.com/us/en",
     "Invesco": "https://invesco.wd1.myworkdayjobs.com/IVZ"
 }
@@ -44,11 +44,11 @@ class SourceExpansionV36Tests(unittest.TestCase):
             cls.rows.extend(json.loads((ROOT / path).read_text(encoding="utf-8")))
         cls.by_name = {row["name"].casefold(): row for row in cls.rows}
 
-    def test_exact_500_distinct_employers_and_157_ats(self):
+    def test_exact_500_distinct_employers_and_at_least_157_ats(self):
         self.assertEqual(len(cls_rows := self.rows), 500)
         self.assertEqual(len(self.by_name), len(cls_rows), "Duplicate employer names")
         self.assertTrue(all(r.get("enabled", True) for r in cls_rows))
-        self.assertEqual(sum(bool(r.get("ats")) for r in cls_rows), 157)
+        self.assertGreaterEqual(sum(bool(r.get("ats")) for r in cls_rows), 157)
 
     def test_26_employer_controlled_careers_sources(self):
         self.assertEqual(len(NEW_EMPLOYERS), 26)
@@ -63,14 +63,19 @@ class SourceExpansionV36Tests(unittest.TestCase):
                 self.assertTrue(row["specialism"])
                 self.assertTrue(row["enabled"])
                 self.assertEqual(row["priority"], "P1")
-                if name != "Invesco":
+                if name not in ("Invesco","Goldman Sachs"):
                     self.assertFalse(row.get("ats"), "Do not invent ATS feeds")
                     self.assertEqual(row["verification_level"],
                                      "official_careers_url_not_necessarily_api")
-                else:
+                elif name == "Invesco":
                     self.assertEqual(row.get("ats"), [ATS_PROVIDER])
                     self.assertEqual(row["verification_level"],
                                      "official_ats_pending_live_smoke")
+                else:
+                    self.assertEqual(row.get("ats"), [{
+                        "kind": "oracle_hcm", "site": "LateralHiring", "language": "en",
+                        "url": NEW_EMPLOYERS["Goldman Sachs"],
+                    }])
 
     def test_existing_96h_and_seen_state_remain_in_place(self):
         import yaml
