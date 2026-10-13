@@ -1,4 +1,4 @@
-name: v3.15 - Worldpay and LemFi live 500-employer smoke
+name: v3.15 - four recovered employers 500-source smoke
 on:
   push:
     branches: ["fix/v3-15-public-recruitment-portals"]
@@ -33,7 +33,8 @@ jobs:
           quality=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
           d={x["company"]:x for x in s["sources"]}
           targets=("Worldpay","LemFi","Viva.com","Tazapay","Northern Trust",
-                   "Sygnum Bank","OakNorth","Kutxabank","Revolut")
+                   "Sygnum Bank","OakNorth","Kutxabank","Revolut",
+                   "dLocal","VP Bank Group")
           print("V315_SOURCE_RESULTS",json.dumps({k:{
               "result":d[k]["result"],"records":d[k]["jobs_found"]
           } for k in targets},ensure_ascii=False))
@@ -43,10 +44,12 @@ jobs:
           print("V315_FUNNEL",json.dumps({k:v for k,v in quality.items()
               if not isinstance(v,list)},ensure_ascii=False))
           assert s["direct_configured"]==500
-          assert s["ats_explicit"]==178
+          assert s["ats_explicit"]==179
           assert len(ledger["seen"])>=306
           assert d["Worldpay"]["result"]=="ok" and d["Worldpay"]["jobs_found"]>=20
           assert d["LemFi"]["result"]=="ok" and d["LemFi"]["jobs_found"]>=5
+          assert d["dLocal"]["result"]=="ok" and d["dLocal"]["jobs_found"]>=20
+          assert d["VP Bank Group"]["result"]=="ok" and d["VP Bank Group"]["jobs_found"]>=5
           assert d["Viva.com"]["jobs_found"]>=10
           assert d["Northern Trust"]["jobs_found"]>=100
           PY
