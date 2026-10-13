@@ -1,0 +1,75 @@
+name: Radar v2.8 — authentic financial ATS smoke
+
+on:
+  push:
+    branches: ["feat/v2-8-authentic-ats-330"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile, unit regressions and source uniqueness
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full read-only ATS and bank sources scan
+        run: python radar.py scan
+      - name: Assert original-date quality, 305-seen ledger and 330 employers
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inventory=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          health=json.loads(Path("data/health.json").read_text())
+          assert inventory["direct_configured"] == 330, inventory["direct_configured"]
+          assert inventory["ats_explicit"] >= 112
+          assert len(state["seen"]) >= 305
+          names=["Capital on Tap","OpenFX","Allica Bank","Incard","Verifone",
+                 "Blockstream","Sotheby\u0027s","Juniper Square","EQT Group","Aksia",
+                 "Tandem Bank","Breeze","Garda Capital Partners","Mercury","Bluevine","Lead Bank",
+                 "Nubank","Caruso","Sydecar","Emigrant Bank"]
+          sources={x["company"]:x for x in inventory["sources"]}
+          checks={x["company"]:x for x in health["sources"]}
+          assert all(x in sources for x in names)
+          print("NEW_ATS_HEALTH",json.dumps({
+            n:{"status":sources[n]["result"],"jobs":sources[n]["jobs_found"],
+               "error":str(checks[n].get("error",""))[:200]}
+            for n in names
+          }))
+          print("COVERAGE",json.dumps({
+            "direct":inventory["direct_configured"],"ats":inventory["ats_explicit"],
+            "rotating":inventory["rotating_checked"],"reached":inventory["reached"],
+            "errors":inventory["errors"],"with_raw_jobs":inventory["with_jobs"]
+          }))
+          print("QUALITY",json.dumps({
+            "raw":audit["raw_total"],"prefiltered":audit["prefiltered_candidates"],
+            "verified":audit["official_apply_page_verified"],
+            "rejection_reasons":audit["verification_reasons"],
+            "seen":len(state["seen"])
+          }))
+          for path in ("index.html","review.html","sources.html","status.html","feed.xml"):
+              assert (Path("public")/path).exists(),path
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-8-employer-ats-quality
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
