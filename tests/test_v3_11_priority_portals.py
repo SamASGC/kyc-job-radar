@@ -80,8 +80,8 @@ class PayDoJobLinkQuality(unittest.IsolatedAsyncioTestCase):
         jobs,found,final=await fetch_generic(Http(),{"name":"PayDo","careers_url":PAYDO})
         self.assertEqual(len(jobs),2,[(x.title,x.apply_url) for x in jobs])
         self.assertEqual({x.apply_url for x in jobs},{
-            "https://paydo.com/career/accountant/",
-            "https://paydo.com/career/compliance-analyst/"
+            "https://paydo.com/career/accountant",
+            "https://paydo.com/career/compliance-analyst"
         })
         self.assertTrue(all(x.source_kind=="official career page" for x in jobs))
         self.assertTrue(all(not x.posted_at for x in jobs))
