@@ -1,0 +1,45 @@
+name: v3.13 - probe Viva Xe and Tazapay public employer feeds
+on:
+  push:
+    branches: ["fix/v3-13-targeted-employer-source-health"]
+    paths: [".github/workflows/v3_13_extra_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Test verified employer-associated applicant URLs
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.workable import fetch_workable
+          from job_radar.sources.generic import fetch_generic
+          async def main():
+            h=Http(concurrency=5,timeout=18)
+            cases=[
+              ("Viva Workable",lambda:fetch_workable(h,{"name":"Viva.com","sector":"Payments"},"viva")),
+              ("Tazapay official Freshteam",lambda:fetch_generic(h,{"name":"Tazapay","sector":"Payments","careers_url":"https://tazapay.freshteam.com/jobs"})),
+              ("Xe careers",lambda:fetch_generic(h,{"name":"Xe","sector":"Payments","careers_url":"https://careers.xe.com/search/jobs"})),
+            ]
+            async def check(name,fn):
+              try:
+                x=await asyncio.wait_for(fn(),timeout=65)
+                jobs=x[0] if isinstance(x,tuple) else x
+                print("EXTRA_FEED",json.dumps({"name":name,"ok":True,"count":len(jobs),
+                  "final":x[2] if isinstance(x,tuple) else "",
+                  "sample":[{"title":z.title,"apply":z.apply_url,"posted":z.posted_at} for z in jobs[:7]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("EXTRA_FEED",json.dumps({"name":name,"ok":False,"error":type(e).__name__+": "+str(e)[:180]}),flush=True)
+            await asyncio.gather(*(check(n,f) for n,f in cases))
+            await h.close()
+          asyncio.run(main())
+          PY
