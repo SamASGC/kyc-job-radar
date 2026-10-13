@@ -28,7 +28,7 @@ jobs:
             h=Http(concurrency=2,timeout=20)
             try:
               r=await h.get(URL);soup=BeautifulSoup(r.text,"html.parser")
-              links=[a for a in soup.select('a[href]') if re.search(r'/Vacancies/\\d+/Description/\\d+',a["href"])]
+              links=[a for a in soup.select('a[href]') if "/Vacancies/" in a["href"] and "/Description/" in a["href"]]
               print("VP_COUNT",len(links))
               for a in links[:5]:
                 p=a
