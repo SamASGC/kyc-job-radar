@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 NAMES = {
     "BBVA","CaixaBank","ABANCA","Ibercaja Banco","Grupo Cooperativo Cajamar",
-    "Unicaja Banco","NEO Finance","Bank of Lithuania","CSSF Luxembourg",
+    "Banca March","NEO Finance","Bank of Lithuania","CSSF Luxembourg",
     "FINMA","Swiss National Bank","Banco de España",
 }
 EVIDENCE = {
@@ -16,7 +16,7 @@ EVIDENCE = {
     "ABANCA": "https://empleo.abanca.com/",
     "Ibercaja Banco": "https://empleo.ibercaja.es/ofertas-de-empleo/",
     "Grupo Cooperativo Cajamar": "https://www.cajamar.es/es/comun/informacion-corporativa/empleo/",
-    "Unicaja Banco": "https://www.talento.unicaja.es/",
+    "Banca March": "https://www.bancamarch.es/es/nosotros/trabaje-con-nosotros/",
     "NEO Finance": "https://careers.neofinance.com/",
     "Bank of Lithuania": "https://karjera.lb.lt/jobs",
     "CSSF Luxembourg": "https://careers.cssf.lu/en/all-jobs/",
