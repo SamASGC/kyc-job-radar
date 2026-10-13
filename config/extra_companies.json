@@ -986,14 +986,20 @@
     "verification_level": "official_careers_url_not_necessarily_api"
   },
   {
-    "origin": "Independently checked official careers or ATS board, 2026-10-12",
+    "origin": "Official Riskified Greenhouse public jobs: https://boards-api.greenhouse.io/v1/boards/riskified/jobs; GitHub Actions 2026-10-13 HTTP 200, 26 job records and employer's own applicant URL https://www.riskified.com/careers/job-description/?gh_jid=8768908002",
     "enabled": true,
     "priority": "P1",
     "name": "Riskified",
     "careers_url": "https://www.riskified.com/careers/",
     "sector": "Fintech",
     "specialism": "Payments and commerce fraud",
-    "verification_level": "official_careers_url_not_necessarily_api"
+    "verification_level": "official_ats_live_probe_passed",
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "riskified"
+      }
+    ]
   },
   {
     "origin": "Independently checked official careers or ATS board, 2026-10-12",
