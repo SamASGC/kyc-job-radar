@@ -36,6 +36,7 @@ jobs:
           inv=json.loads(Path("public/sources.json").read_text())
           audit=json.loads(Path("data/quality_audit.json").read_text())
           assert inv["direct_configured"] == 450, inv["direct_configured"]
+          assert "mandatory_language_filtered" in audit, audit.keys()
           assert inv["ats_explicit"] >= 152, inv["ats_explicit"]
           assert len(state["seen"]) >= 306, len(state["seen"])
           languages={"Spanish","English","French"}
