@@ -1,0 +1,49 @@
+name: v3.17 - confirm IQ-EQ branded SmartRecruiters public API
+on:
+  push:
+    branches: ["fix/v3-17-iqeq-smartrecruiters"]
+    paths: [".github/workflows/v3_17_iqeq_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Verify public employer-scoped SmartRecruiters jobs
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.smartrecruiters import fetch_smartrecruiters
+          async def main():
+            h=Http(concurrency=8,timeout=17)
+            try:
+              url="https://api.smartrecruiters.com/v1/companies/iqeq/postings?limit=100"
+              r=await h.get(url)
+              r.raise_for_status()
+              d=r.json()
+              rows=d.get("content") or d.get("postings") or []
+              print("IQEQ_API",json.dumps({"http":r.status_code,"total":d.get("totalFound"),
+                  "count":len(rows),"sample":[{"name":x.get("name"),"id":x.get("id"),
+                  "company":x.get("company"),"released":x.get("releasedDate"),
+                  "applyUrl":x.get("applyUrl")} for x in rows[:5]]},ensure_ascii=False,default=str),flush=True)
+              jobs=await asyncio.wait_for(fetch_smartrecruiters(h,
+                 {"name":"IQ-EQ","sector":"Fintech"},"iqeq"),timeout=145)
+              print("IQEQ_FETCH",json.dumps({"count":len(jobs),
+                  "with_apply":sum(bool(j.apply_url) for j in jobs),
+                  "with_date":sum(bool(j.posted_at) for j in jobs),
+                  "sample":[{"title":j.title,"url":j.apply_url,
+                  "date":j.posted_at,"loc":j.location} for j in jobs[:7]]},
+                  ensure_ascii=False,default=str),flush=True)
+              assert len(jobs)>=10
+              assert sum(bool(j.apply_url) for j in jobs)>=10
+            finally:await h.close()
+          asyncio.run(main())
+          PY
