@@ -1,0 +1,42 @@
+name: v3.16 - exact Raiffeisen Prospective frontend query contract
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_prospective_contract.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Inspect API query generation and required parameter names
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          URL="https://jobs.raiffeisen.ch/careercenter/1950/static/index-Cdqj9bTc.js"
+          terms=["EP=", "CP=", "SP=", "yP=", "jobs?", "loadmore=true",
+                 "jobsPageSize","searchTerm","filterParams","urlSearchParams"]
+          async def main():
+            h=Http(concurrency=2,timeout=16)
+            try:
+              r=await h.get(URL);t=r.text
+              for term in terms:
+                pos=0;pieces=[]
+                while len(pieces)<4:
+                  i=t.find(term,pos)
+                  if i<0:break
+                  pieces.append(t[max(0,i-500):i+1300])
+                  pos=i+len(term)
+                print("RQUERY",json.dumps({"term":term,"count":t.count(term),
+                  "pieces":pieces},ensure_ascii=False),flush=True)
+            finally:await h.close()
+          asyncio.run(main())
+          PY
