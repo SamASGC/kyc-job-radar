@@ -1,0 +1,58 @@
+name: v3.13 - test NomuPay TerraPay and Moneycorp actual vacancies
+on:
+  push:
+    branches: ["fix/v3-13-targeted-employer-source-health"]
+    paths: [".github/workflows/v3_13_employer_feed_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Verify public employer-owned recruitment boards with actual job records
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.personio import fetch_personio
+          from job_radar.sources.workable import fetch_workable
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.discovery import generic_job_links
+          async def main():
+            h=Http(concurrency=8,timeout=14)
+            checks=[
+              ("NomuPay Personio",lambda:fetch_personio(h,{"name":"NomuPay","sector":"Payments"},"nomupay")),
+              ("TerraPay Workable",lambda:fetch_workable(h,{"name":"TerraPay","sector":"Payments"},"terrapay")),
+              ("TerraPay official",lambda:fetch_generic(h,{"name":"TerraPay","sector":"Payments","careers_url":"https://jobs.terrapay.com/"})),
+              ("Moneycorp corporate jobs",lambda:fetch_generic(h,{"name":"Moneycorp","sector":"Payments","careers_url":"https://careers.moneycorp.com/"})),
+            ]
+            async def one(name,fn):
+              try:
+                out=await asyncio.wait_for(fn(),timeout=60)
+                js=out[0] if isinstance(out,tuple) else out
+                print("NEW_FEED",json.dumps({"name":name,"ok":True,"count":len(js),
+                    "final":out[2] if isinstance(out,tuple) else "",
+                    "samples":[{"title":z.title,"url":z.apply_url,"posted":z.posted_at} for z in js[:5]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("NEW_FEED",json.dumps({"name":name,"ok":False,"error":type(e).__name__+": "+str(e)[:200]}),flush=True)
+            await asyncio.gather(*(one(n,f) for n,f in checks))
+            for name,u in (("NomuPay personio","https://nomupay.jobs.personio.com/"),
+                     ("TerraPay company","https://jobs.terrapay.com/"),
+                     ("Moneycorp dedicated","https://careers.moneycorp.com/")):
+              try:
+                r=await h.get(u)
+                print("NEW_SOURCE",json.dumps({"name":name,"status":r.status_code,"url":str(r.url),
+                    "html_bytes":len(r.content),"first_links":generic_job_links(r.text,str(r.url))[:5],
+                    "preview":r.text[:90]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("NEW_SOURCE",json.dumps({"name":name,"error":str(e)[:140]}),flush=True)
+            await h.close()
+          asyncio.run(main())
+          PY
