@@ -1,0 +1,58 @@
+name: Radar v3.5 - 474 employers and repaired ATS live smoke
+on:
+  push:
+    branches: ["feat/v3-5-bank-funds-live-feed-repair-474"]
+    paths: [".github/workflows/v3_5_financial_sources_474_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and run all regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full isolated live scan (no production state writes)
+        run: python radar.py scan
+      - name: Audit repaired ATS and source productivity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.loads(Path("public/sources.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          added=["PostFinance","Raiffeisen Switzerland","Universal Investment","Langham Hall","Citco Group","HedgeServ","Carne Group","FundRock","Degroof Petercam","Harmonic Fund Services","Banco Sabadell","BPS (SUISSE)"]
+          repaired=["Alma","Billie","Lucinity","Nexi","Mangopay"]
+          indexed={x["company"]:x for x in inv["sources"]}
+          assert inv["direct_configured"]==474, inv["direct_configured"]
+          assert inv["ats_explicit"]==156, inv["ats_explicit"]
+          assert len(state["seen"])>=306, len(state["seen"])
+          assert set(added+repaired)<=set(indexed),set(added+repaired)-set(indexed)
+          print("COVERAGE",json.dumps({k:inv[k] for k in
+              ("direct_configured","ats_explicit","rotating_checked","reached","errors","with_jobs")}))
+          print("NEW_SOURCES",json.dumps({n:{"result":indexed[n]["result"],"jobs":indexed[n]["jobs_found"]} for n in added},ensure_ascii=False))
+          print("REPAIRED_SOURCES",json.dumps({n:{"result":indexed[n]["result"],"jobs":indexed[n]["jobs_found"]} for n in repaired},ensure_ascii=False))
+          print("FUNNEL",json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print("SEEN",len(state["seen"]),"ACTIVE",len(state.get("jobs",{})))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-5-474-source-and-quality-audit
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+          if-no-files-found: warn
