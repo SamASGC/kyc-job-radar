@@ -16,7 +16,7 @@ ATS = {
     "Securitize": ("greenhouse", "securitize"),
     "Kota": ("ashby", "kota"),
     "Capi Money": ("ashby", "capimoney"),
-    "Bitstack": ("ashby", "bitstack"),
+    "Pantheon Ventures": ("greenhouse", "pantheonpublic"),
     "GetGround": ("ashby", "getground"),
     "CertiK": ("lever", "certik"),
     "Wahed": ("lever", "wahed.com"),
