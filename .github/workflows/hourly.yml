@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.4: verify 462 direct financial employers, 152 ATS, 96h original post, language fit and seen ledger (306+).
+    # v3.5: verify 474 direct financial employers, 156 ATS; retain 306+ seen, 96h original post and language fit.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
