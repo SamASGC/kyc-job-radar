@@ -1,0 +1,87 @@
+name: Radar v2.9 — 350 priority financial sources smoke
+
+on:
+  push:
+    branches: ["feat/v2-9-switzerland-luxembourg-350"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regression tests and Python compilation
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Isolated full source sweep (no commit and no Pages)
+        run: python radar.py scan
+      - name: Validate bank/ATS health, original date gate and ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inventory=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          health=json.loads(Path("data/health.json").read_text())
+          assert inventory["direct_configured"] == 350,inventory["direct_configured"]
+          assert inventory["ats_explicit"] >= 126,inventory["ats_explicit"]
+          assert len(state["seen"]) >= 305,len(state["seen"])
+          new_ats=["Lightspark","iCapital","Digital Asset","21shares",
+                   "Alpha Financial Markets Consulting","Petra Funds Group",
+                   "Securitize","Kota","Capi Money","Bitstack","GetGround",
+                   "CertiK","Wahed","Diligent Corporation"]
+          banks=["Artea Bank","VP Bank Group","Arab Bank Switzerland",
+                 "EFG International","Banque Internationale à Luxembourg",
+                 "Bank Frick"]
+          records={x["company"]:x for x in inventory["sources"]}
+          statuses={x["company"]:x for x in health["sources"]}
+          assert all(x in records for x in new_ats+banks)
+          print("NEW_ATS_HEALTH",json.dumps({
+             n:{"status":records[n]["result"],
+                "raw_jobs":records[n]["jobs_found"],
+                "error":str(statuses[n].get("error",""))[:200]}
+             for n in new_ats
+          },ensure_ascii=False))
+          print("NEW_BANK_HEALTH",json.dumps({
+             n:{"status":records[n]["result"],"raw_jobs":records[n]["jobs_found"],
+                "error":str(statuses[n].get("error",""))[:200]}
+             for n in banks
+          },ensure_ascii=False))
+          print("COVERAGE",json.dumps({
+             "direct":inventory["direct_configured"],
+             "ats":inventory["ats_explicit"],
+             "rotating":inventory["rotating_checked"],
+             "reached":inventory["reached"],"errors":inventory["errors"],
+             "raw_productive":inventory["with_jobs"]
+          }))
+          print("QUALITY",json.dumps({
+             "raw":audit["raw_total"],
+             "prefiltered":audit["prefiltered_candidates"],
+             "verified":audit["official_apply_page_verified"],
+             "reasons":audit["verification_reasons"],
+             "seen":len(state["seen"])
+          }))
+          for p in ("index.html","status.html","sources.html","review.html","feed.xml"):
+              assert (Path("public")/p).is_file(),p
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-9-financial-350-source-quality
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
