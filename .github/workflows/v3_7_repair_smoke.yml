@@ -1,0 +1,60 @@
+name: v3.7 - 500 sources actual ATS and failed portal repair
+on:
+  push:
+    branches: ["fix/v3-7-source-coverage-500"]
+    paths: [".github/workflows/v3_7_repair_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-and-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: All regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Scan full live 500-employer universe without writing production branch
+        run: python radar.py scan
+      - name: Check 500 source integrity and repaired employer job discovery
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          rows={x["company"]:x for x in src["sources"]}
+          names=["Goldman Sachs","fundcraft","Obwaldner Kantonalbank",
+                 "Morgan Stanley","Kutxabank","Schaffhauser Kantonalbank",
+                 "Swiss Prime Site Solutions","Berner Kantonalbank"]
+          print("SOURCE_V37",json.dumps({n:{"result":rows[n]["result"],
+              "jobs_found":rows[n]["jobs_found"]} for n in names},ensure_ascii=False))
+          print("COVERAGE_V37",json.dumps({k:src[k] for k in (
+            "direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("LIFETIME_SEEN_V37",len(state["seen"]))
+          assert src["direct_configured"]==500
+          assert src["ats_explicit"]==159
+          assert len(state["seen"])>=306
+          assert rows["Goldman Sachs"]["result"]=="ok",rows["Goldman Sachs"]
+          assert rows["Goldman Sachs"]["jobs_found"]>0,rows["Goldman Sachs"]
+          assert rows["fundcraft"]["result"]=="ok",rows["fundcraft"]
+          assert rows["fundcraft"]["jobs_found"]>0,rows["fundcraft"]
+          assert rows["Obwaldner Kantonalbank"]["jobs_found"]>=2,rows["Obwaldner Kantonalbank"]
+          assert rows["Morgan Stanley"]["result"]=="ok",rows["Morgan Stanley"]
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-7-live-source-repair-health
+          path: |
+            data/health.json
+            data/quality_audit.json
+            public/sources.json
+          if-no-files-found: warn
