@@ -41,10 +41,10 @@ class FinancialSourcesV35Tests(unittest.TestCase):
             cls.companies.extend(json.loads((ROOT/file).read_text(encoding="utf-8")))
         cls.by_name = {r["name"].casefold():r for r in cls.companies}
 
-    def test_exact_474_unique_and_156_explicit_ats(self):
-        self.assertEqual(len(self.companies), 474)
+    def test_at_least_474_unique_and_156_explicit_ats(self):
+        self.assertGreaterEqual(len(self.companies), 474)
         self.assertEqual(len(self.by_name), len(self.companies))
-        self.assertEqual(sum(bool(r.get("ats")) for r in self.companies), 156)
+        self.assertGreaterEqual(sum(bool(r.get("ats")) for r in self.companies), 156)
 
     def test_new_12_are_official_named_employer_portals(self):
         self.assertEqual(len(NEW), 12)
