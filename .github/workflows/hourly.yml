@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.11: 500 employers, 172 configured ATS (Euroclear Oracle added, Shift4 Workday restored, PayDo retired GH removed); preserve strict 96h age and 306+ dedup ledger.
+    # v3.12: 500 employers, 173 configured ATS; Northern Trust Workday restored, previous Euroclear/Shift4/PayDo fixes retained; strict 96h and lifetime dedup preserved.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
