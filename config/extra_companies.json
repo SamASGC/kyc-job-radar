@@ -50,17 +50,18 @@
   },
   {
     "name": "Shift4",
-    "careers_url": "https://job-boards.greenhouse.io/shift4",
+    "careers_url": "https://shift4payments.wd108.myworkdayjobs.com/Shift4_External_CareerSite",
     "sector": "Payments",
     "priority": "P1+",
-    "origin": "Country expansion 2026-08-31",
+    "origin": "Shift4 employer-owned careers page https://www.shift4.com/careers links to Shift4 Payments public Workday recruiting board https://shift4payments.wd108.myworkdayjobs.com/Shift4_External_CareerSite; GitHub Actions 2026-10-13 CXS API returned 60 requisitions.",
     "enabled": true,
     "ats": [
       {
-        "kind": "greenhouse",
-        "slug": "shift4"
+        "kind": "workday",
+        "url": "https://shift4payments.wd108.myworkdayjobs.com/Shift4_External_CareerSite"
       }
-    ]
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "amnis",
@@ -1377,13 +1378,21 @@
   },
   {
     "name": "Euroclear",
-    "careers_url": "https://www.euroclear.com/careers/en.html",
+    "careers_url": "https://don.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1003/jobs",
     "sector": "Banca",
     "specialism": "Custodia y settlement internacional",
     "priority": "P1",
-    "origin": "Official employer careers portal located 2026-10-12: https://www.euroclear.com/careers/en.html",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Official Euroclear careers site https://www.euroclear.com/careers/en.html links directly to https://don.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1003/jobs; GitHub Actions 2026-10-13 official Oracle HCM public API returned 121 requisitions.",
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "oracle_hcm",
+        "site": "CX_1003",
+        "language": "en",
+        "url": "https://don.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1003/jobs"
+      }
+    ]
   },
   {
     "name": "Deutsche Börse / Clearstream",

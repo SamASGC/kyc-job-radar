@@ -966,17 +966,12 @@
   },
   {
     "name": "PayDo",
-    "careers_url": "https://job-boards.greenhouse.io/paydo",
+    "careers_url": "https://paydo.com/career/",
     "sector": "Payments",
     "priority": "P1+",
-    "origin": "Web expansion v3 2026-08-27",
+    "origin": "Official PayDo employer site https://paydo.com/career/ public first-party vacancy listing with individually labelled career links; GitHub Actions 2026-10-13 confirmed HTTP200 and at least 16 individual job role URLs. Former Greenhouse paydo board HTTP404; NO active ATS claimed.",
     "enabled": true,
-    "ats": [
-      {
-        "kind": "greenhouse",
-        "slug": "paydo"
-      }
-    ]
+    "verification_level": "official_careers_url_not_necessarily_api"
   },
   {
     "name": "Peratera",

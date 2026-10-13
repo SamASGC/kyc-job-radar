@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.10: 500 direct employers, 172 configured ATS feeds, PayPal Workday and Trading 212/Trulioo Ashby; keep 306+ seen and strict original 96h gate.
+    # v3.11: 500 employers, 172 configured ATS (Euroclear Oracle added, Shift4 Workday restored, PayDo retired GH removed); preserve strict 96h age and 306+ dedup ledger.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.

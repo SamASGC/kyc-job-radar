@@ -119,6 +119,17 @@ async def fetch_generic(http, company: dict):
             except Exception:
                 pass
 
+    # PayDo replaced a retired Greenhouse board with its official /career/ page.
+    # This first-party page mixes navigation ("Products", generic Careers) with
+    # role-specific /career/<slug>/ links. A reachable nav link is NOT a vacancy.
+    if company.get("name") == "PayDo":
+        from urllib.parse import urlsplit
+        links = [x for x in links if (
+            (p := urlsplit(x.get("url", ""))).scheme == "https"
+            and (p.hostname or "").lower() in {"paydo.com", "www.paydo.com"}
+            and re.fullmatch(r"/career/[a-z0-9-]+/?", p.path, re.I)
+        )]
+
     # Enrich only links whose title already looks relevant. This raises coverage for
     # custom career sites/Teamtailor-like pages without hammering every job detail page.
     relevant = [x for x in links if STRONG_TITLE.search(x.get("title", ""))][:24]
