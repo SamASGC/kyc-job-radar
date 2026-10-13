@@ -38,6 +38,15 @@ class MandatoryLanguageTests(unittest.TestCase):
         scored, accepted = radar._score_job_with_must_have_gaps(j, PROFILE, True)
         self.assertFalse(accepted)
 
+    def test_real_luminor_optional_russian_does_not_cancel_lithuanian_requirement(self):
+        j = sample(
+            "<li><p>Fluent Lithuanian and English is required in spoken and "
+            "written communication due to working on Pan-Baltic level, "
+            "knowledge of Russian language would be considered a strong advantage</p></li>"
+        )
+        self.assertEqual(unmet_mandatory_languages(j, KNOWN), ["lithuanian"])
+        self.assertFalse(passes_strict_gate(j, known_languages=KNOWN))
+
     def test_english_french_spanish_already_covered(self):
         j = sample("Fluent English and French is required in spoken and written communication.")
         self.assertEqual(unmet_mandatory_languages(j, KNOWN), [])
