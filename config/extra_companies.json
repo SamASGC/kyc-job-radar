@@ -704,13 +704,19 @@
   },
   {
     "name": "IQ-EQ",
-    "careers_url": "https://iqeq.com/careers/vacancies/",
+    "careers_url": "https://jobs.smartrecruiters.com/IQEQ",
     "sector": "Fintech",
     "specialism": "Administración de fondos y servicios de compliance",
     "priority": "P1",
-    "origin": "Verified official employer careers or current job listing, October 2026",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "IQ-EQ employer careers https://iqeq.com/careers/vacancies/ publishes IQ-EQ positions, with individually employer-branded official SmartRecruiters job pages https://jobs.smartrecruiters.com/IQEQ/744000154581630 and company identifier IQEQ. Public SmartRecruiters API https://api.smartrecruiters.com/v1/companies/iqeq/postings?limit=100 returned HTTP 200, totalFound=125, stable requisition IDs and original releasedDate; live GitHub Actions 2026-10-13 successfully fetched 100 detail pages with individual jobs.smartrecruiters.com apply URLs.",
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "smartrecruiters",
+        "slug": "iqeq"
+      }
+    ]
   },
   {
     "name": "Alter Domus",
