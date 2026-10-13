@@ -117,7 +117,10 @@ def _score_job_with_must_have_gaps(job, profile, known_company=False):
     scored, ok = _BASE_SCORE_JOB(job, profile, known_company=known_company)
     scored, ok = apply_fit_adjustments(scored, profile, ok)
     if profile.get("strict_quality_gate", False):
-        if not passes_strict_gate(scored, max_hours=int(profile.get("max_post_age_hours", 96))):
+        if not passes_strict_gate(
+            scored, max_hours=int(profile.get("max_post_age_hours", 96)),
+            known_languages=profile.get("profile_summary", {}).get("languages", {}).keys(),
+        ):
             return scored, False
     return scored, ok
 

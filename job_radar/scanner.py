@@ -513,7 +513,7 @@ async def run_scan() -> dict:
             from job_radar.v2_quality import (
                 passes_strict_gate, verify_application_page, official_active_listing,
                 location_allowed, within_new_window, original_posted_at,
-                could_verify_spain_from_job_page,
+                could_verify_spain_from_job_page, unmet_mandatory_languages,
             )
             max_hours = int(profile.get("max_post_age_hours", 96))
             # Undated ATS postings may contain authoritative JobPosting.datePosted
@@ -528,9 +528,11 @@ async def run_scan() -> dict:
                 "prefiltered_candidates": 0,
                 "official_apply_page_verified": 0,
                 "application_not_verified": 0,
+                "mandatory_language_filtered": 0,
                 "rejected_examples": [],
                 "verification_reasons": {},
             }
+            known_languages = profile.get("profile_summary", {}).get("languages", {}).keys()
             prefiltered = []
             for j in raw_jobs:
                 if not official_active_listing(j):
@@ -546,6 +548,19 @@ async def run_scan() -> dict:
                         })
                     continue
                 audit["official_in_scope"] += 1
+                unmet = unmet_mandatory_languages(j, known_languages)
+                if unmet:
+                    audit["mandatory_language_filtered"] += 1
+                    if len(audit["rejected_examples"]) < 500:
+                        audit["rejected_examples"].append({
+                            "company": j.company, "title": j.title,
+                            "location": j.location, "source": j.source,
+                            "posted_at": j.posted_at,
+                            "reason": "mandatory_language_unmet:" + ",".join(unmet),
+                            "geography_verified": location_allowed(j),
+                            "url": j.apply_url,
+                        })
+                    continue
                 posted = original_posted_at(j.posted_at)
                 if posted is None:
                     audit["original_date_missing"] += 1
@@ -564,12 +579,18 @@ async def run_scan() -> dict:
             )
             accepted = []
             for j, is_open in zip(prefiltered, verified):
-                if is_open is True and passes_strict_gate(j, max_hours=max_hours):
+                if is_open is True and passes_strict_gate(
+                    j, max_hours=max_hours, known_languages=known_languages,
+                ):
                     j.apply_verified_at = utcnow_iso()
                     accepted.append(j)
                     audit["official_apply_page_verified"] += 1
                 else:
                     audit["application_not_verified"] += 1
+                    unmet = unmet_mandatory_languages(j, known_languages)
+                    if is_open is True and unmet:
+                        j.verification_reason = "mandatory_language_unmet:" + ",".join(unmet)
+                        audit["mandatory_language_filtered"] += 1
                     reason = str(getattr(j, "verification_reason", "unknown"))
                     audit["verification_reasons"][reason] = audit["verification_reasons"].get(reason, 0) + 1
                     # Keep the complete bounded review pool instead of only
