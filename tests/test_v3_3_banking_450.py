@@ -10,9 +10,9 @@ DIRECT_PORTALS = {
     "Obwaldner Kantonalbank", "Banque Piguet Galland", "Banque Heritage",
     "Cembra Money Bank", "Bank WIR", "SME Bank Lithuania", "Mano Bank",
     "Swiss Life Asset Managers", "Foyer Group", "Kaiser Partner Privatbank",
-    "Banque de Commerce et de Placements", "Bordier & Cie", "Gonet & Cie",
+    "Banque de Commerce et de Placements", "Bordier & Cie", "Delen Private Bank Luxembourg",
     "Baloise Luxembourg", "fundcraft", "Moonfare", "Candriam",
-    "JPMorgan Chase", "Morgan Stanley", "Goldman Sachs", "Banco Santander",
+    "Lazard", "Swiss Prime Site Solutions", "Eurazeo", "Banco Santander",
 }
 ATS_NAME = "NextEnergy Group"
 
