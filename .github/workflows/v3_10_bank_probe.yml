@@ -1,0 +1,44 @@
+name: v3.10 - maples and sygnum official source probe
+on:
+  push:
+    branches: ["fix/v3-10-recover-paypal-trading212-trulioo"]
+    paths: [".github/workflows/v3_10_bank_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Confirm employer-origin career URLs without bypassing anti-bot
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.generic import fetch_generic
+          targets={
+            "Maples Group Financial Services":"https://maplesgroupcareers.ttcportals.com/search/the-maples-group-financial-services/jobs?ns_page=financial",
+            "Maples Group root":"https://maplesgroupcareers.ttcportals.com/",
+            "Sygnum jobs official":"https://www.sygnum.com/careers-portal/",
+            "Sygnum work page":"https://www.sygnum.com/working-at-sygnum-careers/",
+          }
+          async def main():
+            h=Http(concurrency=4,timeout=18)
+            async def one(name,url):
+              try:
+                co={"name":"Maples Group" if "Maples" in name else "Sygnum Bank","sector":"Banca","careers_url":url}
+                jobs,detected,final=await asyncio.wait_for(fetch_generic(h,co),timeout=55)
+                print("BANK_PROBE",json.dumps({"name":name,"ok":True,"job_links":len(jobs),"final":final,
+                    "ats":detected,"sample":[{"title":j.title,"url":j.apply_url} for j in jobs[:6]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("BANK_PROBE",json.dumps({"name":name,"ok":False,"error":type(e).__name__+": "+str(e)[:180]}),flush=True)
+            await asyncio.gather(*(one(n,u) for n,u in targets.items()))
+            await h.close()
+          asyncio.run(main())
+          PY

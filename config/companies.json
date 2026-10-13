@@ -367,11 +367,18 @@
   },
   {
     "name": "PayPal",
-    "careers_url": "https://careers.pypl.com/",
+    "careers_url": "https://paypal.wd1.myworkdayjobs.com/en-US/jobs",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "PayPal official PayPal-branded Workday job requisitions: https://paypal.wd1.myworkdayjobs.com/en-US/jobs/job/Account-Representative--Small-and-Medium-Business_R0137390 ; GitHub Actions official Workday CXS live probe 2026-10-13 returned 332 individual job records.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workday",
+        "url": "https://paypal.wd1.myworkdayjobs.com/en-US/jobs"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Payrails",
@@ -875,11 +882,18 @@
   },
   {
     "name": "Trading 212",
-    "careers_url": "https://www.trading212.com/careers",
+    "careers_url": "https://jobs.ashbyhq.com/trading212",
     "sector": "Fintech",
     "priority": "P1",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Trading 212 official job requisitions: https://jobs.ashbyhq.com/trading212/d9d0cafb-5674-4604-a87d-86617928299f ; GitHub Actions 2026-10-13 public Ashby posting API returned 63 individual job records.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "trading212"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Vivid Money",
@@ -1580,11 +1594,18 @@
   },
   {
     "name": "Trulioo",
-    "careers_url": "https://www.trulioo.com/company/careers",
+    "careers_url": "https://jobs.ashbyhq.com/trulioo",
     "sector": "Fintech",
     "priority": "P3",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Trulioo official job requisitions: https://jobs.ashbyhq.com/trulioo/553e2d9f-a689-4ea6-8abc-99e49a9cef8b/ ; GitHub Actions 2026-10-13 public Ashby posting API returned 27 individual job records.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "trulioo"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Veriff",
