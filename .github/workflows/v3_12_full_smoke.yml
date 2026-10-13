@@ -1,0 +1,58 @@
+name: v3.12 - Northern Trust live 500-source smoke
+on:
+  push:
+    branches: ["fix/v3-12-northerntrust-workday"]
+    paths: [".github/workflows/v3_12_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Run regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Run real 500 employer isolated live scan
+        run: python radar.py scan
+      - name: Validate Northern Trust restored and lifetime job policy unchanged
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          sources=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in sources["sources"]}
+          target=("Northern Trust","Euroclear","Shift4","PayDo","Revolut","Kutxabank")
+          print("V312_FOCUS",json.dumps({n:{
+            "status":by[n]["result"],"records":by[n]["jobs_found"]
+          } for n in target},ensure_ascii=False))
+          print("V312_COVERAGE",json.dumps({k:sources[k] for k in
+             ("direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V312_SEEN",len(state["seen"]))
+          assert sources["direct_configured"]==500
+          assert sources["ats_explicit"]==173
+          assert len(state["seen"])>=306
+          assert by["Northern Trust"]["result"]=="ok"
+          assert by["Northern Trust"]["jobs_found"]>=100
+          assert by["Euroclear"]["jobs_found"]>=25
+          assert by["Shift4"]["jobs_found"]>=20
+          assert by["PayDo"]["jobs_found"]>=7
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-12-live-northern-trust-source-quality
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
