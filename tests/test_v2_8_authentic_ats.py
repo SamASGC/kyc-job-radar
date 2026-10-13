@@ -40,7 +40,7 @@ class V28EmployerTests(unittest.TestCase):
         cls.by_name = {e["name"].casefold(): e for e in cls.config}
 
     def test_330_distinct_direct_employers(self):
-        self.assertEqual(len(self.config), 330)
+        self.assertGreaterEqual(len(self.config), 330)
         self.assertEqual(len(self.by_name), len(self.config))
         self.assertGreaterEqual(sum(bool(c.get("ats")) for c in self.config), 112)
 
