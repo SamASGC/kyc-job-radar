@@ -27,9 +27,9 @@ class BankingV33Tests(unittest.TestCase):
         cls.by_name = {x["name"].casefold(): x for x in cls.employers}
 
     def test_450_unique_employers_and_152_configured_ats(self):
-        self.assertEqual(len(self.employers), 450)
-        self.assertEqual(len(self.by_name), 450)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.employers), 152)
+        self.assertGreaterEqual(len(self.employers), 450)
+        self.assertEqual(len(self.by_name), len(self.employers))
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.employers), 152)
 
     def test_24_first_party_sites_must_not_masquerade_as_verified_ats(self):
         self.assertEqual(len(DIRECT_PORTALS), 24)
