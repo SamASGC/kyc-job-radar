@@ -1,0 +1,60 @@
+name: v3.13 - Swiss public job publication endpoint analysis
+on:
+  push:
+    branches: ["fix/v3-13-targeted-employer-source-health"]
+    paths: [".github/workflows/v3_13_swiss_api_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Resolve public JobPortal / Prospective job listing endpoints
+        run: |
+          python - <<'PY'
+          import asyncio,json,re
+          from job_radar.http import Http
+          bundles={
+            "abacus":"https://jobs.shkb.ch/custom-elements.js",
+            "prospective":"https://ohws.prospective.ch/careercenter/1509/static/bundle.js"
+          }
+          requests={
+            "BEKB medium":"https://ohws.prospective.ch/public/v1/medium/1509",
+            "BEKB career app":"https://ohws.prospective.ch/public/v2/careercenter/1509/",
+            "Abacus public api root":"https://api.jobportal.abaservices.ch/api/",
+          }
+          async def main():
+            h=Http(concurrency=4,timeout=18)
+            for name,url in bundles.items():
+              try:
+                resp=await h.get(url); txt=resp.text
+                for term in (("/public/", "/careercenter/", "jobOffers", "jobList", "jobOverview") if name=="prospective"
+                    else ("/publication/", "/job-offers", "/joboffers", "/public/", "/job-overview", "/jobs", "joboverview")):
+                  samples=[]; pos=0
+                  for k in range(min(txt.count(term),600)):
+                    idx=txt.find(term,pos)
+                    if idx<0:break
+                    pos=idx+len(term)
+                    piece=txt[max(0,idx-135):idx+215].replace("\n"," ")
+                    if piece not in samples:samples.append(piece)
+                    if len(samples)>=7:break
+                  print("PUBLIC_API_SOURCE",json.dumps({"bundle":name,"term":term,
+                      "total":txt.count(term),"samples":samples},ensure_ascii=False),flush=True)
+              except Exception as e:print("PUBLIC_API_ERROR",json.dumps({"name":name,"error":str(e)[:140]}),flush=True)
+            for name,url in requests.items():
+              try:
+                r=await h.get(url)
+                print("PUBLIC_API_GET",json.dumps({"name":name,"status":r.status_code,
+                   "bytes":len(r.content),"ctype":r.headers.get("content-type",""),
+                   "final":str(r.url),"sample":r.text[:440]},ensure_ascii=False),flush=True)
+              except Exception as e:print("PUBLIC_API_GET",json.dumps({"name":name,"error":str(e)[:180]}),flush=True)
+            await h.close()
+          asyncio.run(main())
+          PY
