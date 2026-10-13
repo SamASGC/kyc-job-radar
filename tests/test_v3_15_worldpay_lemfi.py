@@ -15,10 +15,10 @@ class FinancialSourceRepairsV315(unittest.TestCase):
             cls.employers+=json.loads((ROOT/file).read_text(encoding="utf-8"))
         cls.by={e["name"]:e for e in cls.employers}
 
-    def test_500_unique_employers_and_exactly_178_ats_configs(self):
+    def test_500_unique_employers_and_exactly_179_ats_configs(self):
         self.assertEqual(len(self.employers),500)
         self.assertEqual(len({x["name"].casefold() for x in self.employers}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.employers),178)
+        self.assertEqual(sum(bool(x.get("ats")) for x in self.employers),179)
 
     def test_worldpay_live_first_party_workday(self):
         x=self.by["Worldpay"]
@@ -35,6 +35,21 @@ class FinancialSourceRepairsV315(unittest.TestCase):
         self.assertEqual(x["verification_level"],"official_ats_live_probe_passed")
         self.assertIn("14 public structured Ashby",x["origin"])
         self.assertIn("Fincrime Analyst",x["origin"])
+
+    def test_dlocal_public_lever(self):
+        x=self.by["dLocal"]
+        self.assertEqual(x["careers_url"],"https://jobs.lever.co/dlocal")
+        self.assertEqual(x["ats"],[{"kind":"lever","slug":"dlocal"}])
+        self.assertEqual(x["verification_level"],"official_ats_live_probe_passed")
+        self.assertIn("52 distinct",x["origin"])
+
+    def test_vp_bank_umantis_remains_verified_public_site_not_fake_api(self):
+        x=self.by["VP Bank Group"]
+        self.assertEqual(x["careers_url"],
+            "https://recruitingapp-2813.umantis.com/Jobs/All?CompanyID=All&Reset=G&lang=eng")
+        self.assertFalse(x.get("ats"))
+        self.assertIn("10 individual",x["origin"])
+        self.assertEqual(x["verification_level"],"official_careers_url_not_necessarily_api")
 
     def test_no_claim_of_other_blocked_ats_sources(self):
         # OakNorth/Papara still show Cloudflare/protected/corporate 403
