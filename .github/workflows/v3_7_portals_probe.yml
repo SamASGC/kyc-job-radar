@@ -41,7 +41,14 @@ jobs:
             "Obwalden old": "https://www.okb.ch/jobs",
             "Berner old": "https://www.bekb.ch/de/die-bekb/arbeitgeberin/stellen",
             "fundcraft": "https://www.fundcraft.lu/careers/",
-            "Kaiser": "https://kaiserpartner.bank/career/"
+            "Kaiser": "https://kaiserpartner.bank/career/",
+            "Goldman Oracle careers": "https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring",
+            "Goldman Oracle list": "https://hdpc.fa.us2.oraclecloud.com/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions?finder=findReqs%3BsiteNumber%3DLateralHiring%2Climit%3D20%2Coffset%3D0&expand=requisitionList&onlyData=true",
+            "Fundcraft Workable": "https://www.workable.com/api/accounts/fundcraft?details=true",
+            "OKB embedded": "https://okb.abacuscity.ch/de/jobportal",
+            "Berner embedded": "https://ohws.prospective.ch/public/v2/careercenter/1509/?lang=de",
+            "SHKB JS": "https://jobs.shkb.ch/de/jobportal",
+            "SPS JS": "https://jobs.sps.swiss/job-overview/search"
           }
           async def one(name,url,client,sem):
             async with sem:
@@ -56,7 +63,7 @@ jobs:
                   "name":name,"status":r.status_code,"bytes":len(r.content),
                   "final":str(r.url),"html_links":len(items),"sample_links":links,
                   "iframes":frames,"ats_detected":detect_ats(html,str(r.url))[:3],
-                  "title":(soup.title.get_text(" ",strip=True) if soup.title else "")[:130]
+                  "title":(soup.title.get_text(" ",strip=True) if soup.title else "")[:130],\n                  "scripts":[s.get("src","")[:180] for s in soup.select("script[src]")][-9:],\n                  "body_preview":soup.get_text(" ",strip=True)[:170],\n                  "json_count":html.count("requisitionList"),\n                  "content_type":r.headers.get("content-type","")
                 }
               except Exception as e:
                 entry={"name":name,"error":type(e).__name__+": "+str(e)[:150]}
