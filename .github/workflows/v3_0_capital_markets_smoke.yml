@@ -1,4 +1,5 @@
 name: Radar v3.0 — 375 capital markets smoke
+# Verify Virtu Financial replacement for first-scan TRM API 404.
 
 on:
   push:
@@ -38,7 +39,7 @@ jobs:
           assert inv["direct_configured"]==375,inv["direct_configured"]
           assert inv["ats_explicit"]>=140,inv["ats_explicit"]
           assert len(state["seen"])>=305,len(state["seen"])
-          ats=["Clear Street","TRM Labs","FalconX","GSR Markets",
+          ats=["Clear Street","Virtu Financial","FalconX","GSR Markets",
                "DigitalBridge","PINE Advisor Solutions","Nansen",
                "Galaxy Digital","Alpaca Markets","Morpho",
                "Thrivo Wealth Partners","Windranger Labs","Unison Infrastructure"]
