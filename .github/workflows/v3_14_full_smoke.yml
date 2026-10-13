@@ -1,0 +1,55 @@
+name: v3.14 - Viva and Tazapay live source repair acceptance
+on:
+  push:
+    branches: ["fix/v3-14-viva-tazapay-official-jobs"]
+    paths: [".github/workflows/v3_14_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regression tests and Python compilation
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Real full 500 employer scan without production state mutation
+        run: python radar.py scan
+      - name: Require both actual source repairs and lifetime dedup integrity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in src["sources"]}
+          names=("Viva.com","Tazapay","NomuPay","TerraPay","Northern Trust",
+                 "Schaffhauser Kantonalbank","Swiss Prime Site Solutions")
+          print("V314_FOCUS",json.dumps({n:{"status":by[n]["result"],"records":by[n]["jobs_found"]} for n in names},ensure_ascii=False))
+          print("V314_COVERAGE",json.dumps({k:src[k] for k in ("direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V314_SEEN",len(state["seen"]))
+          assert src["direct_configured"]==500
+          assert src["ats_explicit"]==176
+          assert len(state["seen"])>=306
+          assert by["Viva.com"]["result"]=="ok" and by["Viva.com"]["jobs_found"]>=12
+          assert by["Tazapay"]["result"]=="ok" and by["Tazapay"]["jobs_found"]>=1
+          assert by["NomuPay"]["jobs_found"]>=2
+          assert by["TerraPay"]["jobs_found"]>=2
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-14-source-health-and-quality
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn

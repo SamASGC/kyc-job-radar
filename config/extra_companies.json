@@ -983,11 +983,11 @@
     "verification_level": "official_careers_url_not_necessarily_api"
   },
   {
-    "origin": "Independently checked official careers or ATS board, 2026-10-12",
+    "origin": "Employer Tazapay lists current job openings from https://tazapay.com/careers; official-branded public Freshteam career page https://tazapay.freshteam.com/jobs is reachable from GitHub Actions. An on-runner 2026-10-13 generic job-page extractor returned 2 individually titled partner/onboarding manager jobs and employer-specific apply URLs. No supported Freshteam API is claimed; original posted timestamps must be verified separately.",
     "enabled": true,
     "priority": "P1",
     "name": "Tazapay",
-    "careers_url": "https://tazapay.com/careers",
+    "careers_url": "https://tazapay.freshteam.com/jobs",
     "sector": "Fintech",
     "specialism": "Cross-border payments",
     "verification_level": "official_careers_url_not_necessarily_api"

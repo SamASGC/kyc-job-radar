@@ -649,14 +649,21 @@
   },
   {
     "name": "Viva.com",
-    "careers_url": "https://www.viva.com/en-es/about/careers",
+    "careers_url": "https://apply.workable.com/viva/",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
+    "origin": "The employer-owned Viva.com careers page https://www.viva.com/en-es/about/careers lists current individual jobs and the official public Workable board https://apply.workable.com/viva/ is branded Viva.com. GitHub Actions 2026-10-13 extracted 44 public Workable job requisitions with individual apply IDs; no original-post-date inference from index-only labels.",
     "enabled": true,
     "aliases": [
       "Viva Wallet"
-    ]
+    ],
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "viva"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Volt",
