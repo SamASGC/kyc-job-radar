@@ -1,0 +1,63 @@
+name: Radar v3.1 — blocked bank portal alternatives
+
+on:
+  push:
+    branches: ["feat/v3-1-swiss-banks-400"]
+    paths: [".github/workflows/v3_1_bank_portal_probe.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Test employer-owned alternatives without publishing
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.generic import fetch_generic
+          urls={
+            "Swiss Life Switzerland":"https://www.swisslife.ch/en/about-us/job-careers/our-vacancies.html",
+            "Swiss Life corporate":"https://www.swisslife.ch/en/about-us/job-careers.html",
+            "Swiss Life Careers portal":"https://careers.swisslife.com/",
+            "BGL official careers":"https://www.bgl.lu/fr/qui-sommes-nous/nous-rejoindre.html",
+            "BNP Luxembourg alternate":"https://group.bnpparibas/emploi-carriere/toutes-offres-emploi/bgl-bnp-paribas",
+            "Helvetia corporate":"https://www.helvetia.com/ch/web/en/about-us/career.html",
+            "Helvetia vacancies":"https://jobs.helvetia.com/",
+          }
+          async def main():
+            http=Http(concurrency=6,timeout=16)
+            async def get(name,url):
+              try:
+                r=await http.get(url)
+                result={"name":name,"status":r.status_code,"final":str(r.url),
+                        "bytes":len(r.text)}
+                if r.status_code==200:
+                  try:
+                    jobs,ats,final=await fetch_generic(http,{
+                      "name":name,"careers_url":url,"sector":"Banca"
+                    })
+                    result["jobs"]=len(jobs)
+                    result["ats_detected"]=bool(ats)
+                  except Exception as exc:
+                    result["parse_error"]=type(exc).__name__
+                return result
+              except Exception as exc:
+                return {"name":name,"error":type(exc).__name__}
+            try:
+              for item in await asyncio.gather(*(get(n,u) for n,u in urls.items())):
+                print("BANK_FALLBACK_PROBE",json.dumps(item,ensure_ascii=False))
+            finally:
+              await http.close()
+          asyncio.run(main())
+          PY
