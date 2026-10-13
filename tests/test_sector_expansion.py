@@ -32,8 +32,14 @@ class ExpandedSourcesTests(unittest.TestCase):
             self.assertIn(name,by_name)
             c=by_name[name]
             self.assertTrue(c["careers_url"].startswith("https://"))
-            self.assertEqual(c["verification_level"],
-                             "official_careers_url_not_necessarily_api")
+            if name == "Northern Trust":
+                # v3.12: the official employer-owned Workday board was verified live.
+                self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                self.assertEqual(c.get("ats"), [{"kind": "workday",
+                    "url": "https://ntrs.wd1.myworkdayjobs.com/northerntrust"}])
+            else:
+                self.assertEqual(c["verification_level"],
+                                 "official_careers_url_not_necessarily_api")
             self.assertIn(c["sector"],{"Banca","Fintech"})
 
     def test_source_inventory_distinguishes_configuration_and_reachability(self):
