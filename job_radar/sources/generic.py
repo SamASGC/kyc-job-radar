@@ -94,6 +94,14 @@ async def fetch_generic(http, company: dict):
     r.raise_for_status()
     html = r.text
     final_url = str(r.url)
+    # VP Bank uses public Umantis HTML with one original "Online since" date
+    # per job row. Generic link heuristics confuse job subscription/navigation
+    # with vacancies and discard these first-party publication dates.
+    if company.get("name") == "VP Bank Group":
+        from urllib.parse import urlsplit
+        from job_radar.sources.vp_bank_umantis import parse_vp_bank_umantis_page
+        if (urlsplit(final_url).hostname or "").casefold() == "recruitingapp-2813.umantis.com":
+            return parse_vp_bank_umantis_page(html, final_url, company), [], final_url
     detected = detect_ats(html, final_url)
     links = generic_job_links(html, final_url)
     standalone = []
