@@ -35,14 +35,14 @@ jobs:
           state=json.loads(Path("data/state.json").read_text())
           health=json.loads(Path("data/health.json").read_text())
           assert inventory["direct_configured"] == 350,inventory["direct_configured"]
-          assert inventory["ats_explicit"] >= 126,inventory["ats_explicit"]
+          assert inventory["ats_explicit"] >= 127,inventory["ats_explicit"]
           assert len(state["seen"]) >= 305,len(state["seen"])
           new_ats=["Lightspark","iCapital","Digital Asset","21shares",
                    "Alpha Financial Markets Consulting","Petra Funds Group",
                    "Securitize","Kota","Capi Money","Pantheon Ventures","GetGround",
                    "CertiK","Wahed","Diligent Corporation"]
           banks=["Artea Bank","VP Bank Group","Arab Bank Switzerland",
-                 "EFG International","Banque Internationale à Luxembourg",
+                 "Banque Internationale à Luxembourg",
                  "Bank Frick"]
           records={x["company"]:x for x in inventory["sources"]}
           statuses={x["company"]:x for x in health["sources"]}
@@ -58,6 +58,12 @@ jobs:
                 "error":str(statuses[n].get("error",""))[:200]}
              for n in banks
           },ensure_ascii=False))
+          assert "EFG International" in records
+          print("EFG_ORACLE_SOURCE",json.dumps({
+             "status":records["EFG International"]["result"],
+             "raw_jobs":records["EFG International"]["jobs_found"],
+             "error":str(statuses["EFG International"].get("error",""))[:200]
+          }))
           print("COVERAGE",json.dumps({
              "direct":inventory["direct_configured"],
              "ats":inventory["ats_explicit"],
