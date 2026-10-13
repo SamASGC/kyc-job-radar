@@ -1,0 +1,56 @@
+name: v3.10 - audit three recovered official ATS feeds (500 employers)
+on:
+  push:
+    branches: ["fix/v3-10-recover-paypal-trading212-trulioo"]
+    paths: [".github/workflows/v3_10_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Regression tests and compile
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Run actual full employer scan without production state edits
+        run: python radar.py scan
+      - name: Check actual official job lists and preserved gates
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          sources=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in sources["sources"]}
+          tracked=("PayPal","Trading 212","Trulioo","Kutxabank","Revolut",
+                   "PayDo","Shift4","Sygnum Bank","Euroclear")
+          print("V310_RECOVERED",json.dumps({n:{
+              "result":by[n]["result"],"jobs":by[n]["jobs_found"]
+            } for n in tracked},ensure_ascii=False))
+          print("V310_COVERAGE",json.dumps({k:sources[k] for k in (
+              "direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V310_SEEN",len(state["seen"]))
+          assert sources["direct_configured"]==500
+          assert sources["ats_explicit"]==172
+          assert len(state["seen"])>=306
+          for name in ("PayPal","Trading 212","Trulioo"):
+            assert by[name]["result"]=="ok" and by[name]["jobs_found"]>0, (name,by[name])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-10-live-500-source-reliability
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
