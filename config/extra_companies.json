@@ -638,13 +638,19 @@
   },
   {
     "name": "Northern Trust",
-    "careers_url": "https://www.northerntrust.com/united-states/about-us/careers",
+    "careers_url": "https://ntrs.wd1.myworkdayjobs.com/northerntrust",
     "sector": "Banca",
     "specialism": "Custodia y asset servicing",
     "priority": "P1",
-    "origin": "Verified official employer careers or current job listing, October 2026",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Northern Trust employer-identifiable public Workday board https://ntrs.wd1.myworkdayjobs.com/northerntrust, with requisition descriptions naming Northern Trust and branded ntrs tenant; GitHub Actions 2026-10-13 extracted 500 of the first public postings via CXS (scanner pagination currently capped at 500). Original corporate careers page https://www.northerntrust.com/united-states/about-us/careers timed out.",
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workday",
+        "url": "https://ntrs.wd1.myworkdayjobs.com/northerntrust"
+      }
+    ]
   },
   {
     "name": "HSBC",
