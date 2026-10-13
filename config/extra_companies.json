@@ -3357,11 +3357,11 @@
   },
   {
     "name": "Obwaldner Kantonalbank",
-    "careers_url": "https://www.okb.ch/jobs",
+    "careers_url": "https://okb.abacuscity.ch/de/jobportal",
     "sector": "Banca",
     "specialism": "Swiss cantonal bank: legal and compliance, wealth management",
     "priority": "P1",
-    "origin": "Official employer recruitment portal verified by public source 2026-10-13: https://www.okb.ch/jobs",
+    "origin": "Official https://www.okb.ch/jobs redirects to https://www.okb.ch/ueber-uns/karriere/okb-als-arbeitgeberin/offene-stellen and embeds https://okb.abacuscity.ch/de/jobportal; public iframe lists named roles and requisition links 2026-10-13",
     "verification_level": "official_careers_url_not_necessarily_api",
     "enabled": true
   },
@@ -3497,13 +3497,19 @@
   },
   {
     "name": "fundcraft",
-    "careers_url": "https://www.fundcraft.lu/careers/",
+    "careers_url": "https://apply.workable.com/fundcraft/",
     "sector": "Banca",
     "specialism": "Luxembourg and Spain fund administrator: investor KYC and fund operations",
     "priority": "P1",
-    "origin": "Official employer recruitment portal verified by public source 2026-10-13: https://www.fundcraft.lu/careers/",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Official fundcraft careers page https://www.fundcraft.lu/careers/ links to apply.workable.com/fundcraft/; authenticated-free Workable widget returned HTTP 200 with public job JSON via GitHub Actions 2026-10-13",
+    "verification_level": "official_ats_pending_live_smoke",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "fundcraft"
+      }
+    ]
   },
   {
     "name": "Moonfare",
@@ -4057,23 +4063,31 @@
   },
   {
     "name": "Morgan Stanley",
-    "careers_url": "https://www.morganstanley.com/careers/career-opportunities-search",
+    "careers_url": "https://morganstanley.eightfold.ai/careers?domain=morganstanley.com",
     "sector": "Banca",
     "specialism": "Switzerland and Luxembourg — wealth management, compliance and risk",
     "priority": "P1",
-    "origin": "Official employer-controlled careers site researched 2026-10-13: https://www.morganstanley.com/careers/career-opportunities-search",
+    "origin": "Official Morgan Stanley corporate site links to its branded Eightfold recruitment platform https://morganstanley.eightfold.ai/careers?domain=morganstanley.com; website only, no unsupported API declared (2026-10-13)",
     "verification_level": "official_careers_url_not_necessarily_api",
     "enabled": true
   },
   {
     "name": "Goldman Sachs",
-    "careers_url": "https://www.goldmansachs.com/careers",
+    "careers_url": "https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring",
     "sector": "Banca",
     "specialism": "Switzerland and Luxembourg — financial crime, asset management and risk",
     "priority": "P1",
-    "origin": "Official employer-controlled careers site researched 2026-10-13: https://www.goldmansachs.com/careers",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Official Goldman Sachs Open Roles links to higher.gs.com/roles, whose direct Apply action leads to hdpc.fa.us2.oraclecloud.com Candidate Experience LateralHiring; Oracle public requisitions endpoint returned HTTP 200 on GitHub Actions 2026-10-13. https://www.goldmansachs.com/careers | https://higher.gs.com/roles/184552",
+    "verification_level": "official_ats_pending_live_smoke",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "oracle_hcm",
+        "site": "LateralHiring",
+        "language": "en",
+        "url": "https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring"
+      }
+    ]
   },
   {
     "name": "Franklin Templeton",
