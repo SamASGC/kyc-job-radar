@@ -1,0 +1,80 @@
+name: Radar v3.1 — 400 Swiss and Luxembourg employer smoke
+
+on:
+  push:
+    branches: ["feat/v3-1-swiss-banks-400"]
+    paths: [".github/workflows/v3_1_swiss_banks_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regressions and compile
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full real scan in isolation (no writeback)
+        run: python radar.py scan
+      - name: Verify Swiss bank portals, four ATS boards, historical seen and quality
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.loads(Path("public/sources.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          health=json.loads(Path("data/health.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          assert inv["direct_configured"]==400,inv["direct_configured"]
+          assert inv["ats_explicit"]>=144,inv["ats_explicit"]
+          assert len(state["seen"])>=305,len(state["seen"])
+          ats=["Jane Street","Point72","DRW Trading","Optiver"]
+          banks=["Banque Cantonale de Genève","Banque Cantonale de Fribourg",
+              "Banque Cantonale du Valais","Banque Cantonale Neuchâteloise",
+              "Bank Cler","Quintet Private Bank","Swiss Life Group","Swiss Re",
+              "Helvetia Group","Bank CIC (Switzerland)",
+              "Liechtensteinische Landesbank","BGL BNP Paribas","Syz Group",
+              "Zurich Insurance Group","St. Galler Kantonalbank",
+              "Aargauische Kantonalbank","Valiant Bank",
+              "Basellandschaftliche Kantonalbank","Luzerner Kantonalbank",
+              "Graubündner Kantonalbank","Thurgauer Kantonalbank"]
+          sources={x["company"]:x for x in inv["sources"]}
+          checks={x["company"]:x for x in health["sources"]}
+          assert all(n in sources for n in ats+banks)
+          def item(name):
+              s=sources[name]
+              return {"result":s["result"],"raw_jobs":s["jobs_found"],
+                      "error":str(checks.get(name,{}).get("error",""))[:250]}
+          print("NEW_ATS_HEALTH",json.dumps({n:item(n) for n in ats},ensure_ascii=False))
+          print("NEW_BANKS_HEALTH",json.dumps({n:item(n) for n in banks},ensure_ascii=False))
+          print("COVERAGE",json.dumps({"direct":inv["direct_configured"],
+                "ats":inv["ats_explicit"],"rotating":inv["rotating_checked"],
+                "reached":inv["reached"],"errors":inv["errors"],
+                "raw_productive":inv["with_jobs"]}))
+          print("QUALITY",json.dumps({"raw":audit["raw_total"],
+                "prefiltered":audit["prefiltered_candidates"],
+                "verified":audit["official_apply_page_verified"],
+                "rejections":audit["verification_reasons"],"seen":len(state["seen"])}))
+          for name in ("index.html","status.html","sources.html","review.html","feed.xml"):
+              assert (Path("public")/name).is_file(),name
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-1-swiss-400-coverage
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+            public/status.json
+          if-no-files-found: warn
