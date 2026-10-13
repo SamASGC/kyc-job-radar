@@ -695,8 +695,15 @@
     "careers_url": "https://www.coinbase.com/careers",
     "sector": "Fintech",
     "priority": "P1",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Official Coinbase career requisition URLs https://www.coinbase.com/careers/positions/{id}?gh_jid={id} correspond to public Greenhouse board https://boards-api.greenhouse.io/v1/boards/coinbase/jobs?content=true ; 227 live board items in GitHub Actions on 2026-10-13.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "coinbase"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "eToro",
@@ -988,11 +995,18 @@
   },
   {
     "name": "Airwallex",
-    "careers_url": "https://careers.airwallex.com/",
+    "careers_url": "https://jobs.ashbyhq.com/airwallex",
     "sector": "Payments",
     "priority": "P2",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Official Airwallex vacancy postings are hosted under https://jobs.ashbyhq.com/airwallex/; public Ashby board API returned 504 requisitions in GitHub Actions 2026-10-13.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "airwallex"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Banking Circle",
@@ -1326,8 +1340,15 @@
     "careers_url": "https://www.fireblocks.com/careers",
     "sector": "Fintech",
     "priority": "P2+",
-    "origin": "Web expansion v3 2026-08-27",
-    "enabled": true
+    "origin": "Official Fireblocks career requisition URLs https://www.fireblocks.com/careers/position?gh_jid={id} correspond to public Greenhouse board https://boards-api.greenhouse.io/v1/boards/fireblocks/jobs?content=true ; 28 live board items in GitHub Actions on 2026-10-13.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "fireblocks"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Form3",
