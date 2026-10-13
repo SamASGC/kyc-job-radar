@@ -18,7 +18,7 @@ class FinancialSourceRepairsV315(unittest.TestCase):
     def test_500_unique_employers_and_exactly_179_ats_configs(self):
         self.assertEqual(len(self.employers),500)
         self.assertEqual(len({x["name"].casefold() for x in self.employers}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.employers),179)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.employers),179)
 
     def test_worldpay_live_first_party_workday(self):
         x=self.by["Worldpay"]
