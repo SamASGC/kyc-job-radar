@@ -164,11 +164,80 @@ def official_active_listing(job: Job) -> bool:
     return True
 
 
-def passes_strict_gate(job: Job, max_hours: int = 96, now: datetime | None = None) -> bool:
+
+# A hard stop only for *explicit* language requirements, never for nationality,
+# the location of clients, or a language merely described as advantageous.
+# A conservative matcher is preferable to discarding valid roles silently.
+LANGUAGES = (
+    "lithuanian", "estonian", "latvian", "german", "italian", "dutch",
+    "polish", "portuguese", "finnish", "swedish", "danish", "norwegian",
+    "czech", "slovak", "hungarian", "romanian", "greek", "turkish",
+    "arabic", "russian", "ukrainian", "french", "spanish", "english",
+)
+_LANGUAGE_PATTERN = re.compile(r"\\b(?:" + "|".join(LANGUAGES) + r")\\b", re.I)
+_MANDATORY_CUE = re.compile(r"\\b(required|mandatory|essential|must|necessar(?:y|ily)|obligator(?:y|io|ia)|exig(?:e|ido|ida)|erforderlich|erforderliche)\\b", re.I)
+_OPTIONAL_CUE = re.compile(
+    r"\\b(preferred|advantage|advantageous|plus|nice to have|optional|"
+    r"desirable|not required|not mandatory|nicht erforderlich|wunschenswert)\\b", re.I
+)
+_LANGUAGE_SKILL_CUE = re.compile(
+    r"\\b(fluent|fluency|fluently|native|proficien(?:t|cy)|bilingual|"
+    r"speak|speaking|spoken|written|communication|language|linguistic|"
+    r"kenntnisse|sprachkenntnisse|sprache|idioma|nivel|niveau|level|"
+    r"command of|knowledge of|kenntnis|verbal)\\b", re.I
+)
+_LANGUAGE_DIRECT_REQUIREMENT = re.compile(
+    r"\\b(?:" + "|".join(LANGUAGES) +
+    r")(?:\\s+(?:[abc][12]\\s*(?:level|niveau)?|language|skills|kenntnisse))?"
+    r"\\s+(?:is|are|(?:would be))?\\s*(?:required|mandatory|essential|"
+    r"erforderlich|exigido|obligatorio)\\b", re.I
+)
+
+
+def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
+    """Languages unequivocally required but absent from the configured CV.
+
+    A 'German OR French' requirement is satisfied by French; 'Lithuanian
+    AND English' requires both. Unknown/optional wording stays in review
+    rather than becoming an automatic rejection. No language is inferred
+    from residence or citizenship.
+    """
+    if known_languages is None:
+        return []
+    known = {norm_text(str(x)) for x in known_languages}
+    if not known:
+        return []
+    from bs4 import BeautifulSoup
+    desc = BeautifulSoup(job.description or "", "html.parser").get_text(" ; ", strip=True)
+    verified_text = getattr(job, "_verified_page_text", "")
+    clauses = re.split(r"[.;\\n]+", desc + " ; " + verified_text)
+    missing = set()
+    for clause in clauses:
+        clause = norm_text(clause)
+        if not _MANDATORY_CUE.search(clause) or _OPTIONAL_CUE.search(clause):
+            continue
+        present = set(_LANGUAGE_PATTERN.findall(clause))
+        if not present:
+            continue
+        if not (_LANGUAGE_SKILL_CUE.search(clause)
+                or _LANGUAGE_DIRECT_REQUIREMENT.search(clause)):
+            continue
+        if re.search(r"\\b(?:no|not)\\s+(?:language\\s+)?(?:is\\s+)?required\\b", clause):
+            continue
+        # Alternative languages: one proven language satisfies this clause.
+        if re.search(r"\\b(?:or|either|ou|oder|o)\\b", clause) and present & known:
+            continue
+        missing.update(present - known)
+    return sorted(missing)
+
+
+def passes_strict_gate(job: Job, max_hours: int = 96, now: datetime | None = None,
+                       known_languages=None) -> bool:
     return (
         official_active_listing(job)
         and within_new_window(job.posted_at, max_hours=max_hours, now=now)
         and location_allowed(job)
+        and not unmet_mandatory_languages(job, known_languages)
     )
 
 
@@ -274,6 +343,8 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
         job.verification_reason = "original_publication_missing_or_older_than_96h"
         return False
     visible_text = soup.get_text(" ", strip=True).casefold()
+    # Transient, job-specific page evidence; not a persistent Job/state field.
+    job._verified_page_text = visible_text[:35_000]
     closed = (
         "no longer accepting applications", "applications are closed",
         "this job is no longer available", "this position has been filled",
