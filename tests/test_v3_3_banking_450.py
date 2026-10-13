@@ -42,6 +42,12 @@ class BankingV33Tests(unittest.TestCase):
                     self.assertEqual(x["verification_level"], "official_ats_pending_live_smoke")
                     self.assertEqual(x.get("ats"), [{"kind": "workable", "slug": "fundcraft"}])
                     self.assertIn("fundcraft.lu/careers/", x["origin"])
+                elif name == "Berner Kantonalbank":
+                    # v3.16: the bank-owned careers page embeds an observed
+                    # Prospective medium with individual live requisitions.
+                    self.assertEqual(x["verification_level"], "official_ats_live_probe_passed")
+                    self.assertEqual(x.get("ats"), [{"kind": "prospective", "medium_id": 1509}])
+                    self.assertIn("/medium/1509", x["origin"])
                 else:
                     self.assertEqual(x["verification_level"], "official_careers_url_not_necessarily_api")
                     self.assertFalse(x.get("ats"))
