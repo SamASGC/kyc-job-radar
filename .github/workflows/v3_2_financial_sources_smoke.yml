@@ -1,4 +1,5 @@
 name: Radar v3.2 - 425 financial sources smoke
+# Retest three zero-productivity banks with first-party Swiss and Luxembourg alternatives.
 
 on:
   push:
@@ -42,9 +43,9 @@ jobs:
                "Capstone Investment Advisors","Vestwell","ATLAS SP"]
           portals=[
             "Zuger Kantonalbank","Schwyzer Kantonalbank",
-            "Schaffhauser Kantonalbank","Glarner Kantonalbank",
-            "Appenzeller Kantonalbank","Berner Kantonalbank",
-            "Nidwaldner Kantonalbank","BancaStato",
+            "Basler Kantonalbank","Glarner Kantonalbank",
+            "Appenzeller Kantonalbank","acrevis Bank",
+            "Nidwaldner Kantonalbank","Advanzia Bank",
             "Hypothekarbank Lenzburg","Migros Bank","Bank Avera",
             "Inbank","Bigbank","Holm Bank","Urbo Bank","Paysera",
             "Spuerkeess","Banque Raiffeisen Luxembourg"]
