@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.15: 500 employers, 178 configured ATS; verified Worldpay Workday and LemFi Ashby live requisitions; strict original 96h, original job apply and lifetime dedup unchanged.
+    # v3.15: 500 employers, 179 ATS; verified Worldpay Workday, LemFi Ashby, dLocal Lever, VP Bank Umantis with first-party dates; strict 96h and lifetime dedup unchanged.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
