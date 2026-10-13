@@ -1,0 +1,60 @@
+name: Radar v3.4 - 462 financial employers live smoke
+on:
+  push:
+    branches: ["feat/v3-4-verified-financial-sources-462"]
+    paths: [".github/workflows/v3_4_financial_462_smoke.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and unit regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Live source scan without production state writes
+        run: python radar.py scan
+      - name: Inspect 12 employers and check 462/152/306 invariants
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inv=json.loads(Path("public/sources.json").read_text())
+          state=json.loads(Path("data/state.json").read_text())
+          audit=json.loads(Path("data/quality_audit.json").read_text())
+          names={"BBVA","CaixaBank","ABANCA","Ibercaja Banco","Grupo Cooperativo Cajamar",
+                 "Banca March","NEO Finance","Bank of Lithuania","CSSF Luxembourg",
+                 "FINMA","Swiss National Bank","Banco de España"}
+          indexed={x["company"]:x for x in inv["sources"]}
+          assert inv["direct_configured"]==462,inv["direct_configured"]
+          assert inv["ats_explicit"]==152,inv["ats_explicit"]
+          assert len(state["seen"])>=306,len(state["seen"])
+          assert names<=set(indexed),names-set(indexed)
+          print("COVERAGE",json.dumps({k:inv[k] for k in
+              ("direct_configured","ats_explicit","rotating_checked","reached","errors","with_jobs")}))
+          print("NEW_SOURCES",json.dumps({n:{
+              "result":indexed[n]["result"],"jobs":indexed[n]["jobs_found"]
+          } for n in sorted(names)},ensure_ascii=False))
+          print("FUNNEL",json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print("LIFETIME_SEEN",len(state["seen"]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-4-462-sources-audit
+          path: |
+            data/quality_audit.json
+            data/health.json
+            public/sources.json
+          if-no-files-found: warn
