@@ -37,10 +37,16 @@ class BankingV33Tests(unittest.TestCase):
             with self.subTest(company=name):
                 x = self.by_name[name.casefold()]
                 self.assertTrue(x["enabled"])
-                self.assertEqual(x["verification_level"], "official_careers_url_not_necessarily_api")
-                self.assertFalse(x.get("ats"))
+                if name == "fundcraft":
+                    # v3.7: its own careers page explicitly links to the now-proven Workable board.
+                    self.assertEqual(x["verification_level"], "official_ats_pending_live_smoke")
+                    self.assertEqual(x.get("ats"), [{"kind": "workable", "slug": "fundcraft"}])
+                    self.assertIn("fundcraft.lu/careers/", x["origin"])
+                else:
+                    self.assertEqual(x["verification_level"], "official_careers_url_not_necessarily_api")
+                    self.assertFalse(x.get("ats"))
+                    self.assertIn(x["careers_url"], x["origin"])
                 self.assertEqual(urlsplit(x["careers_url"]).scheme, "https")
-                self.assertIn(x["careers_url"], x["origin"])
 
     def test_official_greenhouse_board_identity(self):
         x = self.by_name[ATS_NAME.casefold()]
