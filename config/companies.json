@@ -108,11 +108,18 @@
   },
   {
     "name": "dLocal",
-    "careers_url": "https://www.dlocal.com/careers",
+    "careers_url": "https://jobs.lever.co/dlocal",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "dLocal official international careers direct candidate board https://jobs.lever.co/dlocal; GitHub Actions 2026-10-13 fetched 52 distinct public requisitions with employer-specific Lever apply URLs and absolute official createdAt date fields. Old corporate https://www.dlocal.com/careers produced zero extractable job links. Only original publication dates <=96h and permitted locations can pass the alert gate.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "dlocal"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Dojo",
@@ -213,11 +220,18 @@
   },
   {
     "name": "LemFi",
-    "careers_url": "https://www.lemfi.com/careers",
+    "careers_url": "https://jobs.ashbyhq.com/lemfi",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "Employer-branded official LemFi Ashby requisition board https://jobs.ashbyhq.com/lemfi; GitHub Actions 2026-10-13 returned 14 public structured Ashby postings including Fincrime Analyst with individual apply URLs and absolute posting dates. Original corporate https://www.lemfi.com/careers showed no extracted postings.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "lemfi"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Lemonway",
@@ -675,11 +689,18 @@
   },
   {
     "name": "Worldpay",
-    "careers_url": "https://jobs.worldpay.com/",
+    "careers_url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "Worldpay-branded official Workday candidate portal https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site; verified in GitHub Actions 2026-10-13 with 95 individual public CXS requisitions (including CDD Advisory Analyst and CDD Operations Analyst - Onboarding). Official candidate pages confirm Worldpay as hiring employer. Previous jobs.worldpay.com timed out on runner. Workday 'Posted' relative labels are not automatically treated as original dates.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workday",
+        "url": "https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Zilch",

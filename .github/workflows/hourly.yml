@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.14: 500 employers, 176 ATS configured; Viva.com Workable and Tazapay official Freshteam links recovered; original 96h and dedup ledger unchanged.
+    # v3.15: 500 employers, 179 ATS; verified Worldpay Workday, LemFi Ashby, dLocal Lever, VP Bank Umantis with first-party dates; strict 96h and lifetime dedup unchanged.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.

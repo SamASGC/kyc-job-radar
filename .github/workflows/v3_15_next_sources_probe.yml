@@ -1,0 +1,49 @@
+name: v3.15 - next blocked sources dLocal and VP Bank probe
+on:
+  push:
+    branches: ["fix/v3-15-public-recruitment-portals"]
+    paths: [".github/workflows/v3_15_next_sources_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Probe official dLocal Lever and Swiss VP Bank Umantis vacancies
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from bs4 import BeautifulSoup
+          from job_radar.http import Http
+          from job_radar.sources.lever import fetch_lever
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.discovery import generic_job_links
+          URL="https://recruitingapp-2813.umantis.com/Jobs/All?CompanyID=All&Reset=G&lang=eng"
+          async def main():
+            http=Http(concurrency=6,timeout=15)
+            async def one(name,fn):
+              try:
+                res=await asyncio.wait_for(fn(),timeout=70)
+                jobs=res[0] if isinstance(res,tuple) else res
+                print("NEXT_PROBE",json.dumps({"name":name,"count":len(jobs),
+                   "samples":[{"title":x.title,"url":x.apply_url,"posted":x.posted_at} for x in jobs[:10]]},ensure_ascii=False),flush=True)
+              except Exception as e:print("NEXT_PROBE",json.dumps({"name":name,"error":str(e)[:180]}),flush=True)
+            await asyncio.gather(
+               one("dLocal Lever",lambda:fetch_lever(http,{"name":"dLocal","sector":"Payments"},"dlocal",eu=False)),
+               one("VP Bank Umantis",lambda:fetch_generic(http,{"name":"VP Bank Group","sector":"Banca","careers_url":URL}))
+            )
+            r=await http.get(URL)
+            soup=BeautifulSoup(r.text,"html.parser")
+            links=generic_job_links(r.text,str(r.url))
+            print("UMANTIS_HTTP",json.dumps({"status":r.status_code,"len":len(r.content),
+                "rows":len(soup.select("tr")),"links":len(links),"sample_links":links[:15]},ensure_ascii=False),flush=True)
+            await http.close()
+          asyncio.run(main())
+          PY

@@ -1,0 +1,64 @@
+name: v3.15 - four recovered employers 500-source smoke
+on:
+  push:
+    branches: ["fix/v3-15-public-recruitment-portals"]
+    paths: [".github/workflows/v3_15_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Run all regression tests and compile
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: End-to-end live scan of unchanged 500 employers
+        run: python radar.py scan
+      - name: Assert two functioning ATS providers and strict historical ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          ledger=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          quality=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
+          d={x["company"]:x for x in s["sources"]}
+          targets=("Worldpay","LemFi","Viva.com","Tazapay","Northern Trust",
+                   "Sygnum Bank","OakNorth","Kutxabank","Revolut",
+                   "dLocal","VP Bank Group")
+          print("V315_SOURCE_RESULTS",json.dumps({k:{
+              "result":d[k]["result"],"records":d[k]["jobs_found"]
+          } for k in targets},ensure_ascii=False))
+          print("V315_TOTAL",json.dumps({k:s[k] for k in (
+              "direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V315_LIFETIME_SEEN",len(ledger["seen"]))
+          print("V315_FUNNEL",json.dumps({k:v for k,v in quality.items()
+              if not isinstance(v,list)},ensure_ascii=False))
+          assert s["direct_configured"]==500
+          assert s["ats_explicit"]==179
+          assert len(ledger["seen"])>=306
+          assert d["Worldpay"]["result"]=="ok" and d["Worldpay"]["jobs_found"]>=20
+          assert d["LemFi"]["result"]=="ok" and d["LemFi"]["jobs_found"]>=5
+          assert d["dLocal"]["result"]=="ok" and d["dLocal"]["jobs_found"]>=20
+          assert d["VP Bank Group"]["result"]=="ok" and d["VP Bank Group"]["jobs_found"]>=5
+          assert d["Viva.com"]["jobs_found"]>=10
+          assert d["Northern Trust"]["jobs_found"]>=100
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-15-worldpay-lemfi-500-employer-health
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
