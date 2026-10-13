@@ -63,13 +63,19 @@ class FinancialSourcesV26Tests(unittest.TestCase):
             with self.subTest(name=name):
                 c = self.by_name[name]
                 self.assertTrue(c["careers_url"].startswith("https://"))
-                self.assertFalse(c.get("ats"))
-                self.assertEqual(c["verification_level"],
-                                 "official_careers_url_not_necessarily_api")
+                if name == "Euroclear":
+                    # v3.11: the official employer site now exposes its Oracle HCM board.
+                    self.assertEqual(c["ats"], [{"kind": "oracle_hcm",
+                        "site": "CX_1003", "language": "en",
+                        "url": c["careers_url"]}])
+                    self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                    self.assertIn("euroclear.com/careers/en.html", c["origin"])
+                else:
+                    self.assertFalse(c.get("ats"))
+                    self.assertEqual(c["verification_level"],
+                                     "official_careers_url_not_necessarily_api")
+                    self.assertEqual(c["origin"].split(": ", 1)[-1], c["careers_url"])
                 self.assertIn(c["sector"], ("Banca", "Fintech"))
-                self.assertEqual(
-                    c["origin"].split(": ", 1)[-1], c["careers_url"]
-                )
 
 
 if __name__ == "__main__":
