@@ -18,9 +18,9 @@ ATS = {
 }
 PORTALS = {
     "Zuger Kantonalbank", "Schwyzer Kantonalbank",
-    "Schaffhauser Kantonalbank", "Glarner Kantonalbank",
-    "Appenzeller Kantonalbank", "Berner Kantonalbank",
-    "Nidwaldner Kantonalbank", "BancaStato",
+    "Basler Kantonalbank", "Glarner Kantonalbank",
+    "Appenzeller Kantonalbank", "acrevis Bank",
+    "Nidwaldner Kantonalbank", "Advanzia Bank",
     "Hypothekarbank Lenzburg", "Migros Bank", "Bank Avera",
     "Inbank", "Bigbank", "Holm Bank", "Urbo Bank", "Paysera",
     "Spuerkeess", "Banque Raiffeisen Luxembourg",
