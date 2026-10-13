@@ -1,0 +1,61 @@
+name: v3.16 - Swiss Raiffeisen and BEKB full live 500 employer test
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regression and original-post-date safety tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Live scan of all 500 employers isolated from production state
+        run: python radar.py scan
+      - name: Verify both Swiss bank public APIs and preserved no-repeat ledger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          funnel=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
+          by={row["company"]:row for row in x["sources"]}
+          focus=["Raiffeisen Switzerland","Berner Kantonalbank",
+              "VP Bank Group","Worldpay","LemFi","dLocal","Northern Trust",
+              "Revolut","Kutxabank"]
+          print("V316_SOURCES",json.dumps({n:{"result":by[n]["result"],
+              "records":by[n]["jobs_found"]} for n in focus},ensure_ascii=False))
+          print("V316_TOTAL",json.dumps({k:x[k] for k in
+              ("direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V316_FUNNEL",json.dumps({k:v for k,v in funnel.items()
+              if not isinstance(v,list)},ensure_ascii=False))
+          print("V316_SEEN",len(state["seen"]))
+          assert x["direct_configured"]==500
+          assert x["ats_explicit"]==181
+          assert len(state["seen"])>=306
+          assert by["Raiffeisen Switzerland"]["result"]=="ok" and by["Raiffeisen Switzerland"]["jobs_found"]>=70
+          assert by["Berner Kantonalbank"]["result"]=="ok" and by["Berner Kantonalbank"]["jobs_found"]>=5
+          assert by["VP Bank Group"]["jobs_found"]>=5
+          assert by["Worldpay"]["jobs_found"]>=20
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-16-raiffeisen-bekb-official-source-health
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
