@@ -1,0 +1,64 @@
+name: v3.15 - test Worldpay Sygnum OakNorth Papara official job portals
+on:
+  push:
+    branches: ["fix/v3-15-public-recruitment-portals"]
+    paths: [".github/workflows/v3_15_employer_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Query existing employer public job boards and inspect job-level identity
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from bs4 import BeautifulSoup
+          from job_radar.http import Http
+          from job_radar.sources.workday import fetch_workday
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.discovery import generic_job_links,detect_ats
+          S={
+            "Worldpay Workday":"https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site",
+            "Sygnum official Salesforce":"https://sygnumpeopleportal.my.salesforce-sites.com/recruit/fRecruit__ApplyJobList",
+            "OakNorth official job list":"https://oaknorth.co.uk/jobs/",
+            "Papara official all-jobs":"https://careers.papara.com/en/all-jobs/",
+          }
+          async def main():
+            http=Http(concurrency=8,timeout=14)
+            async def one(name,url):
+              try:
+                company={"name":name.split(" ")[0],"sector":"Banca","careers_url":url}
+                if name.startswith("Worldpay"):
+                  js=await asyncio.wait_for(fetch_workday(http,company,url),timeout=100)
+                else:
+                  result=await asyncio.wait_for(fetch_generic(http,company),timeout=80)
+                  js=result[0]
+                print("V315_RETRIEVAL",json.dumps({
+                  "name":name,"count":len(js),"jobs":[{"title":z.title[:100],
+                     "url":z.apply_url[:160],"posted_at":z.posted_at,
+                     "source":z.source_kind} for z in js[:9]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("V315_RETRIEVAL",json.dumps({"name":name,"error":type(e).__name__+": "+str(e)[:230]}),flush=True)
+              try:
+                r=await http.get(url)
+                soup=BeautifulSoup(r.text,"html.parser")
+                links=generic_job_links(r.text,str(r.url))
+                print("V315_HTTP",json.dumps({"name":name,"status":r.status_code,
+                   "final":str(r.url),"bytes":len(r.content),"title":soup.title.get_text(" ",strip=True)[:140] if soup.title else "",
+                   "link_count":len(links),"links":links[:10],
+                   "frames":[q.get("src","") for q in soup.select("iframe[src]")][:5],
+                   "ats":detect_ats(r.text,str(r.url))[:4]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("V315_HTTP",json.dumps({"name":name,"error":str(e)[:150]}),flush=True)
+            await asyncio.gather(*(one(n,u) for n,u in S.items()))
+            await http.close()
+          asyncio.run(main())
+          PY
