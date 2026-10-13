@@ -1,0 +1,53 @@
+name: v3.16 - exact public prospective Raiffeisen and BEKB JSON jobs
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_prospective_exact.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Reproduce public official React jobs requests
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          base="https://ohws.prospective.ch/public/v1/medium/"
+          cases=[
+            ("Raiffeisen default",base+"1950/jobs?lang=de&offset=0&limit=6"),
+            ("Raiffeisen large",base+"1950/jobs?lang=de&offset=0&limit=50"),
+            ("BEKB default",base+"1509/jobs?lang=de&offset=0&limit=4"),
+            ("BEKB large",base+"1509/jobs?lang=de&offset=0&limit=50"),
+          ]
+          async def main():
+            h=Http(concurrency=4,timeout=18)
+            async def one(name,url):
+              try:
+                r=await h.get(url)
+                output={"name":name,"status":r.status_code,"bytes":len(r.content),
+                  "content_type":r.headers.get("content-type"),"url":str(r.url)}
+                if r.status_code==200:
+                  try:
+                    data=r.json();output["shape"]=type(data).__name__
+                    output["keys"]=list(data)[:20] if isinstance(data,dict) else []
+                    output["preview"]=str(data)[:2300]
+                    if isinstance(data,dict):
+                      output["total"]=data.get("total")
+                      output["jobs_count"]=len(data.get("jobs",[]) or [])
+                  except Exception as e:output["json_error"]=str(e)[:200]
+                else:output["preview"]=r.text[:160]
+                print("EXACT_PROSPECTIVE",json.dumps(output,ensure_ascii=False),flush=True)
+              except Exception as e:print("EXACT_PROSPECTIVE",json.dumps({"name":name,"error":str(e)[:180]}),flush=True)
+            await asyncio.gather(*(one(n,u) for n,u in cases))
+            await h.close()
+          asyncio.run(main())
+          PY
