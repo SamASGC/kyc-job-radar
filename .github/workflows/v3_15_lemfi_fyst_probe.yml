@@ -1,0 +1,48 @@
+name: v3.15 - probe LemFi Ashby and FYST first-party listings
+on:
+  push:
+    branches: ["fix/v3-15-public-recruitment-portals"]
+    paths: [".github/workflows/v3_15_lemfi_fyst_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Verify employer-attributed live requisitions
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.generic import fetch_generic
+          cases=[
+            ("LemFi Ashby",lambda h:fetch_ashby(h,{"name":"LemFi","sector":"Payments"},"lemfi")),
+            ("FYST Ashby old",lambda h:fetch_ashby(h,{"name":"FYST","sector":"Payments"},"fyst")),
+            ("FYST JazzHR",lambda h:fetch_generic(h,{"name":"FYST","sector":"Payments",
+               "careers_url":"https://fyst.applytojob.com/apply"})),
+            ("Lemonway careers",lambda h:fetch_generic(h,{"name":"Lemonway","sector":"Payments",
+               "careers_url":"https://www.lemonway.com/en/careers"})),
+          ]
+          async def main():
+            h=Http(concurrency=8,timeout=15)
+            async def run(name,fn):
+              try:
+                result=await asyncio.wait_for(fn(h),timeout=75)
+                jobs=result[0] if isinstance(result,tuple) else result
+                print("V315_EXTRA",json.dumps({"name":name,"count":len(jobs),
+                   "samples":[{"title":z.title,"url":z.apply_url,"posted":z.posted_at} for z in jobs[:6]]},
+                   ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("V315_EXTRA",json.dumps({"name":name,"error":type(e).__name__+": "+str(e)[:180]}),flush=True)
+            await asyncio.gather(*(run(n,f) for n,f in cases))
+            await h.close()
+          asyncio.run(main())
+          PY
