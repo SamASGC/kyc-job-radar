@@ -63,7 +63,11 @@ jobs:
                   "name":name,"status":r.status_code,"bytes":len(r.content),
                   "final":str(r.url),"html_links":len(items),"sample_links":links,
                   "iframes":frames,"ats_detected":detect_ats(html,str(r.url))[:3],
-                  "title":(soup.title.get_text(" ",strip=True) if soup.title else "")[:130],\n                  "scripts":[s.get("src","")[:180] for s in soup.select("script[src]")][-9:],\n                  "body_preview":soup.get_text(" ",strip=True)[:170],\n                  "json_count":html.count("requisitionList"),\n                  "content_type":r.headers.get("content-type","")
+                  "title":(soup.title.get_text(" ",strip=True) if soup.title else "")[:130],
+                  "scripts":[s.get("src","")[:180] for s in soup.select("script[src]")][-9:],
+                  "body_preview":soup.get_text(" ",strip=True)[:170],
+                  "json_count":html.count("requisitionList"),
+                  "content_type":r.headers.get("content-type","")
                 }
               except Exception as e:
                 entry={"name":name,"error":type(e).__name__+": "+str(e)[:150]}
