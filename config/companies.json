@@ -77,11 +77,18 @@
   },
   {
     "name": "Clear Junction",
-    "careers_url": "https://clearjunction.com/careers/",
+    "careers_url": "https://apply.workable.com/clearjunction/",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "Official Clear Junction public workable board: https://www.workable.com/api/accounts/clearjunction?details=true; GitHub Actions 2026-10-13 returned 3 publicly listed jobs and employer-corresponding requisition https://apply.workable.com/j/1E0ECEA844; original employer site: https://apply.workable.com/clearjunction/",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "clearjunction"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Crypto.com",
@@ -386,9 +393,16 @@
     "name": "PPRO",
     "sector": "Payments",
     "priority": "EXP",
-    "careers_url": "https://www.ppro.com/about-us/careers/",
-    "origin": "Web expansion 2026-08-27",
-    "aliases": []
+    "careers_url": "https://jobs.ashbyhq.com/ppro",
+    "origin": "Official PPRO public ashby board: https://api.ashbyhq.com/posting-api/job-board/ppro; GitHub Actions 2026-10-13 returned 22 publicly listed jobs and employer-corresponding requisition https://jobs.ashbyhq.com/ppro/4930d72c-c6c4-47c3-8da1-aaafd6a61e8f; original employer site: https://jobs.ashbyhq.com/ppro",
+    "aliases": [],
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "ppro"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Primer",
@@ -473,11 +487,18 @@
   },
   {
     "name": "Strise",
-    "careers_url": "https://www.strise.ai/careers",
+    "careers_url": "https://apply.workable.com/strise/",
     "sector": "Fintech",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "Official Strise public workable board: https://www.workable.com/api/accounts/strise?details=true; GitHub Actions 2026-10-13 returned 2 publicly listed jobs and employer-corresponding requisition https://apply.workable.com/j/70E09B4E65; original employer site: https://apply.workable.com/strise/",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "strise"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "SwissBorg",
@@ -1407,11 +1428,18 @@
   },
   {
     "name": "Alloy",
-    "careers_url": "https://www.alloy.com/careers",
+    "careers_url": "https://www.alloy.com/about/jobs",
     "sector": "Fintech",
     "priority": "P3",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Official Alloy public greenhouse board: https://boards-api.greenhouse.io/v1/boards/alloy/jobs; GitHub Actions 2026-10-13 returned 24 publicly listed jobs and employer-corresponding requisition https://www.alloy.com/about/jobs/detail?gh_jid=8726449002; original employer site: https://www.alloy.com/about/jobs",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "alloy"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Bnext",
@@ -1426,8 +1454,15 @@
     "careers_url": "https://complyadvantage.com/careers/jobs/",
     "sector": "Fintech",
     "priority": "P3",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Official ComplyAdvantage public greenhouse board: https://boards-api.greenhouse.io/v1/boards/complyadvantage/jobs; GitHub Actions 2026-10-13 returned 19 publicly listed jobs and employer-corresponding requisition https://complyadvantage.com/careers/jobs/8642475002?gh_jid=8642475002; original employer site: https://complyadvantage.com/careers/jobs/",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "complyadvantage"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Entrust / Onfido",
@@ -1556,8 +1591,15 @@
     "careers_url": "https://www.veriff.com/careers",
     "sector": "Fintech",
     "priority": "P3",
-    "origin": "PDF target list",
-    "enabled": true
+    "origin": "Official Veriff public greenhouse board: https://boards-api.greenhouse.io/v1/boards/veriff/jobs; GitHub Actions 2026-10-13 returned 11 publicly listed jobs and employer-corresponding requisition https://www.veriff.com/careers/position/8857654002?gh_jid=8857654002; original employer site: https://www.veriff.com/careers",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "veriff"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Yapily",

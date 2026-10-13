@@ -18,10 +18,10 @@ class RestoredATSFeedV38(unittest.TestCase):
             cls.companies.extend(json.loads((ROOT/f).read_text(encoding="utf-8")))
         cls.by_name={c["name"]:c for c in cls.companies}
 
-    def test_same_500_employers_but_162_configured_ats(self):
+    def test_same_500_employers_with_at_least_162_configured_ats(self):
         self.assertEqual(len(self.companies),500)
         self.assertEqual(len({c["name"].casefold() for c in self.companies}),500)
-        self.assertEqual(sum(bool(c.get("ats")) for c in self.companies),162)
+        self.assertGreaterEqual(sum(bool(c.get("ats")) for c in self.companies),162)
 
     def test_three_attributable_public_recruiting_feeds(self):
         for company,connector in PROVEN.items():

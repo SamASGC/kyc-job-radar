@@ -1,0 +1,60 @@
+name: v3.9 - official public ATS recovery probes
+on:
+  push:
+    branches: ["fix/v3-9-further-official-ats-recovery"]
+    paths: [".github/workflows/v3_9_ats_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Audit published first-party boards (no restricted access)
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          greenhouse=["riskified","complyadvantage","veriff","trulioo","sygnum","tuum",
+                      "thetaray","paypal","paydo","shift4","ppro","revolut",
+                      "tazapay","alloy","strise","papara","clearjunction"]
+          ashby=["complyadvantage","veriff","sygnum","tuum","thetaray",
+                 "strise","ppro","tazapay","alloy","clearjunction"]
+          workable=["clearjunction","trulioo","ppro","sygnum","strise"]
+          requests=(
+              [("greenhouse",n,f"https://boards-api.greenhouse.io/v1/boards/{n}/jobs?content=false") for n in greenhouse]+
+              [("ashby",n,f"https://api.ashbyhq.com/posting-api/job-board/{n}") for n in ashby]+
+              [("workable",n,f"https://www.workable.com/api/accounts/{n}?details=true") for n in workable]
+          )
+          async def check(http,provider,name,url):
+              try:
+                  r=await http.get(url)
+                  if r.status_code!=200:
+                      return {"provider":provider,"name":name,"status":r.status_code}
+                  dat=r.json()
+                  rows=dat.get("jobs") if isinstance(dat,dict) else None
+                  rows=rows if isinstance(rows,list) else []
+                  first=rows[0] if rows else {}
+                  link=first.get("absolute_url") or first.get("jobUrl") or first.get("url") or ""
+                  return {"provider":provider,"name":name,"status":r.status_code,
+                          "jobs":len(rows),"sample_title":str(first.get("title",""))[:90],
+                          "sample_link":str(link)[:180],
+                          "employer_name":str(dat.get("name",""))[:80]}
+              except Exception as e:
+                  return {"provider":provider,"name":name,"error":type(e).__name__+":"+str(e)[:80]}
+          async def main():
+              http=Http(concurrency=5,timeout=15)
+              try:
+                  results=await asyncio.gather(*(check(http,*p) for p in requests))
+                  for rec in results:
+                      print("ATS_DISCOVERY",json.dumps(rec,ensure_ascii=False),flush=True)
+              finally:
+                  await http.close()
+          asyncio.run(main())
+          PY
