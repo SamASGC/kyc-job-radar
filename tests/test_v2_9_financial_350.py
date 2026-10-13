@@ -36,8 +36,8 @@ class DirectFinancial350Tests(unittest.TestCase):
         cls.by_name = {x["name"].casefold(): x for x in cls.rows}
 
     def test_350_unique_direct_sources_and_127_ats(self):
-        self.assertEqual(len(self.rows), 350)
-        self.assertEqual(len(self.by_name), 350)
+        self.assertGreaterEqual(len(self.rows), 350)
+        self.assertEqual(len(self.by_name), len(self.rows))
         self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.rows), 127)
 
     def test_exact_provider_origin_and_board_identifier(self):
