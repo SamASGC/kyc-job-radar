@@ -1,0 +1,55 @@
+name: v3.8 - targeted official ATS probe (existing employers)
+on:
+  push:
+    branches: ["fix/v3-8-restore-official-ats-existing-employers"]
+    paths: [".github/workflows/v3_8_ats_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Check genuine public ATS endpoints; never bypass site restrictions
+        run: |
+          python - <<'PY'
+          import asyncio, json
+          from job_radar.http import Http
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.lever import fetch_lever
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          from job_radar.discovery import detect_ats
+          async def run():
+            h=Http(concurrency=5,timeout=15)
+            try:
+              specs=[
+                ("Airwallex Ashby",lambda:fetch_ashby(h,{"name":"Airwallex","careers_url":"https://jobs.ashbyhq.com/airwallex"},"airwallex")),
+                ("OakNorth Lever",lambda:fetch_lever(h,{"name":"OakNorth","careers_url":"https://jobs.lever.co/oaknorth.ai"},"oaknorth.ai",eu=False)),
+                ("Alloy correct careers",lambda:fetch_generic(h,{"name":"Alloy","careers_url":"https://www.alloy.com/about/jobs","sector":"Fintech"})),
+                ("Fireblocks GH",lambda:fetch_greenhouse(h,{"name":"Fireblocks"},"fireblocks")),
+                ("Coinbase GH",lambda:fetch_greenhouse(h,{"name":"Coinbase"},"coinbase")),
+                ("Revolut GH",lambda:fetch_greenhouse(h,{"name":"Revolut"},"revolut")),
+                ("Shift4 GH",lambda:fetch_greenhouse(h,{"name":"Shift4"},"shift4")),
+              ]
+              for name,call in specs:
+                try:
+                  result=await asyncio.wait_for(call(),timeout=35)
+                  jobs=result[0] if isinstance(result,tuple) else result
+                  print("LIVE_PROBE",json.dumps({"name":name,"ok":True,
+                       "count":len(jobs),"sample":[{"title":j.title,"url":j.apply_url[:150],
+                       "post":j.posted_at} for j in jobs[:3]],
+                       "ats_detected":result[1] if isinstance(result,tuple) else []},ensure_ascii=False,default=str),flush=True)
+                except Exception as e:
+                  print("LIVE_PROBE",json.dumps({"name":name,"ok":False,
+                    "error":type(e).__name__+": "+str(e)[:200]}),flush=True)
+            finally:
+              await h.close()
+          asyncio.run(run())
+          PY
