@@ -37,6 +37,12 @@ class ExpandedSourcesTests(unittest.TestCase):
                 self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
                 self.assertEqual(c.get("ats"), [{"kind": "workday",
                     "url": "https://ntrs.wd1.myworkdayjobs.com/northerntrust"}])
+            elif name == "IQ-EQ":
+                # v3.17: public employer-scoped IQEQ SmartRecruiters feed
+                # was checked against the provider's company identifier.
+                self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                self.assertEqual(c.get("ats"), [{"kind": "smartrecruiters", "slug": "iqeq"}])
+                self.assertIn("iqeq.com/careers/vacancies/", c["origin"])
             else:
                 self.assertEqual(c["verification_level"],
                                  "official_careers_url_not_necessarily_api")
