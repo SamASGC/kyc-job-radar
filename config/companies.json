@@ -108,11 +108,18 @@
   },
   {
     "name": "dLocal",
-    "careers_url": "https://www.dlocal.com/careers",
+    "careers_url": "https://jobs.lever.co/dlocal",
     "sector": "Payments",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "dLocal official international careers direct candidate board https://jobs.lever.co/dlocal; GitHub Actions 2026-10-13 fetched 52 distinct public requisitions with employer-specific Lever apply URLs and absolute official createdAt date fields. Old corporate https://www.dlocal.com/careers produced zero extractable job links. Only original publication dates <=96h and permitted locations can pass the alert gate.",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "dlocal"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Dojo",
