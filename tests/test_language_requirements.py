@@ -3,7 +3,6 @@ import copy
 import unittest
 from datetime import datetime, timezone
 
-import radar  # Installs the production scoring extensions on scanner.
 from job_radar.models import Job
 from job_radar.scanner import update_state_with_jobs
 from job_radar.v2_quality import unmet_mandatory_languages, passes_strict_gate
@@ -35,6 +34,7 @@ class MandatoryLanguageTests(unittest.TestCase):
         j = sample("<p>Fluent Lithuanian and English is required in spoken and written communication.</p>")
         self.assertEqual(unmet_mandatory_languages(j, KNOWN), ["lithuanian"])
         self.assertFalse(passes_strict_gate(j, known_languages=KNOWN))
+        import radar  # Import AFTER native_apply test modules are discovered.
         scored, accepted = radar._score_job_with_must_have_gaps(j, PROFILE, True)
         self.assertFalse(accepted)
 
@@ -85,6 +85,7 @@ class MandatoryLanguageTests(unittest.TestCase):
             "external_id": j.external_id, "source": j.source,
             "first_seen": existing["first_seen"],
         }}
+        import radar  # Ensure production scoring is installed before state revalidation.
         state = {"jobs": {j.fingerprint: existing}, "seen": copy.deepcopy(ledger),
                  "discovery": {}, "stats": {}, "strict_v2_baseline": "2026-10-12"}
         updated, stats = update_state_with_jobs(
