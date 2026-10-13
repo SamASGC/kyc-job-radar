@@ -1,0 +1,43 @@
+name: v3.16 - inspect Raiffeisen and BEKB public job record schema
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_prospective_schema.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Inspect first-party posting fields and exact apply URLs
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          async def main():
+            h=Http(concurrency=3,timeout=15)
+            try:
+              for name,mid in (("Raiffeisen",1950),("BEKB",1509)):
+                r=await h.get(f"https://ohws.prospective.ch/public/v1/medium/{mid}/jobs?lang=de&offset=0&limit=15")
+                r.raise_for_status()
+                data=r.json()
+                print("RECORD_META",json.dumps({"name":name,"status":r.status_code,"total":data.get("total"),
+                  "count":len(data.get("jobs",[]))},ensure_ascii=False),flush=True)
+                for job in data.get("jobs",[])[:4]:
+                  s=job.get("szas") or {}
+                  print("RECORD_DETAIL",json.dumps({"name":name,
+                    "id":job.get("id"),"title":job.get("title"),"keys":list(job),
+                    "plain_fields":{k:v for k,v in job.items() if k not in ("szas","attributes") and isinstance(v,(str,int,float,bool,type(None)))},
+                    "szas_keys":list(s),"relevant_szas":{k:v for k,v in s.items()
+                      if any(t in k.lower() for t in ("link","date","datum","publish","posted","apply","location","joburl","url","contact","position"))},
+                    "attributes":job.get("attributes")},ensure_ascii=False),flush=True)
+            finally:await h.close()
+          asyncio.run(main())
+          PY

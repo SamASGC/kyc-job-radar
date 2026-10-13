@@ -1,0 +1,46 @@
+name: v3.16 - Raiffeisen public jobs data endpoints in official JS
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_rai_public_api.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Locate public frontend HTTP data path and endpoint configuration
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          URL="https://jobs.raiffeisen.ch/careercenter/1950/static/index-Cdqj9bTc.js"
+          terms=["api/","api.", "baseUrl","baseURL","backend","/v1/", "/v2/", "careercenter/1950",
+                 "jobs/", "jobPosting", "vacancies","jobSearch","jobListing","offerSearch",
+                 "fetch(", "axios.create", "graphql","wd3.myworkday","searchApi","workday"]
+          async def main():
+            h=Http(concurrency=2,timeout=15)
+            try:
+              r=await h.get(URL)
+              t=r.text
+              print("RJS_META",json.dumps({"status":r.status_code,"bytes":len(r.content)}),flush=True)
+              for term in terms:
+                pos=0;hits=[]
+                while len(hits)<8:
+                  i=t.lower().find(term.lower(),pos)
+                  if i<0:break
+                  snippet=t[max(0,i-165):i+225]
+                  if snippet not in hits:hits.append(snippet)
+                  pos=i+len(term)
+                print("RJS_TERM",json.dumps({"term":term,"count":t.lower().count(term.lower()),
+                      "snippets":hits},ensure_ascii=False),flush=True)
+            finally:await h.close()
+          asyncio.run(main())
+          PY

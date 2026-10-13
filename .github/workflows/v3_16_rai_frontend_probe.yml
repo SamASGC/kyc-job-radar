@@ -1,0 +1,47 @@
+name: v3.16 - Raiffeisen official frontend jobs data discovery
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_rai_frontend_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Discover openly published frontend data endpoints
+        run: |
+          python - <<'PY'
+          import asyncio,re,json
+          from urllib.parse import urljoin
+          from bs4 import BeautifulSoup
+          from job_radar.http import Http
+          URL="https://jobs.raiffeisen.ch/"
+          async def main():
+            h=Http(concurrency=4,timeout=15)
+            try:
+              r=await h.get(URL);soup=BeautifulSoup(r.text,"html.parser")
+              assets=[urljoin(str(r.url),a.get("src")) for a in soup.select("script[src]") if a.get("src")]
+              print("RAI_FRONTEND",json.dumps({"status":r.status_code,"html":r.text[:1500],
+                "scripts":assets,"links":[(a.get("href") or "") for a in soup.select("link[href]")][:14]},
+                ensure_ascii=False),flush=True)
+              for u in assets[:6]:
+                try:
+                  s=await h.get(u);txt=s.text
+                  samples=[]
+                  for pat in (r"https?://[^\\s\\x22\\x27<>]{12,150}",
+                    r"(?i).{0,60}(?:vacancy|jobs/search|job-board|graphql|\\/api\\/|api\\.|jobposting|careerportal).{0,85}"):
+                    samples.append(list(dict.fromkeys(re.findall(pat,txt)))[:18])
+                  print("RAI_SCRIPT",json.dumps({"url":str(s.url),"status":s.status_code,
+                    "bytes":len(s.content),"snippets":samples},ensure_ascii=False),flush=True)
+                except Exception as e:print("RAI_SCRIPT_ERROR",str(e)[:200],flush=True)
+            finally:await h.close()
+          asyncio.run(main())
+          PY

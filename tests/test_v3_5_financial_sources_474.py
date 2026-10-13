@@ -56,9 +56,16 @@ class FinancialSourcesV35Tests(unittest.TestCase):
                 self.assertTrue(c["enabled"])
                 self.assertTrue(c["specialism"])
                 self.assertIn(url,c["origin"])
-                self.assertEqual(c["verification_level"],
-                    "official_ats_pending_live_smoke" if name in ATS else "official_careers_url_not_necessarily_api")
-                self.assertEqual(c.get("ats",[]), [ATS[name]] if name in ATS else [])
+                if name == "Raiffeisen Switzerland":
+                    # v3.16: the public first-party portal exposes a provider
+                    # medium whose employer identity and requisitions were checked.
+                    self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                    self.assertEqual(c.get("ats", []), [{"kind": "prospective", "medium_id": 1950}])
+                    self.assertIn("/medium/1950", c["origin"])
+                else:
+                    self.assertEqual(c["verification_level"],
+                        "official_ats_pending_live_smoke" if name in ATS else "official_careers_url_not_necessarily_api")
+                    self.assertEqual(c.get("ats", []), [ATS[name]] if name in ATS else [])
 
     def test_five_failed_legacy_sources_have_real_recruitment_links(self):
         self.assertEqual(len(REPAIRED), 5)

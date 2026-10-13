@@ -1,0 +1,47 @@
+name: v3.16 - audit Prospective apply hosts and initial dates
+on:
+  push:
+    branches: ["fix/v3-16-raiffeisen-public-jobs"]
+    paths: [".github/workflows/v3_16_apply_hosts.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Count and classify public employer application link hosts
+        run: |
+          python - <<'PY'
+          import asyncio,json,collections
+          from urllib.parse import urlsplit
+          from job_radar.http import Http
+          async def main():
+            h=Http(concurrency=5,timeout=16)
+            try:
+              for name,mid in (("Raiffeisen",1950),("BEKB",1509)):
+                count=0;hosts=collections.Counter();empty=0;cases=[];dates=[];seen=set()
+                for off in range(0,350,50):
+                  r=await h.get(f"https://ohws.prospective.ch/public/v1/medium/{mid}/jobs?lang=de&offset={off}&limit=50")
+                  r.raise_for_status();d=r.json();jobs=d.get("jobs",[])
+                  for job in jobs:
+                    if job.get("id") in seen:continue
+                    seen.add(job.get("id"));count+=1
+                    u=str((job.get("szas") or {}).get("sza_apply_link") or "")
+                    if not u:empty+=1
+                    hosts[urlsplit(u).scheme+"://"+str(urlsplit(u).hostname)]+=1
+                    dates.append(str(job.get("start_date") or ""))
+                    if len(cases)<6:cases.append({"id":job.get("id"),"title":job.get("title"),"url":u,"links":job.get("links"),"date":job.get("start_date")})
+                  if len(jobs)<50 or off+50>=d.get("total",0):break
+                print("PUBLIC_APPLY_AUDIT",json.dumps({"name":name,"count":count,
+                   "hosts":dict(hosts),"empty_urls":empty,"date_missing":sum(not x for x in dates),
+                   "samples":cases},ensure_ascii=False),flush=True)
+            finally:await h.close()
+          asyncio.run(main())
+          PY

@@ -28,6 +28,7 @@ from job_radar.sources.workday import fetch_workday
 from job_radar.sources.recruitee import fetch_recruitee
 from job_radar.sources.breezy import fetch_breezy
 from job_radar.sources.oracle_hcm import fetch_oracle_hcm
+from job_radar.sources.prospective import fetch_prospective
 from job_radar.sources.aggregators import (
     fetch_jobicy, fetch_remotive, fetch_arbeitnow, fetch_remoteok,
     fetch_himalayas, fetch_weworkremotely,
@@ -65,6 +66,8 @@ async def fetch_target(http: Http, company: dict, target: dict) -> list[Job]:
         return await fetch_breezy(http, company, slug)
     if kind == "oracle_hcm":
         return await fetch_oracle_hcm(http, company, target)
+    if kind == "prospective":
+        return await fetch_prospective(http, company, int(target["medium_id"]))
     return []
 
 
