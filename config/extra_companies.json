@@ -3352,9 +3352,15 @@
     "sector": "Banca",
     "specialism": "Swiss cantonal bank: compliance, AML, risk and wealth operations",
     "priority": "P1",
-    "origin": "Official employer recruitment portal verified by public source 2026-10-13: https://www.bekb.ch/de/die-bekb/arbeitgeberin/stellen",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Berner Kantonalbank official careers page https://www.bekb.ch/de/die-bekb/arbeitgeberin/stellen embeds Prospective career center https://ohws.prospective.ch/public/v2/careercenter/1509/. Official public GET /public/v1/medium/1509/jobs?lang=de&offset=0&limit=50 returned 10 individual postings dated with first-party start_date, stable IDs and original bank-owned https://bekb.abacuscity.ch job application URLs on 2026-10-13 GitHub Actions. No timestamp is synthesized from updated_at or scan time.",
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "prospective",
+        "medium_id": 1509
+      }
+    ]
   },
   {
     "name": "Schaffhauser Kantonalbank",
@@ -3744,9 +3750,15 @@
     "sector": "Banca",
     "specialism": "Swiss cooperative banks and AML/financial crime operations",
     "priority": "P1",
-    "origin": "Official employer-controlled careers site verified 2026-10-13: https://jobs.raiffeisen.ch/",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "origin": "Raiffeisen Switzerland employer's official job frontend https://jobs.raiffeisen.ch/ includes public React API base https://ohws.prospective.ch/public/v1/medium/1950. A live GitHub Actions GET with exact first-party parameters ?lang=de&offset=0&limit=50 returned 173 requisitions, source start_date, original job ID, and employer-owned apply link. 127 candidates link to Raiffeisen Workday, 1 to raiffeisen.ch, and 45 provide mailto only; parser intentionally excludes non-HTTPS mailto from alert candidates. The provider's last_modification_timestamp is never used as original posting date.",
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "prospective",
+        "medium_id": 1950
+      }
+    ]
   },
   {
     "name": "Universal Investment",
