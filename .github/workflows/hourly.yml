@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v2.8 production verification: 330 direct financial employers; 112 ATS, all 20 new ATS productive in smoke.
+    # v2.9 release scan: 350 verified direct employers, 127 configured ATS and strict date/dedupe.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
