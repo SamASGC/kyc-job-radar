@@ -336,11 +336,18 @@
     "name": "NomuPay",
     "sector": "Payments",
     "priority": "EXP",
-    "careers_url": "https://nomupay.com/career/",
-    "origin": "Web expansion 2026-08-27",
+    "careers_url": "https://nomupay.jobs.personio.com/",
+    "origin": "Public, employer-attributable NomuPay recruiting portal https://nomupay.jobs.personio.com/ lists NomuPay UK/Total Processing job requisitions. 2026-10-13 live GitHub Actions Personio XML/page scraper returned 4 individually identified Personio job IDs and live application pages; original https://nomupay.com/career/ returns 403 on GitHub runner.",
     "aliases": [
       "Nomupay"
-    ]
+    ],
+    "ats": [
+      {
+        "kind": "personio",
+        "slug": "nomupay"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Nuvei",
@@ -559,9 +566,16 @@
     "name": "TerraPay",
     "sector": "Payments",
     "priority": "EXP",
-    "careers_url": "https://www.terrapay.com/careers/",
-    "origin": "Web expansion 2026-08-27",
-    "aliases": []
+    "careers_url": "https://apply.workable.com/terrapay/",
+    "origin": "The official TerraPay website https://www.terrapay.com/careers/ links to https://jobs.terrapay.com/ job opportunities; first-party brand-listed public Workable jobs API https://www.workable.com/api/accounts/terrapay?details=true returned 8 individual requisition records on 2026-10-13 in GitHub Actions. Verify Workable created_at dates separately; current job listings are not proof of eligible original posting age.",
+    "aliases": [],
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "terrapay"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Teya",

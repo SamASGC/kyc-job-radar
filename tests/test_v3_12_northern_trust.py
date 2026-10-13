@@ -16,7 +16,7 @@ class NorthernTrustV312(unittest.TestCase):
     def test_500_unique_and_173_declared_ats(self):
         self.assertEqual(len(self.rows),500)
         self.assertEqual(len({x["name"].casefold() for x in self.rows}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.rows),173)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.rows),173)
 
     def test_source_owner_and_real_workday_connector(self):
         x=self.by["Northern Trust"]

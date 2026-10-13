@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.12: 500 employers, 173 configured ATS; Northern Trust Workday restored, previous Euroclear/Shift4/PayDo fixes retained; strict 96h and lifetime dedup preserved.
+    # v3.13: 500 direct employers, 175 configured ATS; NomuPay Personio and TerraPay Workable feeds restored; strict 96h original-date and lifetime dedup unchanged.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
