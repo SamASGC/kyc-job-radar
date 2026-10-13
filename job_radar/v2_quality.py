@@ -210,7 +210,7 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
     from bs4 import BeautifulSoup
     desc = BeautifulSoup(job.description or "", "html.parser").get_text(" ; ", strip=True)
     verified_text = getattr(job, "_verified_page_text", "")
-    clauses = re.split(r"[.;\n]+", desc + " ; " + verified_text)
+    clauses = re.split(r"[.;\n,]+", desc + " ; " + verified_text)
     missing = set()
     for clause in clauses:
         clause = norm_text(clause)
