@@ -42,6 +42,11 @@ class FinancialSourceBatchTests(unittest.TestCase):
             if name in NATIVE:
                 self.assertEqual(c["ats"][0]["kind"], NATIVE[name])
                 self.assertEqual(c["verification_level"], "official_ats_board_link_verified")
+            elif name == "Riskified":
+                # v3.9: its official employer-owned Greenhouse board is proven live.
+                self.assertEqual(c.get("ats"), [{"kind":"greenhouse","slug":"riskified"}])
+                self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                self.assertIn("riskified", c["origin"].casefold())
             else:
                 self.assertNotIn("ats", c)
                 self.assertEqual(c["verification_level"],
