@@ -1,0 +1,55 @@
+name: v3.8 - recover three official ATS feeds (500-source full smoke)
+on:
+  push:
+    branches: ["fix/v3-8-restore-official-ats-existing-employers"]
+    paths: [".github/workflows/v3_8_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Complete regression suite
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: End to end real official feeds 500 employer scan
+        run: python radar.py scan
+      - name: Audit recovered sources and verify no data loss
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          rows={r["company"]:r for r in s["sources"]}
+          targets=("Airwallex","Coinbase","Fireblocks","Goldman Sachs",
+                   "fundcraft","Kutxabank","Morgan Stanley","OakNorth")
+          print("RECOVERY_V38",json.dumps({n:{"result":rows[n]["result"],
+               "jobs":rows[n]["jobs_found"]} for n in targets},ensure_ascii=False))
+          print("COVERAGE_V38",json.dumps({k:s[k] for k in (
+              "direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("LIFETIME_SEEN_V38",len(state["seen"]))
+          assert s["direct_configured"]==500
+          assert s["ats_explicit"]==162
+          assert len(state["seen"])>=306
+          assert all(rows[n]["result"]=="ok" and rows[n]["jobs_found"]>0
+             for n in ("Airwallex","Coinbase","Fireblocks"))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-8-existing-employer-full-source-health
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
