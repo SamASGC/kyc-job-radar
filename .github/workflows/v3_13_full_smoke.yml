@@ -1,0 +1,56 @@
+name: v3.13 - live 500 source feed repair acceptance
+on:
+  push:
+    branches: ["fix/v3-13-targeted-employer-source-health"]
+    paths: [".github/workflows/v3_13_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regression tests (old and new)
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Isolated live 500-employer scan
+        run: python radar.py scan
+      - name: Verify two restored feeds, prior regressions and lifetime dedup
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in src["sources"]}
+          focus=("NomuPay","TerraPay","Northern Trust","Euroclear",
+                 "Shift4","PayDo","IQ-EQ","JTC Group","Berner Kantonalbank",
+                 "Schaffhauser Kantonalbank","Swiss Prime Site Solutions")
+          print("V313_FOCUS",json.dumps({n:{"result":by[n]["result"],"jobs":by[n]["jobs_found"]} for n in focus},ensure_ascii=False))
+          print("V313_COVERAGE",json.dumps({k:src[k] for k in ("direct_configured","ats_explicit","reached","errors","with_jobs")}))
+          print("V313_LIFETIME_SEEN",len(state["seen"]))
+          assert src["direct_configured"]==500
+          assert src["ats_explicit"]==175
+          assert len(state["seen"])>=306
+          for n in ("NomuPay","TerraPay"):
+            assert by[n]["result"]=="ok" and by[n]["jobs_found"]>=2,by[n]
+          assert by["Northern Trust"]["jobs_found"]>=100
+          assert by["Euroclear"]["jobs_found"]>=20
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-13-official-feeds-source-health
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
