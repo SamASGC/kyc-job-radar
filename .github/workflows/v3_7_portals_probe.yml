@@ -1,0 +1,70 @@
+name: v3.7 - employer portal HTTP and job-link diagnostics
+on:
+  push:
+    branches: ["fix/v3-7-source-coverage-500"]
+    paths: [".github/workflows/v3_7_portals_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check httpx beautifulsoup4
+      - name: Inspect public official websites without bypassing protections
+        run: |
+          python - <<'PY'
+          import asyncio, json
+          from urllib.parse import urlsplit
+          import httpx
+          from bs4 import BeautifulSoup
+          from job_radar.discovery import generic_job_links,detect_ats
+          sites = {
+            "Goldman old": "https://www.goldmansachs.com/careers",
+            "Goldman jobs": "https://higher.gs.com/results",
+            "Goldman role": "https://higher.gs.com/roles/184552",
+            "Morgan old": "https://www.morganstanley.com/careers/career-opportunities-search",
+            "Morgan filtered": "https://www.morganstanley.com/careers/career-opportunities-search?opportunity=sg",
+            "Kutxa old": "https://www.kutxabanktalent.com/es/",
+            "Kutxa recruiter": "https://kutxabanktalent.aplygo.com/",
+            "SHKB old": "https://jobs.shkb.ch/de/jobportal",
+            "SHKB root": "https://jobs.shkb.ch/",
+            "SPS old": "https://jobs.sps.swiss/de",
+            "SPS jobs": "https://jobs.sps.swiss/job-overview/search",
+            "SME old": "https://smebank.lt/karjera/",
+            "SME English": "https://smebank.lt/en/karjera/",
+            "Obwalden old": "https://www.okb.ch/jobs",
+            "Berner old": "https://www.bekb.ch/de/die-bekb/arbeitgeberin/stellen",
+            "fundcraft": "https://www.fundcraft.lu/careers/",
+            "Kaiser": "https://kaiserpartner.bank/career/"
+          }
+          async def one(name,url,client,sem):
+            async with sem:
+              try:
+                r=await client.get(url,timeout=16,follow_redirects=True)
+                html=r.text
+                soup=BeautifulSoup(html,"html.parser")
+                items=generic_job_links(html,str(r.url))
+                links=[{"title":x["title"][:60],"url":x["url"][:140]} for x in items[:8]]
+                frames=[x.get("src") for x in soup.select("iframe[src]")][:4]
+                entry={
+                  "name":name,"status":r.status_code,"bytes":len(r.content),
+                  "final":str(r.url),"html_links":len(items),"sample_links":links,
+                  "iframes":frames,"ats_detected":detect_ats(html,str(r.url))[:3],
+                  "title":(soup.title.get_text(" ",strip=True) if soup.title else "")[:130]
+                }
+              except Exception as e:
+                entry={"name":name,"error":type(e).__name__+": "+str(e)[:150]}
+              print("SOURCE_DIAG",json.dumps(entry,ensure_ascii=False),flush=True)
+          async def main():
+            limits=httpx.Limits(max_connections=10)
+            async with httpx.AsyncClient(limits=limits,headers={"User-Agent":"KYCJobRadar/1.0 (+personal job-search dashboard; low-frequency crawler)"}) as client:
+              sem=asyncio.Semaphore(7)
+              await asyncio.gather(*(one(n,u,client,sem) for n,u in sites.items()))
+          asyncio.run(main())
+          PY
