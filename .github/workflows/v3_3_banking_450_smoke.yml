@@ -1,4 +1,5 @@
 name: Radar v3.3 - 450 financial employers live smoke
+# Retest blocked corporate portals with reachable private bank and investment firm sites.
 
 on:
   push:
@@ -43,9 +44,9 @@ jobs:
             "Obwaldner Kantonalbank","Banque Piguet Galland","Banque Heritage",
             "Cembra Money Bank","Bank WIR","SME Bank Lithuania","Mano Bank",
             "Swiss Life Asset Managers","Foyer Group","Kaiser Partner Privatbank",
-            "Banque de Commerce et de Placements","Bordier & Cie","Gonet & Cie",
+            "Banque de Commerce et de Placements","Bordier & Cie","Delen Private Bank Luxembourg",
             "Baloise Luxembourg","fundcraft","Moonfare","Candriam",
-            "JPMorgan Chase","Morgan Stanley","Goldman Sachs","Banco Santander",
+            "Lazard","Swiss Prime Site Solutions","Eurazeo","Banco Santander",
             "NextEnergy Group"]
           records={x["company"]:x for x in inv["sources"]}
           checks={x["company"]:x for x in health["sources"]}
