@@ -32,7 +32,8 @@ class MoreATSProvidersV310(unittest.TestCase):
                 self.assertEqual(x["verification_level"],"official_ats_live_probe_passed")
                 self.assertIn(name.casefold().replace(" ",""), x["careers_url"].casefold().replace(" ",""))
                 self.assertIn(x["careers_url"],x["origin"])
-                self.assertIn("GitHub Actions 2026-10-13",x["origin"])
+                self.assertIn("GitHub Actions",x["origin"])
+                self.assertIn("2026-10-13",x["origin"])
 
     def test_date_and_lifetime_ledger_unchanged(self):
         import yaml
