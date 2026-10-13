@@ -14,7 +14,7 @@ ATS={
 PORTALS={
 "Banque Cantonale de Genève","Banque Cantonale de Fribourg",
 "Banque Cantonale du Valais","Banque Cantonale Neuchâteloise",
-"Bank Cler","Quintet Private Bank","Swiss Life Group","Swiss Re",
+"Bank Cler","Quintet Private Bank","Banque Cantonale du Jura","Swiss Re",
 "Helvetia Group","Bank CIC (Switzerland)",
 "Liechtensteinische Landesbank","BGL BNP Paribas","Syz Group",
 "Zurich Insurance Group","St. Galler Kantonalbank",
