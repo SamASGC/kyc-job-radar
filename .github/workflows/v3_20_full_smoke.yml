@@ -1,0 +1,59 @@
+name: v3.20 - 500 employers official Entrust recovery live smoke
+on:
+  push:
+    branches: ["fix/v3-20-entrust-workday-health"]
+    paths: [".github/workflows/v3_20_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Run complete regression suite
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Run actual 500 employer scan with no main branch writes
+        run: python radar.py scan
+      - name: Validate employer counts and actual Entrust Workday postings
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          rows={x["company"]:x for x in src["sources"]}
+          focus=("Entrust / Onfido","Northern Trust","Euroclear","IQ-EQ",
+                 "Sygnum Bank","emerchantpay","Revolut","Kutxabank")
+          print("V320_FOCUS",json.dumps({n:{"result":rows[n]["result"],
+            "records":rows[n]["jobs_found"]} for n in focus},ensure_ascii=False))
+          print("V320_DIRECT",json.dumps({k:src[k] for k in (
+            "direct_configured","direct_with_records","direct_errors",
+            "direct_reachable_zero","direct_not_checked","ats_explicit")}))
+          print("V320_LIFETIME_SEEN",len(state["seen"]))
+          assert src["direct_configured"]==500
+          assert src["ats_explicit"]==184
+          assert len(state["seen"])>=306
+          assert rows["Entrust / Onfido"]["result"]=="ok"
+          assert rows["Entrust / Onfido"]["jobs_found"]>=30
+          assert rows["Northern Trust"]["jobs_found"]>=100
+          assert sum(src[k] for k in ("direct_with_records","direct_errors",
+              "direct_reachable_zero","direct_not_checked"))==500
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-20-entrust-official-source-quality
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
