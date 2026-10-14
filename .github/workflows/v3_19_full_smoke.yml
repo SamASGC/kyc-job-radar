@@ -1,0 +1,59 @@
+name: v3.19 - full 500 company recovery and no-foreign-ATS acceptance
+on:
+  push:
+    branches: ["fix/v3-19-recover-current-employer-job-feeds"]
+    paths: [".github/workflows/v3_19_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Run all quality and historical regression tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full live employer scan (isolated from production state)
+        run: python radar.py scan
+      - name: Verify actual emerchantpay jobs and no Swiss-neon cross-contamination
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          by={x["company"]:x for x in src["sources"]}
+          focus=("emerchantpay","neon Switzerland","Northern Trust","IQ-EQ",
+                 "Raiffeisen Switzerland","Sygnum Bank","Kutxabank","Revolut")
+          print("V319_FOCUS",json.dumps({n:{"result":by[n]["result"],
+                "records":by[n]["jobs_found"]} for n in focus},ensure_ascii=False))
+          print("V319_COVERAGE",json.dumps({k:src[k] for k in (
+                "direct_configured","direct_with_records","direct_errors",
+                "direct_reachable_zero","direct_not_checked","ats_explicit",
+                "reached","errors","with_jobs")}))
+          print("V319_LIFETIME_SEEN",len(state["seen"]))
+          assert src["direct_configured"]==500
+          assert src["ats_explicit"]==183
+          assert len(state["seen"])>=306
+          assert by["emerchantpay"]["result"]=="ok" and by["emerchantpay"]["jobs_found"]>=3
+          assert by["IQ-EQ"]["jobs_found"]>=20
+          assert sum(src[k] for k in ("direct_with_records","direct_errors",
+                "direct_reachable_zero","direct_not_checked"))==500
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-19-full-live-source-and-quality-audit
+          path: |
+            public/sources.json
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn
