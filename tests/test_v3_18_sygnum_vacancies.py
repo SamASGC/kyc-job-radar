@@ -88,5 +88,31 @@ class SygnumDispatchTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(final,BASE)
 
 
+
+class EmployerHealthTruthfulnessTests(unittest.TestCase):
+    def test_direct_metrics_exclude_rotating_and_distinguish_empty(self):
+        from job_radar.source_inventory import summarize_source_coverage
+        employers=[
+            {"name":"A","careers_url":"https://a.example/jobs"},
+            {"name":"B","careers_url":"https://b.example/jobs"},
+            {"name":"C","careers_url":"https://c.example/jobs"},
+            {"name":"D","careers_url":"https://d.example/jobs"},
+            {"name":"Rotating firm","careers_url":"https://rotating.example/jobs"},
+        ]
+        health=[
+            {"company":"A","ok":True,"jobs":7},
+            {"company":"B","ok":False,"jobs":0,"error":"HTTP 403"},
+            {"company":"C","ok":True,"jobs":0},
+            {"company":"Rotating firm","ok":True,"jobs":400},
+        ]
+        x=summarize_source_coverage(employers,health,
+            direct_company_names={"a","b","c","d"})
+        self.assertEqual(x["direct_configured"],4)
+        self.assertEqual(x["direct_with_records"],1)
+        self.assertEqual(x["direct_errors"],1)
+        self.assertEqual(x["direct_reachable_zero"],1)
+        self.assertEqual(x["direct_not_checked"],1)
+        self.assertEqual(x["with_jobs"],2)  # Global includes the rotating firm
+
 if __name__=="__main__":
     unittest.main()
