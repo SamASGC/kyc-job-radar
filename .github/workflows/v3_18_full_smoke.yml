@@ -45,7 +45,7 @@ jobs:
           assert sum(sources[k] for k in ("direct_with_records","direct_errors",
              "direct_reachable_zero","direct_not_checked"))==500
           assert by["Sygnum Bank"]["result"]=="ok" and by["Sygnum Bank"]["jobs_found"]>=5
-          assert by["C24 Bank"]["result"]=="ok"  # Vacancy list accessible, not necessarily extractable
+          assert by["C24 Bank"]["result"]=="ok" and by["C24 Bank"]["jobs_found"]==0  # Accessible JS page, no false menu jobs
           assert "Empresas directas con registros brutos" in Path("public/sources.html").read_text(encoding="utf-8")
           PY
       - uses: actions/upload-artifact@v4
