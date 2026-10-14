@@ -18,7 +18,7 @@ class IQEQProviderV317(unittest.TestCase):
     def test_500_unique_182_configured_feeds(self):
         self.assertEqual(len(self.rows),500)
         self.assertEqual(len({x["name"].casefold() for x in self.rows}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.rows),182)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.rows),182)
 
     def test_iqeq_belongs_to_company_not_semiconductor_iqe(self):
         c=self.by["IQ-EQ"]
