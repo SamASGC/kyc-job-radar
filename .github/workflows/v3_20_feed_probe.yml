@@ -1,0 +1,44 @@
+name: v3.20 - official Entrust Workday and FinCrime careers probe
+on:
+  push:
+    branches: ["fix/v3-20-entrust-workday-health"]
+    paths: [".github/workflows/v3_20_feed_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Test employer-controlled careers without bypassing access restrictions
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.workday import fetch_workday
+          from job_radar.sources.generic import fetch_generic
+          async def main():
+            h=Http(concurrency=6,timeout=16)
+            links=[
+              ("Entrust published Workday", lambda:fetch_workday(h,{"name":"Entrust / Onfido","sector":"Fintech"}, "https://entrust.wd1.myworkdayjobs.com/EntrustCareers")),
+              ("ThetaRay Comeet official",lambda:fetch_generic(h,{"name":"ThetaRay","sector":"Fintech","careers_url":"https://www.comeet.com/jobs/thetaray/72.00F"})),
+              ("Ondato careers",lambda:fetch_generic(h,{"name":"Ondato","sector":"Fintech","careers_url":"https://ondato.com/careers/"})),
+            ]
+            async def one(name,fn):
+              try:
+                response=await asyncio.wait_for(fn(),timeout=100)
+                jobs=response[0] if isinstance(response,tuple) else response
+                print("EMPLOYER_V320",json.dumps({"name":name,"ok":True,"jobs":len(jobs),
+                   "examples":[{"title":x.title,"url":x.apply_url,"posted":x.posted_at} for x in jobs[:4]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("EMPLOYER_V320",json.dumps({"name":name,"ok":False,"error":type(e).__name__+": "+str(e)[:200]}),flush=True)
+            await asyncio.gather(*(one(n,f) for n,f in links))
+            await h.close()
+          asyncio.run(main())
+          PY
