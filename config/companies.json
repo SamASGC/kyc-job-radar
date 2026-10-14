@@ -1533,15 +1533,22 @@
   },
   {
     "name": "Entrust / Onfido",
-    "careers_url": "https://www.entrust.com/company/careers",
+    "careers_url": "https://entrust.wd1.myworkdayjobs.com/EntrustCareers",
     "sector": "Fintech",
     "priority": "P3",
-    "origin": "PDF target list",
+    "origin": "Official Entrust careers page https://www.entrust.com/company/careers explicitly links its Apply Now and View Open Positions actions to Entrust's public Workday board https://entrust.wd1.myworkdayjobs.com/EntrustCareers. On 2026-10-14, the GitHub Actions v3.20 runner retrieved 88 individually identified jobs using Workday CXS, each with an Entrust-branded application URL; relative Workday posted labels are NOT independently verified original publication dates.",
     "enabled": true,
     "aliases": [
       "Entrust",
       "Onfido"
-    ]
+    ],
+    "ats": [
+      {
+        "kind": "workday",
+        "url": "https://entrust.wd1.myworkdayjobs.com/EntrustCareers"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Fenergo",

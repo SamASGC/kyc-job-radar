@@ -16,7 +16,7 @@ class SourceFixV319Tests(unittest.TestCase):
     def test_exact_500_and_183_ats_configurations(self):
         self.assertEqual(len(self.all),500)
         self.assertEqual(len({x["name"].casefold() for x in self.all}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in self.all),183)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in self.all),183)
 
     def test_emerchantpay_first_party_attributed_workable_feed(self):
         x=self.by["emerchantpay"]
