@@ -41,9 +41,14 @@ def summarize_source_coverage(companies: list[dict], health: list[dict],
             "url": c.get("careers_url") or "",
         })
     counts = Counter(r["result"] for r in records)
+    direct = [r for r in records if r["origin_class"] == "direct"]
     return {
         "total_configured_checked_or_scheduled": len(records),
-        "direct_configured": sum(r["origin_class"] == "direct" for r in records),
+        "direct_configured": len(direct),
+        "direct_with_records": sum(r["result"] == "ok" and r["jobs_found"] > 0 for r in direct),
+        "direct_errors": sum(r["result"] == "error" for r in direct),
+        "direct_reachable_zero": sum(r["result"] == "ok" and r["jobs_found"] == 0 for r in direct),
+        "direct_not_checked": sum(r["result"] == "not_checked" for r in direct),
         "rotating_checked": sum(r["origin_class"] == "rotating" for r in records),
         "ats_explicit": sum(bool(c.get("ats")) for c in companies if c.get("enabled", True)),
         "careers_discovery": sum(not c.get("ats") for c in companies if c.get("enabled", True)),
@@ -101,12 +106,16 @@ NO son vacantes abiertas ni fuentes ATS garantizadas.</p>
 Rotatorias incluidas: {rotating} · ATS configurados: {ats} ·
 Webs de empleo: {generic} · Respondieron: {ok} · Errores: {errors} ·
 No consultadas: {missing} · Con vacantes brutas: {productive}</p>
-<p><a href="index.html">Vacantes verificadas</a> · <a href="status.html">Estado</a></p>
+<p class="summary">Empresas directas con registros brutos: {direct_with_records} · Errores: {direct_errors} ·\nAccesibles pero sin registros extraídos: {direct_zero} · Sin consultar: {direct_missing}</p>\n<p>Estos registros incluyen enlaces genéricos: no equivalen a vacantes abiertas, recientes ni verificadas.</p>\n<p><a href="index.html">Vacantes verificadas</a> · <a href="status.html">Estado</a></p>
 <table><thead><tr><th>Empresa</th><th>Especialidad</th><th>Integración</th>
 <th>Última comprobación</th><th>Anuncios brutos</th></tr></thead>
 <tbody>{rows}</tbody></table></body></html>""".format(
         total=summary["total_configured_checked_or_scheduled"],
         direct=summary["direct_configured"],
+        direct_with_records=summary["direct_with_records"],
+        direct_errors=summary["direct_errors"],
+        direct_zero=summary["direct_reachable_zero"],
+        direct_missing=summary["direct_not_checked"],
         rotating=summary["rotating_checked"],
         ats=summary["ats_explicit"],generic=summary["careers_discovery"],
         ok=summary["reached"],errors=summary["errors"],
