@@ -1,0 +1,56 @@
+name: v3.18 - inspect first-party Sygnum C24 and ThetaRay vacancy listings
+on:
+  push:
+    branches: ["fix/v3-18-thetaray-official-comeet-source"]
+    paths: [".github/workflows/v3_18_target_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --disable-pip-version-check -r requirements.txt
+      - name: Test official job-listing endpoints from the real runner
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from bs4 import BeautifulSoup
+          from job_radar.http import Http
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.discovery import generic_job_links
+          PAGES={
+           "Sygnum Salesforce":"https://sygnumpeopleportal.my.salesforce-sites.com/recruit/fRecruit__ApplyJobList",
+           "C24 PowerApps":"https://c24-recruiting.powerappsportals.com/de-DE/",
+           "ThetaRay Comeet":"https://www.comeet.com/jobs/thetaray/72.00F",
+           "Featurespace Visa redirect":"https://www2.featurespace.com/careers/current-opportunities",
+          }
+          async def one(h,name,url):
+            c={"name":name.split()[0],"careers_url":url,"sector":"Banca"}
+            try:
+              res=await asyncio.wait_for(fetch_generic(h,c),timeout=50)
+              jobs=res[0]
+              print("OFFICIAL_CAREERS_FETCH",json.dumps({"name":name,"result":"ok","count":len(jobs),
+                "final":res[2],"samples":[{"title":j.title[:90],"url":j.apply_url[:150],
+                   "posted":j.posted_at} for j in jobs[:6]]},ensure_ascii=False),flush=True)
+            except Exception as e:
+              print("OFFICIAL_CAREERS_FETCH",json.dumps({"name":name,"error":str(e)[:250]}),flush=True)
+            try:
+              r=await h.get(url); soup=BeautifulSoup(r.text,"html.parser")
+              anchors=[{"t":a.get_text(" ",strip=True)[:65],"href":a.get("href","")[:150]}
+                for a in soup.select("a[href]")]
+              print("OFFICIAL_CAREERS_PAGE",json.dumps({"name":name,"status":r.status_code,
+                "final":str(r.url),"bytes":len(r.content),"anchors":len(anchors),
+                "examples":anchors[:12],"title":soup.title.get_text(" ",strip=True)[:100] if soup.title else ""},ensure_ascii=False),flush=True)
+            except Exception as e:print("OFFICIAL_CAREERS_PAGE",json.dumps({"name":name,"error":str(e)[:250]}),flush=True)
+          async def main():
+            h=Http(concurrency=5,timeout=17)
+            await asyncio.gather(*(one(h,name,url) for name,url in PAGES.items()))
+            await h.close()
+          asyncio.run(main())
+          PY
