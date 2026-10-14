@@ -27,7 +27,7 @@ JOB_SELECTOR_PARAMS = frozenset({
     "gh_jid", "job", "jobid", "job_id", "job-id", "jid", "id",
     "requisition", "requisitionid", "requisition_id", "reqid", "req_id",
     "position", "positionid", "position_id", "postingid", "posting_id",
-    "opening", "openingid", "roleid", "ashby_jid", "oid", "rid",
+    "opening", "openingid", "roleid", "ashby_jid", "oid", "rid", "vacancyno",
 })
 
 
