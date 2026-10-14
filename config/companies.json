@@ -134,11 +134,18 @@
     "name": "emerchantpay",
     "sector": "Payments",
     "priority": "EXP",
-    "careers_url": "https://www.emerchantpay.com/careers/",
-    "origin": "Web expansion 2026-08-27",
+    "careers_url": "https://apply.workable.com/emerchantpay/",
+    "origin": "Employer-identified emerchantpay official Workable vacancies linked from https://www.emerchantpay.com/careers/ ; public Workable job API https://www.workable.com/api/accounts/emerchantpay?details=true returned 13 individual requisition records including Onboarding Analyst and current listings in GitHub Actions probe 2026-10-14. Posting age and official apply remain individually verified under 96-hour policy.",
     "aliases": [
       "eMerchantPay"
-    ]
+    ],
+    "ats": [
+      {
+        "kind": "workable",
+        "slug": "emerchantpay"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Equals Money",
@@ -325,7 +332,8 @@
     "enabled": true,
     "aliases": [
       "neon"
-    ]
+    ],
+    "notes": "Do not attribute https://jobs.ashbyhq.com/neon to neon Switzerland: that public job board is Neon (a gaming payments/e-commerce company), not Swiss banking/neon-free.ch; verified 2026-10-14. Treat the Swiss bank careers site as zero-extracted until an attributable board is verified."
   },
   {
     "name": "Nexi",
