@@ -94,6 +94,15 @@ async def fetch_generic(http, company: dict):
     r.raise_for_status()
     html = r.text
     final_url = str(r.url)
+    # Sygnum publishes a public Salesforce table of individual vacancyNo jobs.
+    # Its HTML is not an ATS API, and no original posting date is supplied.
+    # Generic link heuristics would merge all detail URLs if vacancyNo is lost.
+    if company.get("name") == "Sygnum Bank":
+        from urllib.parse import urlsplit
+        from job_radar.sources.sygnum_salesforce import parse_sygnum_vacancies, SYGNUM_HOST
+        if (urlsplit(final_url).hostname or "").casefold() == SYGNUM_HOST:
+            return parse_sygnum_vacancies(html, final_url, company), [], final_url
+
     # VP Bank uses public Umantis HTML with one original "Online since" date
     # per job row. Generic link heuristics confuse job subscription/navigation
     # with vacancies and discard these first-party publication dates.
