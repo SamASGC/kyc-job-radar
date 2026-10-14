@@ -4,6 +4,9 @@ minimum_score: 62
 max_post_age_days: 4
 max_post_age_hours: 96
 strict_quality_gate: true
+# User preference: technical individual-contributor KYC/AML and Financial Crime work only.
+# Manager, Head, MLRO, Director and explicit staff supervision roles are not alerts.
+exclude_management_roles: true
 stale_after_hours: 24
 
 # Onsite/hybrid shortlist only. Barcelona is excluded in v2.

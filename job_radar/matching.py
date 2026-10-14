@@ -316,7 +316,32 @@ def location_score_and_allowed(job: Job, preliminary_score: int, skills: list[st
     return (2 if allowed else -8), allowed, "ubicación no clara"
 
 
+def excluded_management_role(job: Job, profile: dict) -> bool:
+    """Don't alert leadership vacancies when the user requests an IC career.
+
+    Case management, risk management, mentoring or being coached by a manager
+    are not by themselves staff-management duties. A managerial *job title*
+    or an explicit responsibility for staff performance, hiring, line
+    management or direct reports is different.
+    """
+    if not profile.get("exclude_management_roles", False):
+        return False
+    title = norm_text(job.title)
+    if re.search(r"\b(?:manager|head|director|chief|mlro|vice president|vp|team leader)\b", title):
+        return True
+    desc = norm_text(job.description)
+    patterns = (
+        r"\b(?:people management|line management|staff management|direct reports)\b",
+        r"\b(?:manag(?:e|ing)|supervis(?:e|ing)|lead(?:ing)?)\s+(?:a |the |our )?(?:team of |team|staff|direct reports|junior colleagues)\b",
+        r"\b(?:responsible for|responsibility for|taking responsibility for)\s+(?:the )?(?:work|development|performance).{0,120}\b(?:colleagues|staff|employees|team|direct reports)\b",
+        r"\b(?:conduct|conducting|responsible for)\s+(?:staff |employee |team )?performance (?:reviews|appraisals)\b",
+    )
+    return any(re.search(pattern, desc) for pattern in patterns)
+
+
 def score_job(job: Job, profile: dict, known_company: bool = False) -> tuple[Job, bool]:
+    if excluded_management_role(job, profile):
+        return job, False
     if obvious_non_job_content(job.source_kind, job.title, job.apply_url):
         return job, False
     title_norm = norm_text(job.title)
