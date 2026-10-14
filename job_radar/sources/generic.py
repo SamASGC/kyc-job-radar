@@ -103,6 +103,13 @@ async def fetch_generic(http, company: dict):
         if (urlsplit(final_url).hostname or "").casefold() == SYGNUM_HOST:
             return parse_sygnum_vacancies(html, final_url, company), [], final_url
 
+    # C24's public Power Pages vacancy portal currently renders jobs with JS.
+    # Its visible HTML contains only language/menu links. They are NOT vacancies.
+    if company.get("name") == "C24 Bank":
+        from urllib.parse import urlsplit
+        if (urlsplit(final_url).hostname or "").casefold() == "c24-recruiting.powerappsportals.com":
+            return [], [], final_url
+
     # VP Bank uses public Umantis HTML with one original "Online since" date
     # per job row. Generic link heuristics confuse job subscription/navigation
     # with vacancies and discard these first-party publication dates.
