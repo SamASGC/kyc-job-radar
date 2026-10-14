@@ -1,0 +1,69 @@
+name: v3.19 - verify official public employer recruitment feeds
+on:
+  push:
+    branches: ["fix/v3-19-recover-current-employer-job-feeds"]
+    paths: [".github/workflows/v3_19_provider_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-public-feeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Test only documented public vacancies and brand-owned career pages
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.workable import fetch_workable
+          from job_radar.sources.generic import fetch_generic
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          from bs4 import BeautifulSoup
+          async def main():
+            http=Http(concurrency=8,timeout=16)
+            jobs=[
+             ("emerchantpay Workable",lambda:fetch_workable(http,{"name":"emerchantpay","sector":"Payments"},"emerchantpay")),
+             ("Klarna Deel",lambda:fetch_generic(http,{"name":"Klarna","sector":"Payments","careers_url":"https://jobs.deel.com/job-boards/klarna"})),
+             ("Lemonway English careers",lambda:fetch_generic(http,{"name":"Lemonway","sector":"Payments","careers_url":"https://www.lemonway.com/en/careers"})),
+             ("Featurespace Greenhouse",lambda:fetch_greenhouse(http,{"name":"Featurespace","sector":"Fintech"},"featurespace")),
+             ("Featurespace Workable",lambda:fetch_workable(http,{"name":"Featurespace","sector":"Fintech"},"featurespace")),
+             ("neon Switzerland Ashby",lambda:fetch_ashby(http,{"name":"neon Switzerland","sector":"Banca"},"neon")),
+             ("Klarna Greenhouse",lambda:fetch_greenhouse(http,{"name":"Klarna","sector":"Payments"},"klarna")),
+            ]
+            async def probe(name,call):
+              try:
+                result=await asyncio.wait_for(call(),timeout=60)
+                rows=result[0] if isinstance(result,tuple) else result
+                print("JOB_FEED",json.dumps({"name":name,"ok":True,"total":len(rows),
+                  "final":result[2] if isinstance(result,tuple) else "",
+                  "samples":[{"title":x.title[:100],"url":x.apply_url[:190],"posted":x.posted_at} for x in rows[:5]]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("JOB_FEED",json.dumps({"name":name,"ok":False,
+                  "error":type(e).__name__+": "+str(e)[:190]},ensure_ascii=False),flush=True)
+            await asyncio.gather(*(probe(n,f) for n,f in jobs))
+            for n,url in [
+             ("Klarna Deel public","https://jobs.deel.com/job-boards/klarna"),
+             ("Lemonway official","https://www.lemonway.com/en/careers"),
+             ("emerchantpay official","https://www.emerchantpay.com/careers/"),
+             ("neon current","https://www.neon-free.ch/en/jobs")]:
+              try:
+                r=await http.get(url)
+                soup=BeautifulSoup(r.text,"html.parser")
+                matches=[{"title":a.get_text(" ",strip=True)[:65],"href":a.get("href","")[:180]}
+                 for a in soup.select("a[href]") if any(z in ((a.get("href","")+" "+a.get_text(" ",strip=True)).lower())
+                 for z in ("apply","recruit","jobs.","job/","karriere","offre","candidater","career","vacanc"))]
+                print("CAREER_HTML",json.dumps({"name":n,"status":r.status_code,
+                 "url":str(r.url),"title":soup.title.get_text(" ",strip=True)[:100] if soup.title else "",
+                 "links":matches[:15]},ensure_ascii=False),flush=True)
+              except Exception as e:
+                print("CAREER_HTML",json.dumps({"name":n,"error":str(e)[:180]}),flush=True)
+            await http.close()
+          asyncio.run(main())
+          PY

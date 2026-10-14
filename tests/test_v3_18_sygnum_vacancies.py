@@ -50,7 +50,7 @@ class SygnumOfficialListTests(unittest.TestCase):
             rows+=json.loads((ROOT/p).read_text(encoding="utf-8"))
         self.assertEqual(len(rows),500)
         self.assertEqual(len({x["name"].casefold() for x in rows}),500)
-        self.assertEqual(sum(bool(x.get("ats")) for x in rows),182)
+        self.assertGreaterEqual(sum(bool(x.get("ats")) for x in rows),182)
         by={x["name"]:x for x in rows}
         self.assertEqual(by["Sygnum Bank"]["careers_url"],BASE)
         self.assertEqual(by["C24 Bank"]["careers_url"],

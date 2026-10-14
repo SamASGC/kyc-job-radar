@@ -133,6 +133,13 @@ def ats_target_has_company_identity(company: dict, target: dict) -> bool:
     Explicitly configured, verified ATS links are handled separately.
     """
     from job_radar.models import norm_text
+    # Brand-name collisions can point to a different real employer (for example,
+    # Swiss banking neon vs. US gaming payments Neon). Employer-specific deny
+    # entries are evidence-backed, never an automatic ATS identity match.
+    if any(t.get("kind") == target.get("kind") and
+           t.get("slug", "").casefold() == target.get("slug", "").casefold()
+           for t in company.get("disallowed_ats", [])):
+        return False
     def flat(x: str) -> str:
         return "".join(x for x in norm_text(x) if x.isalnum())
     brands = [flat(company.get("name") or "")]
