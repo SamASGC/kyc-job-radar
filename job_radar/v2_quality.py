@@ -333,14 +333,14 @@ def has_job_application_form(soup) -> bool:
         ))
         has_resume = (
             any(str(field.get("type", "")).casefold() == "file" for field in inputs)
-            or bool(re.search(r"\\b(?:resume|curriculum vitae|cv|cover letter)\\b", field_names))
+            or bool(re.search(r"\b(?:resume|curriculum vitae|cv|cover letter)\b", field_names))
         )
         has_email = (
             any(str(field.get("type", "")).casefold() == "email" for field in inputs)
-            or bool(re.search(r"\\b(?:e mail|email)\\b", field_names))
+            or bool(re.search(r"\b(?:e mail|email)\b", field_names))
         )
         has_person_name = bool(re.search(
-            r"\\b(?:first name|last name|full name|firstname|lastname|fullname)\\b",
+            r"\b(?:first name|last name|full name|firstname|lastname|fullname)\b",
             field_names,
         ))
         action_path = urlsplit(str(form.get("action") or "")).path.casefold()
