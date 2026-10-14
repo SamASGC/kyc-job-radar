@@ -1,0 +1,60 @@
+name: v3.18 - public Sygnum vacancy IDs and direct coverage accuracy
+on:
+  push:
+    branches: ["fix/v3-18-thetaray-official-comeet-source"]
+    paths: [".github/workflows/v3_18_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and run all regressions
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full real 500-employer scan isolated from deployed state
+        run: python radar.py scan
+      - name: Require Sygnum individual job IDs and accurately reported direct health
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          sources=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          st=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          direct=[x for x in sources["sources"] if x["origin_class"]=="direct"]
+          by={x["company"]:x for x in direct}
+          print("V318_SYGNUM",json.dumps(by["Sygnum Bank"],ensure_ascii=False))
+          print("V318_C24",json.dumps(by["C24 Bank"],ensure_ascii=False))
+          print("V318_SOURCE_HEALTH",json.dumps({k:sources[k] for k in (
+            "direct_configured","direct_with_records","direct_errors",
+            "direct_reachable_zero","direct_not_checked","ats_explicit",
+            "reached","errors","with_jobs")},ensure_ascii=False))
+          print("V318_SEEN",len(st["seen"]))
+          assert len(direct)==500 and sources["direct_configured"]==500
+          assert sources["ats_explicit"]==182
+          assert len(st["seen"])>=306
+          assert sum(sources[k] for k in ("direct_with_records","direct_errors",
+             "direct_reachable_zero","direct_not_checked"))==500
+          assert by["Sygnum Bank"]["result"]=="ok" and by["Sygnum Bank"]["jobs_found"]>=5
+          assert by["C24 Bank"]["result"]=="ok" and by["C24 Bank"]["jobs_found"]==0  # Accessible JS page, no false menu jobs
+          assert "Empresas directas con registros brutos" in Path("public/sources.html").read_text(encoding="utf-8")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-18-direct-employer-source-diagnostics
+          path: |
+            public/sources.json
+            public/sources.html
+            data/health.json
+            data/quality_audit.json
+          if-no-files-found: warn

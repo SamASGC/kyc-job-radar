@@ -69,11 +69,12 @@
   },
   {
     "name": "C24 Bank",
-    "careers_url": "https://jobs.c24.de/",
+    "careers_url": "https://c24-recruiting.powerappsportals.com/de-DE/vacancies/",
     "sector": "Banca",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
-    "enabled": true
+    "origin": "Official https://c24.de/karriere links to the public C24 Power Pages recruitment site. GitHub Actions 2026-10-14 HTTP200 on /de-DE/vacancies/; the page renders a JavaScript-only vacancy table not yet supported by the current HTML parser. Do not count it as jobs extracted or an ATS connector.",
+    "enabled": true,
+    "verification_level": "official_careers_url_not_necessarily_api"
   },
   {
     "name": "Clear Junction",
@@ -559,14 +560,15 @@
   },
   {
     "name": "Sygnum Bank",
-    "careers_url": "https://www.sygnum.com/working-at-sygnum-careers/",
+    "careers_url": "https://sygnumpeopleportal.my.salesforce-sites.com/recruit/fRecruit__ApplyJobList",
     "sector": "Banca",
     "priority": "EXP",
-    "origin": "Web expansion 2026-08-27",
+    "origin": "Sygnum official https://www.sygnum.com/working-at-sygnum-careers/ links to the employer-branded Salesforce candidate job list. GitHub Actions 2026-10-14 returned HTTP200 and verified individual public /recruit/fRecruit__ApplyJob?vacancyNo=VN... rows. Dedicated parser preserves vacancy IDs and records no invented original post date.",
     "enabled": true,
     "aliases": [
       "Sygnum"
-    ]
+    ],
+    "verification_level": "official_careers_url_not_necessarily_api"
   },
   {
     "name": "Taptap Send",
