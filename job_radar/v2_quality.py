@@ -306,6 +306,52 @@ def extract_original_jobposting_date(soup, expected_title: str) -> str:
     return ""
 
 
+
+
+def has_job_application_form(soup) -> bool:
+    """Do not confuse cookies, login or newsletter forms with job applications.
+
+    A real candidate form has a submit control plus applicant-specific fields.
+    An email-only newsletter/contact form, or password-based login, is not
+    evidence that an application can be submitted for this requisition.
+    """
+    for form in soup.find_all("form"):
+        inputs = form.find_all("input")
+        controls = form.find_all(["input", "textarea"])
+        if any(str(field.get("type", "")).casefold() == "password" for field in inputs):
+            continue
+        has_submit = any(
+            (field.name == "button" and str(field.get("type", "submit")).casefold() == "submit")
+            or (field.name == "input" and str(field.get("type", "")).casefold() == "submit")
+            for field in form.find_all(["button", "input"])
+        )
+        if not has_submit:
+            continue
+        field_names = norm_text(" ".join(
+            " ".join(str(field.get(key) or "") for key in ("name", "id", "aria-label", "placeholder"))
+            for field in controls
+        ))
+        has_resume = (
+            any(str(field.get("type", "")).casefold() == "file" for field in inputs)
+            or bool(re.search(r"\b(?:resume|curriculum vitae|cv|cover letter)\b", field_names))
+        )
+        has_email = (
+            any(str(field.get("type", "")).casefold() == "email" for field in inputs)
+            or bool(re.search(r"\b(?:e mail|email)\b", field_names))
+        )
+        has_person_name = bool(re.search(
+            r"\b(?:first name|last name|full name|firstname|lastname|fullname)\b",
+            field_names,
+        ))
+        action_path = urlsplit(str(form.get("action") or "")).path.casefold()
+        has_application_action = bool(re.search(
+            r"/(?:apply|application|candidate)(?:/|$)", action_path
+        ))
+        if has_resume or (has_email and has_person_name and has_application_action):
+            return True
+    return False
+
+
 async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
     """Check the exact ATS application page; attach a diagnostic reason.
 
@@ -356,7 +402,7 @@ async def verify_application_page(http, job: Job, max_hours: int = 96) -> bool:
     ctas = ("apply for this job", "apply for this position", "apply now",
             "submit application", "apply for this role",
             "apply to this job", "start your application")
-    has_form = soup.find("form") is not None
+    has_form = has_job_application_form(soup)
     has_cta = any(p in visible_text for p in ctas)
     if not has_cta:
         for a in soup.find_all(["a", "button"]):

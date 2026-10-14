@@ -130,6 +130,46 @@ class NativeApplyChecks(unittest.IsolatedAsyncioTestCase):
             StubHttp({}, ats_status=404), j
         ))
 
+    async def test_cookie_login_and_newsletter_forms_are_not_apply_proof(self):
+        bogus_pages = [
+            "<form id='cookie-consent'><input name='cookie-choice'>"
+            "<button type='submit'>Accept cookies</button></form>",
+            "<form action='/login' method='post'><input type='email' name='email'>"
+            "<input type='password' name='password'><button>Sign in</button></form>",
+            "<form action='/subscribe' method='post'><input type='email' name='email'>"
+            "<button>Subscribe</button></form>",
+            "<form action='/apply/123'><input type='email' name='email'>"
+            "<input name='first_name'></form>",
+        ]
+        for fragment in bogus_pages:
+            with self.subTest(fragment=fragment):
+                j = make_job()
+                page = Response(text="<html><h1>KYB Analyst</h1>" + fragment + "</html>")
+                # No matching applicant questions from the employer's public
+                # ATS API; a generic form cannot substitute for an application.
+                http = StubHttp({"id": 123, "title": "KYB Analyst"}, page=page)
+                self.assertFalse(await verify_application_page(http, j))
+                self.assertEqual(j.verification_reason,
+                                 "page_200_but_no_visible_apply_action")
+
+    async def test_applicant_specific_form_with_submit_is_evidence(self):
+        samples = [
+            "<form method='post' action='/apply/123'>"
+            "<input name='first_name'><input type='email' name='email'>"
+            "<button type='submit'>Send</button></form>",
+            "<form method='post'>"
+            "<input type='file' name='resume'><button type='submit'>Send</button></form>",
+        ]
+        for fragment in samples:
+            with self.subTest(fragment=fragment):
+                j = make_job()
+                page = Response(text="<html><h1>KYB Analyst</h1>" + fragment + "</html>")
+                http = StubHttp({}, page=page, ats_status=404)
+                self.assertTrue(await verify_application_page(http, j))
+                self.assertEqual(j.verification_reason,
+                                 "official_live_page_with_apply_action")
+                self.assertEqual(len(http.urls), 1)
+
     async def test_oracle_configured_adapter_reachable_from_dispatcher(self):
         company = {"name": "Amex", "careers_url": "https://example.org/careers"}
         target = {"kind": "oracle_hcm", "url": "https://example.org/careers",
