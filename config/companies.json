@@ -333,7 +333,13 @@
     "aliases": [
       "neon"
     ],
-    "notes": "Do not attribute https://jobs.ashbyhq.com/neon to neon Switzerland: that public job board is Neon (a gaming payments/e-commerce company), not Swiss banking/neon-free.ch; verified 2026-10-14. Treat the Swiss bank careers site as zero-extracted until an attributable board is verified."
+    "notes": "Do not attribute https://jobs.ashbyhq.com/neon to neon Switzerland: that public job board is Neon (a gaming payments/e-commerce company), not Swiss banking/neon-free.ch; verified 2026-10-14. Treat the Swiss bank careers site as zero-extracted until an attributable board is verified.",
+    "disallowed_ats": [
+      {
+        "kind": "ashby",
+        "slug": "neon"
+      }
+    ]
   },
   {
     "name": "Nexi",
