@@ -89,6 +89,22 @@ class SygnumDispatchTests(unittest.IsolatedAsyncioTestCase):
 
 
 
+class C24NoFalsePositiveTests(unittest.IsolatedAsyncioTestCase):
+    async def test_menu_links_are_not_vacancies(self):
+        from job_radar.sources.generic import fetch_generic
+        url="https://c24-recruiting.powerappsportals.com/de-DE/vacancies/"
+        class Response:
+            text='<html><body><a href="/de-DE/vacancies/">Stellenangebote</a><a href="/en-US/vacancies/">English</a></body></html>'
+            def __init__(self):self.url=url
+            def raise_for_status(self):pass
+        class H:
+            async def get(self,u):return Response()
+        jobs,targets,final=await fetch_generic(H(),{"name":"C24 Bank","careers_url":url})
+        self.assertEqual(jobs,[])
+        self.assertEqual(targets,[])
+        self.assertEqual(final,url)
+
+
 class EmployerHealthTruthfulnessTests(unittest.TestCase):
     def test_direct_metrics_exclude_rotating_and_distinguish_empty(self):
         from job_radar.source_inventory import summarize_source_coverage
