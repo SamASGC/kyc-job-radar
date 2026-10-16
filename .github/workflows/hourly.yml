@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.22: strict applicant-specific form verification (not cookie/login/newsletter), 500 firms, 184 ATS; retain original 96h, open employer apply, IC-only, geography, language and seen ledger.
+    # v3.23: mandatory-language groups and hard experience requirements; preserve 500 firms, 184 ATS, 96h, official live apply, geography, IC fit and lifetime seen.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
