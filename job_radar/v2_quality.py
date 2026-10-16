@@ -195,6 +195,25 @@ _LANGUAGE_DIRECT_REQUIREMENT = re.compile(
 )
 
 
+def _unmet_language_groups(clause: str, present: set[str], known: set[str]) -> set[str]:
+    """An 'or' only makes its own language alternatives optional.
+
+    'English AND (Latvian, Lithuanian OR Estonian)' is NOT satisfied by
+    English. Use the nearest conjunction boundaries around each OR group.
+    """
+    missing = present - known
+    for conjunction in re.finditer(r"\b(?:or|either|ou|oder|o)\b", clause):
+        prior_and = clause.rfind(" and ", 0, conjunction.start())
+        first = prior_and + 5 if prior_and >= 0 else 0
+        following_and = re.search(r"\band\b", clause[conjunction.end():])
+        last = (conjunction.end() + following_and.start()
+                if following_and else len(clause))
+        group = set(_LANGUAGE_PATTERN.findall(clause[first:last]))
+        if len(group) >= 2 and group & known:
+            missing.difference_update(group)
+    return missing
+
+
 def _required_section_language_gaps(description: str, known: set[str]) -> set[str]:
     """The Qualifications/What We Expect bullet list conveys mandatory status.
 
@@ -226,9 +245,7 @@ def _required_section_language_gaps(description: str, known: set[str]) -> set[st
             continue
         if re.search(r"\b(?:no|not)\s+(?:language\s+)?(?:is\s+)?required\b", clause):
             continue
-        if re.search(r"\b(?:or|either|ou|oder|o)\b", clause) and present & known:
-            continue
-        missing.update(present - known)
+        missing.update(_unmet_language_groups(clause, present, known))
     return missing
 
 
@@ -263,9 +280,7 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
         if re.search(r"\b(?:no|not)\s+(?:language\s+)?(?:is\s+)?required\b", clause):
             continue
         # Alternative languages: one proven language satisfies this clause.
-        if re.search(r"\b(?:or|either|ou|oder|o)\b", clause) and present & known:
-            continue
-        missing.update(present - known)
+        missing.update(_unmet_language_groups(clause, present, known))
     missing.update(_required_section_language_gaps(job.description or "", known))
     return sorted(missing)
 
