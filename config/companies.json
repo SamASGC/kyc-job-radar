@@ -1134,7 +1134,15 @@
     "sector": "Payments",
     "priority": "P2",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "ebury"
+      }
+    ],
+    "ats_evidence": "Verified official Greenhouse public ATS feed on 2026-10-16; job board returned 143 first-party requisitions with employer job URLs and first_published timestamps; source probe run 38954205567.",
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "EPI / Wero",
@@ -1300,7 +1308,15 @@
     "sector": "Payments",
     "priority": "P2",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "stripe"
+      }
+    ],
+    "ats_evidence": "Verified official Greenhouse public ATS feed on 2026-10-16; job board returned 731 first-party requisitions with employer job URLs and first_published timestamps; source probe run 38954205567.",
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "SumUp",
@@ -1308,7 +1324,15 @@
     "sector": "Payments",
     "priority": "P2",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "sumup"
+      }
+    ],
+    "ats_evidence": "Verified official Greenhouse public ATS feed on 2026-10-16; job board returned 335 first-party requisitions with employer job URLs and first_published timestamps; source probe run 38954205567.",
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "Swan",
