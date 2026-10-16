@@ -49,7 +49,7 @@ jobs:
           assert all(not (x["company"] == "Luminor" and
               x["title"] == "Control Expert (Compliance)") for x in state["jobs"].values())
           assert any(x["company"] == "Luminor" and
-              x["title"] == "Control Expert (Compliance)") for x in state["seen"].values())
+              x["title"] == "Control Expert (Compliance)" for x in state["seen"].values())
           PY
       - uses: actions/upload-artifact@v4
         if: always()
