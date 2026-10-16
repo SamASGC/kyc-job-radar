@@ -15,6 +15,7 @@ from dateutil import parser as dateparser
 
 from job_radar.matching import detect_country, detect_mode
 from job_radar.models import Job, norm_text
+from job_radar.experience_requirements import hard_experience_gap
 
 
 def original_posted_at(value) -> datetime | None:
@@ -194,6 +195,43 @@ _LANGUAGE_DIRECT_REQUIREMENT = re.compile(
 )
 
 
+def _required_section_language_gaps(description: str, known: set[str]) -> set[str]:
+    """The Qualifications/What We Expect bullet list conveys mandatory status.
+
+    Do not require the literal word 'required' inside every separate bullet:
+    e.g. 'Excellent Latvian, Lithuanian or Estonian language skills' under
+    'What We Expect' is an explicit must-have, not a geographic reference.
+    """
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(description or "", "html.parser")
+    in_requirements = False
+    missing: set[str] = set()
+    for node in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "li"]):
+        if node.name != "li":
+            header = norm_text(node.get_text(" ", strip=True))
+            in_requirements = bool(re.search(
+                r"\b(?:what we expect|what you bring|your profile|"
+                r"requirements|qualifications|essential skills|"
+                r"must have|who you are|required skills)\b", header
+            )) and not bool(re.search(r"\b(?:preferred|optional|nice to have)\b", header))
+            continue
+        if not in_requirements:
+            continue
+        clause = norm_text(node.get_text(" ", strip=True))
+        if _OPTIONAL_CUE.search(clause) or re.search(r"\bnot\s+(?:a\s+)?requirement\b", clause):
+            continue
+        present = set(_LANGUAGE_PATTERN.findall(clause))
+        if not present or not (_LANGUAGE_SKILL_CUE.search(clause)
+                               or _LANGUAGE_DIRECT_REQUIREMENT.search(clause)):
+            continue
+        if re.search(r"\b(?:no|not)\s+(?:language\s+)?(?:is\s+)?required\b", clause):
+            continue
+        if re.search(r"\b(?:or|either|ou|oder|o)\b", clause) and present & known:
+            continue
+        missing.update(present - known)
+    return missing
+
+
 def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
     """Languages unequivocally required but absent from the configured CV.
 
@@ -228,6 +266,7 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
         if re.search(r"\b(?:or|either|ou|oder|o)\b", clause) and present & known:
             continue
         missing.update(present - known)
+    missing.update(_required_section_language_gaps(job.description or "", known))
     return sorted(missing)
 
 
@@ -238,6 +277,7 @@ def passes_strict_gate(job: Job, max_hours: int = 96, now: datetime | None = Non
         and within_new_window(job.posted_at, max_hours=max_hours, now=now)
         and location_allowed(job)
         and not unmet_mandatory_languages(job, known_languages)
+        and not hard_experience_gap(job.description)
     )
 
 
