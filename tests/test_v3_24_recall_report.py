@@ -42,6 +42,17 @@ class RecallReportTests(unittest.TestCase):
             self.assertEqual(len(data["examples"]),1)
             self.assertFalse(data["examples"][0]["original_date_proven"])
 
+    def test_no_designer_or_manager_titles_in_recall_shortlist(self):
+        base={"company":"Bank", "location":"Madrid", "posted_at":"",
+              "url":"https://bank.example/jobs/1", "geography_verified":True,
+              "reason":"unconfirmed date"}
+        rows=[dict(base,title="Senior Product Designer - Onboarding"),
+              dict(base,title="Chief Compliance Officer"),
+              dict(base,title="Compliance Operations Manager"),
+              dict(base,title="Regulatory Compliance Analyst")]
+        shortlist=select_recall_examples({"rejected_examples":rows})
+        self.assertEqual([x["title"] for x in shortlist],["Regulatory Compliance Analyst"])
+
     def test_duplicate_report_links_collapsed(self):
         row={"company":"Bank","title":"KYB Analyst","location":"Vilnius Lithuania",
              "url":"https://official.example/jobs/1","posted_at":"",
