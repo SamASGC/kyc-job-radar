@@ -16,6 +16,7 @@ from job_radar.feed import create_rss
 from job_radar.status import build_status
 from job_radar.source_inventory import build_source_inventory
 from job_radar.review import build_review_page
+from job_radar.recall_report import build_recall_report
 from job_radar.sources.generic import fetch_generic
 from job_radar.discovery import ats_target_has_company_identity
 from job_radar.sources.greenhouse import fetch_greenhouse
@@ -533,6 +534,9 @@ async def run_scan() -> dict:
                 "application_not_verified": 0,
                 "mandatory_language_filtered": 0,
                 "rejected_examples": [],
+                "verified_score_accepted": 0,
+                "verified_score_rejected": 0,
+                "verified_score_rejects": [],
                 "verification_reasons": {},
             }
             known_languages = profile.get("profile_summary", {}).get("languages", {}).keys()
@@ -607,6 +611,28 @@ async def run_scan() -> dict:
                             "geography_verified": location_allowed(j),
                             "url": j.apply_url,
                         })
+            # Observe genuine role-fit rejections *after* official applicant/date
+            # verification. Diagnostics are not permissions to bypass any gate.
+            source_lookup = known_company_lookup(companies)
+            for candidate in accepted:
+                owner = find_known_company(candidate, source_lookup)
+                scored, fits = score_job(candidate, profile, known_company=bool(owner))
+                if fits:
+                    audit["verified_score_accepted"] += 1
+                else:
+                    audit["verified_score_rejected"] += 1
+                    if len(audit["verified_score_rejects"]) < 120:
+                        audit["verified_score_rejects"].append({
+                            "company": candidate.company,
+                            "title": candidate.title,
+                            "location": candidate.location,
+                            "source": candidate.source,
+                            "url": candidate.apply_url,
+                            "posted_at": candidate.posted_at,
+                            "geography_verified": location_allowed(candidate),
+                            "score": scored.score,
+                            "reason": scored.score_reason or "role or qualification hard stop",
+                        })
             save_json("data/quality_audit.json", audit)
             print("[RADAR] V2 audit funnel: " + str({
                 k: v for k, v in audit.items() if not isinstance(v, list)
@@ -637,4 +663,5 @@ async def run_scan() -> dict:
         # Separate diagnostic page: never part of verified dashboard/RSS/alerts.
         build_review_page(audit.get("rejected_examples", []),
                           state.get("seen", {}))
+        build_recall_report(audit)
     return run_stats
