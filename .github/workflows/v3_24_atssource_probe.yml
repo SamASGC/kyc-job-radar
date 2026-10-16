@@ -1,0 +1,40 @@
+name: v3.24 probe SumUp Stripe Ebury official ATS
+on:
+  push:
+    branches: ["feat/v3-24-recover-fincrime-direct-ats-and-recall"]
+    paths: [".github/workflows/v3_24_atssource_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Probe owner-identity and original first_published without altering production data
+        run: |
+          python - <<'PY'
+          import asyncio, json
+          from job_radar.http import Http
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          async def run():
+              http=Http(concurrency=5,timeout=15)
+              try:
+                  for name, slug in (("SumUp","sumup"),("Stripe","stripe"),("Ebury","ebury")):
+                      try:
+                          rows=await fetch_greenhouse(http,{"name":name,"sector":"Payments"},slug)
+                          wanted=[x for x in rows if any(s in x.title.lower() for s in ("aml","kyc","financial crime","compliance","fraud","sanction","due diligence"))]
+                          print("V324_PROBE",json.dumps({"name":name,"slug":slug,"records":len(rows),"relevant":len(wanted),
+                            "samples":[{"title":x.title,"location":x.location,"date":str(x.posted_at),"url":x.apply_url} for x in wanted[:10]]}))
+                          if not rows:
+                              print("V324_NO_LISTINGS",name)
+                      except Exception as e:
+                          print("V324_SOURCE_ERROR",name,type(e).__name__,str(e)[:300])
+              finally: await http.close()
+          asyncio.run(run())
+          PY
