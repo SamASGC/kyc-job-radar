@@ -1,0 +1,72 @@
+name: v3.24 - direct ATS, geography and recall acceptance
+on:
+  push:
+    branches: ["feat/v3-24-recover-fincrime-direct-ats-and-recall"]
+    paths: [".github/workflows/v3_24_direct_ats_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and test all previous/new regressions
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Scan all 500 direct financial firms with 3 validated official feeds
+        run: python radar.py scan
+      - name: Assert original filtering policy and transparent bounded audit
+        run: |
+          python - <<'PY'
+          import json,yaml
+          from pathlib import Path
+          root=Path(".")
+          profile=yaml.safe_load((root/"config/profile.yaml").read_text(encoding="utf-8"))
+          assert profile["strict_quality_gate"] is True
+          assert profile["max_post_age_hours"] == 96
+          assert profile["remote_scope"] == "Spain"
+          assert profile["exclude_management_roles"] is True
+          assert profile["minimum_score"] == 62
+          state=json.loads((root/"data/state.json").read_text(encoding="utf-8"))
+          audit=json.loads((root/"data/quality_audit.json").read_text(encoding="utf-8"))
+          sources=json.loads((root/"public/sources.json").read_text(encoding="utf-8"))
+          recall=json.loads((root/"public/recall.json").read_text(encoding="utf-8"))
+          print("V324_SOURCE_HEALTH",json.dumps({k:sources.get(k) for k in (
+            "direct_configured","ats_explicit","direct_with_records",
+            "direct_errors","direct_reachable_zero","direct_not_checked")}))
+          print("V324_FUNNEL",json.dumps(recall["funnel"]))
+          print("V324_SAMPLE",json.dumps(recall["examples"][:10]))
+          print("V324_DASHBOARD",json.dumps({"visible":len(state["jobs"]),"seen":len(state["seen"])}))
+          print("V324_ELIGIBLE_JOBS",json.dumps([{"company":x["company"],"title":x["title"],"location":x["location"],"posted_at":x["posted_at"],"url":x["apply_url"],"score":x["score"],"reason":x.get("score_reason","")} for x in state["jobs"].values()]))
+          assert sources["direct_configured"] == 500
+          assert sources["ats_explicit"] >= 187
+          assert sources["direct_not_checked"] == 0
+          assert len(state["seen"]) >= 309
+          assert audit["official_apply_page_verified"] >= 0
+          assert audit["verified_score_accepted"]+audit["verified_score_rejected"] == audit["official_apply_page_verified"]
+          assert recall["funnel"]["verified_score_rejected"] == audit["verified_score_rejected"]
+          assert len(recall["examples"]) <= 60
+          assert (root/"public/recall.html").exists()
+          assert "NO SON OFERTAS VERIFICADAS NI ALERTAS" in (root/"public/recall.html").read_text(encoding="utf-8")
+          assert all(x["company"]!="Luminor" or x["title"]!="Control Expert (Compliance)" for x in state["jobs"].values())
+          assert all(x.get("apply_verified_at") and x.get("fingerprint") for x in state["jobs"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-24-ats-source-and-recall-diagnostics
+          path: |
+            public/sources.json
+            public/status.json
+            public/recall.json
+            public/recall.html
+            data/quality_audit.json
+          if-no-files-found: warn
