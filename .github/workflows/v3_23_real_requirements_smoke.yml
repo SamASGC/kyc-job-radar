@@ -1,0 +1,62 @@
+name: v3.23 - language groups and experience verification
+on:
+  push:
+    branches: ["fix/v3-23-real-mandatory-language-and-experience"]
+    paths: [".github/workflows/v3_23_real_requirements_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and run entire regression suite
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Execute full isolated scan against real configured employers
+        run: python radar.py scan
+      - name: Verify policy, coverage and removal of the real false positive
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import yaml
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          sources=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          audit=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
+          profile=yaml.safe_load(Path("config/profile.yaml").read_text(encoding="utf-8"))
+          print("V323_SOURCE_HEALTH",json.dumps({k:sources.get(k) for k in (
+              "direct_configured","ats_explicit","direct_with_records",
+              "direct_errors","direct_reachable_zero","direct_not_checked")}))
+          print("V323_AUDIT",json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print("V323_JOB_TITLES",[(x["company"],x["title"]) for x in state["jobs"].values()])
+          print("V323_SEEN",len(state["seen"]))
+          assert sources["direct_configured"] == 500
+          assert sources["ats_explicit"] == 184
+          assert profile["max_post_age_hours"] == 96
+          assert profile["exclude_management_roles"] is True
+          assert profile["strict_quality_gate"] is True
+          assert profile["remote_scope"] == "Spain"
+          assert len(state["seen"]) >= 309
+          assert all(not (x["company"] == "Luminor" and
+              x["title"] == "Control Expert (Compliance)") for x in state["jobs"].values())
+          assert any(x["company"] == "Luminor" and
+              x["title"] == "Control Expert (Compliance)" for x in state["seen"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-23-live-verified-requirements-audit
+          path: |
+            public/sources.json
+            public/status.json
+            data/quality_audit.json
+          if-no-files-found: warn

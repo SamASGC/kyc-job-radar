@@ -259,13 +259,10 @@ def parse_age_days(posted_at) -> float | None:
 
 
 def extract_years_required(description: str) -> int | None:
-    d = description.lower()
-    vals = []
-    for m in re.finditer(r"(?:at least|min(?:imum)?\s*)?(\d{1,2})\+?\s*(?:years?|yrs?|años?)", d):
-        v = int(m.group(1))
-        if 0 <= v <= 20:
-            vals.append(v)
-    return min(vals) if vals else None
+    # Deliberately exclude non-qualification tenure (employee benefits, company
+    # history). For multiple required qualifications use the strictest minimum.
+    from job_radar.experience_requirements import required_experience_years
+    return required_experience_years(description)
 
 
 def language_adjustment(description: str) -> tuple[int, list[str]]:
