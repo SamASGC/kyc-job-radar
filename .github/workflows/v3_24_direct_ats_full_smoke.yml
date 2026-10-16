@@ -1,4 +1,4 @@
-name: v3.24 - direct ATS and recall audit acceptance
+name: v3.24 - direct ATS, geography and recall acceptance
 on:
   push:
     branches: ["feat/v3-24-recover-fincrime-direct-ats-and-recall"]
@@ -45,6 +45,7 @@ jobs:
           print("V324_FUNNEL",json.dumps(recall["funnel"]))
           print("V324_SAMPLE",json.dumps(recall["examples"][:10]))
           print("V324_DASHBOARD",json.dumps({"visible":len(state["jobs"]),"seen":len(state["seen"])}))
+          print("V324_ELIGIBLE_JOBS",json.dumps([{"company":x["company"],"title":x["title"],"location":x["location"],"posted_at":x["posted_at"],"url":x["apply_url"],"score":x["score"],"reason":x.get("score_reason","")} for x in state["jobs"].values()]))
           assert sources["direct_configured"] == 500
           assert sources["ats_explicit"] >= 187
           assert sources["direct_not_checked"] == 0
