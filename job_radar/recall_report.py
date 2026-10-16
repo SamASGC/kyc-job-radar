@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from job_radar.config import ROOT
 from job_radar.models import norm_text, utcnow_iso
+from job_radar.precision import irrelevant_profession_title
 from job_radar.v2_quality import original_posted_at, within_new_window
 
 ROLE_TITLES = (
@@ -52,7 +53,14 @@ def select_recall_examples(audit: dict, max_count: int = 60) -> list[dict]:
             if not isinstance(v, dict):
                 continue
             title = str(v.get("title") or "")
-            if not any(term in norm_text(title) for term in ROLE_TITLES):
+            normalized_title = norm_text(title)
+            # Diagnostics are for possible technical IC opportunities, not
+            # obvious design/sales/IT roles or executives.
+            if irrelevant_profession_title(title) or any(
+                word in normalized_title.split() for word in ("manager", "head", "director", "chief", "mlro", "vp")
+            ) or "vice president" in normalized_title:
+                continue
+            if not any(term in normalized_title for term in ROLE_TITLES):
                 continue
             if v.get("geography_verified") is not True:
                 continue
