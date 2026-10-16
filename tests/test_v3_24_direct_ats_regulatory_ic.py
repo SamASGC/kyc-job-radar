@@ -78,6 +78,22 @@ class RegulatoryICDiscovery(unittest.TestCase):
             with self.subTest(title=title,description=desc):
                 self.assertFalse(qualifies_regulatory_ic(title,desc))
 
+    def test_england_does_not_match_swiss_town_gland(self):
+        from job_radar.matching import detect_country
+        from job_radar.v2_quality import location_allowed
+        self.assertEqual(detect_country("London, Greater London, England, United Kingdom"), "United Kingdom")
+        self.assertEqual(detect_country("Gland, Switzerland"), "Switzerland")
+        self.assertEqual(detect_country("London, England"), "United Kingdom")
+        j=Job(source="Greenhouse:goldman",source_kind="official ATS",
+              company="Test Bank",sector="Banca",
+              title="Compliance Analyst",location="London, Greater London, England, United Kingdom",
+              description="Compliance monitoring and regulatory reporting",
+              posted_at=datetime.now(timezone.utc).isoformat(),
+              apply_url="https://example.com/jobs/london").finalize()
+        self.assertFalse(location_allowed(j))
+        j.location="Gland, Switzerland"
+        self.assertTrue(location_allowed(j))
+
     def test_technical_compliance_manager_still_hard_excluded(self):
         j=Job(source="Greenhouse:example",source_kind="official ATS",
               company="Test Bank",sector="Banca",title="Regulatory Compliance Manager",
