@@ -218,10 +218,10 @@ def detect_country(location: str) -> str:
         a = norm_text(alias)
         if not a:
             continue
-        if len(a) <= 3:
-            if re.search(rf"(?:^|\s){re.escape(a)}(?:$|\s)", low):
-                return country
-        elif a in low:
+        # All city/country aliases must occupy whole tokens. Previously long
+        # aliases were substrings: "Gland" (Switzerland) matched "England"
+        # and could falsely admit London jobs as Swiss!
+        if re.search(rf"(?:^|\s){re.escape(a)}(?=\s|$)", low):
             return country
     return ""
 
