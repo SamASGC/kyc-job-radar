@@ -89,6 +89,44 @@ def irrelevant_profession_title(title: str) -> bool:
     return contains_any(title, HARD_NON_TARGET_TITLE_TERMS)
 
 
+
+# Technical regulatory-compliance roles can be genuine IC careers without the
+# acronyms AML/KYC in the TITLE. Permit discovery only when both the regulated-
+# financial context and hands-on compliance duties are explicit in the JD.
+REGULATORY_IC_TITLES = (
+    "regulatory compliance analyst", "regulatory compliance specialist",
+    "regulatory compliance officer", "compliance analyst", "compliance specialist",
+    "compliance officer", "compliance monitoring analyst",
+    "compliance monitoring specialist", "compliance assurance analyst",
+    "compliance control analyst", "compliance testing analyst",
+    "regulatory affairs analyst", "regulatory reporting analyst",
+)
+REGULATED_DOMAIN_SIGNALS = (
+    "financial services", "banking", "bank", "payments", "payment services",
+    "e money", "electronic money", "fintech", "regulated financial",
+    "financial regulation", "mifid", "psd2", "psd3", "eba",
+    "cssf", "finma", "fca", "european banking", "investment services",
+)
+REGULATORY_HANDS_ON_SIGNALS = (
+    "compliance monitoring", "compliance testing", "control testing",
+    "compliance assurance", "compliance risk assessment",
+    "regulatory reporting", "regulatory obligations", "regulatory change",
+    "regulatory requirements", "regulatory examinations",
+    "compliance controls", "risk assessment", "risk assessments",
+    "monitoring plan", "control framework", "remediation actions",
+    "regulatory policies", "regulatory framework", "internal controls",
+    "compliance reviews", "conduct risk",
+)
+
+
+def qualifies_regulatory_ic(title: str, description: str) -> bool:
+    if not contains_any(title, REGULATORY_IC_TITLES):
+        return False
+    if not contains_any(description, REGULATED_DOMAIN_SIGNALS):
+        return False
+    return sum(contains_term(description, p) for p in REGULATORY_HANDS_ON_SIGNALS) >= 2
+
+
 def safe_role_relevance(title: str, description: str, role_terms: dict[str, int]) -> tuple[int, list[str]]:
     hits: list[str] = []
     best = 0
@@ -103,6 +141,11 @@ def safe_role_relevance(title: str, description: str, role_terms: dict[str, int]
         if len(strong_hits) >= 2:
             best = min(20, 8 + len(desc_hits) * 2)
             hits.extend(desc_hits[:5])
+        elif qualifies_regulatory_ic(title, description):
+            # Admissible ROLE family, not automatic eligibility. Existing
+            # min-score, experience, language, freshness and apply gates stay.
+            best = 22
+            hits.append("technical regulatory compliance")
     elif desc_hits:
         best = min(30, best + min(8, len(set(desc_hits))))
         for term in desc_hits:
