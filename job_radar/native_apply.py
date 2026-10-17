@@ -84,6 +84,10 @@ async def native_application_evidence(http, job: Job) -> bool:
     provider application surface. Upstream callers must independently verify
     the *original* posted date, geography and explicit closed-page text.
     """
+    if job.source_kind == "official ATS" and (job.source or "").startswith("Workday:"):
+        from job_radar.workday_detail import native_workday_application_evidence
+        return await native_workday_application_evidence(http, job)
+
     board = _official_board(job)
     if board is None:
         return False
