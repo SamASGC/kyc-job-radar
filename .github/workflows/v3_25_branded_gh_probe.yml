@@ -1,0 +1,39 @@
+name: v3.25 probe employer-branded Greenhouse application evidence
+on:
+  push:
+    branches: ["fix/v3-25-branded-greenhouse-native-applications"]
+    paths: [".github/workflows/v3_25_branded_gh_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Inspect exactly matching currently published job IDs from official read-only ATS
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          async def main():
+              h=Http(concurrency=4,timeout=20)
+              try:
+                  for name,slug in [("SumUp","sumup"),("Stripe","stripe"),("Ebury","ebury")]:
+                      rows=await fetch_greenhouse(h,{"name":name,"sector":"Payments"},slug)
+                      choices=[j for j in rows if ("compliance" in j.title.lower() or "risk" in j.title.lower() or "kyc" in j.title.lower() or "financial crime" in j.title.lower())]
+                      j=choices[0] if choices else rows[0]
+                      from urllib.parse import quote
+                      url=f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{quote(str(j.external_id),safe='')}?questions=true"
+                      r=await h.get(url)
+                      data=r.json()
+                      print("V325_BRANDED_GH",json.dumps({"company":name,"slug":slug,"source_count":len(rows),"job_id":str(j.external_id),"original_url":j.apply_url,"title":j.title,"original_date":j.posted_at,"detail_status":r.status_code,"detail_id":data.get("id"),"detail_title":data.get("title"),"has_questions_array":isinstance(data.get("questions"),list),"question_count":len(data.get("questions") or [])}))
+              finally: await h.close()
+          asyncio.run(main())
+          PY
