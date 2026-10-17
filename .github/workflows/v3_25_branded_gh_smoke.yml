@@ -1,4 +1,4 @@
-name: v3.25 - branded ATS native application integrity
+name: v3.25 - native Greenhouse, Checkout.com and 500-source acceptance
 on:
   push:
     branches: ["fix/v3-25-branded-greenhouse-native-applications"]
@@ -21,7 +21,7 @@ jobs:
         run: |
           python -m compileall -q radar.py job_radar tests
           python -m unittest discover -s tests -v
-      - name: Live 500-company scan with 187 authenticated first-party provider configs
+      - name: Live 500-company scan with 188 official ATS feed configurations
         run: python radar.py scan
       - name: Verify policy, provider inventory, published payload and lifetime seen
         run: |
@@ -41,7 +41,7 @@ jobs:
           assert p['max_post_age_hours']==96 and p['strict_quality_gate'] and p['exclude_management_roles']
           assert p['remote_scope']=='Spain' and p['minimum_score']==62
           assert counts['direct_configured']==500
-          assert counts['ats_explicit']==187
+          assert counts['ats_explicit']==188
           assert counts['direct_not_checked']==0
           assert len(state['seen'])>=309
           assert len(audit.get('verified_score_rejects',[]))<=120
