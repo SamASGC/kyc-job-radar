@@ -242,14 +242,14 @@ def _required_luxembourg_funds_experience_gap(job: Job, profile: dict) -> bool:
         if re.search(
             r"\b(?:relevant|proven|prior|previous|practical|hands on)\s+"
             r"experience\s+(?:in|of|with)\s+(?:the\s+)?"
-            r"luxembou?r?g\b.{0,95}\bfund(?:s)?\b",
+            r"luxembo?urg\b.{0,95}\bfund(?:s)?\b",
             clause,
         ):
             return True
         if re.search(
             r"\b(?:relevant|proven|prior|previous|practical|hands on)\s+"
             r"experience\s+(?:in|of|with)\s+(?:the\s+)?"
-            r"(?:fund|funds|fund administration)\b.{0,95}\bluxembou?r?g\b",
+            r"(?:fund|funds|fund administration)\b.{0,95}\bluxembo?urg\b",
             clause,
         ):
             return True
