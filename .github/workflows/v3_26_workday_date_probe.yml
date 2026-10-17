@@ -1,0 +1,55 @@
+name: v3.26 probe official Workday per-requisition original publication
+on:
+  push:
+    branches: ["feat/v3-26-workday-first-party-date-and-recall"]
+    paths: [".github/workflows/v3_26_workday_date_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Probe exact Workday CXS list and job detail (read-only)
+        run: |
+          python - <<'PY'
+          import asyncio,json,re
+          from urllib.parse import urlsplit
+          from job_radar.http import Http
+          async def probe():
+              h=Http(concurrency=5,timeout=17)
+              sites=[
+                ("PayPal","https://paypal.wd1.myworkdayjobs.com/en-US/jobs"),
+                ("Entrust / Onfido","https://entrust.wd1.myworkdayjobs.com/EntrustCareers"),
+                ("Northern Trust","https://ntrs.wd1.myworkdayjobs.com/northerntrust"),
+                ("Worldpay","https://worldpay.wd5.myworkdayjobs.com/Worldpay_External_Careers_Site")
+              ]
+              try:
+                  for name,url in sites:
+                      try:
+                          p=urlsplit(url);parts=[x for x in p.path.split('/') if x]
+                          site=parts[1] if len(parts)>1 and re.fullmatch(r"[a-z]{2}(?:-[A-Z]{2})?",parts[0]) else parts[0]
+                          tenant=p.hostname.split(".")[0]
+                          base=f"https://{p.hostname}/wday/cxs/{tenant}/{site}"
+                          r=await h.post(base+"/jobs",json={"appliedFacets":{},"limit":20,"offset":0,"searchText":"compliance"},headers={"Content-Type":"application/json"})
+                          raw=r.json() if r.status_code==200 else {}
+                          rows=raw.get("jobPostings") or []
+                          print("V326_WORKDAY_BOARD",json.dumps({"company":name,"url":url,"status":r.status_code,"count":len(rows),"total":raw.get("total"),"sample":[{"title":x.get("title"),"postedOn":x.get("postedOn"),"externalPath":x.get("externalPath")} for x in rows[:3]]}))
+                          if not rows: continue
+                          chosen=next((x for x in rows if re.search(r"(?i)posted (?:today|yesterday|[123] days? ago)",str(x.get("postedOn") or ""))),rows[0]);ext=str(chosen.get("externalPath") or "")
+                          if not ext.startswith("/job/"): continue
+                          rr=await h.get(base+ext)
+                          obj=rr.json() if rr.status_code==200 else {}
+                          info=obj.get("jobPostingInfo") or {}
+                          print("V326_WORKDAY_DETAIL",json.dumps({"company":name,"status":rr.status_code,"keys":list(obj.keys()),"info_keys":list(info.keys()),"title":info.get("title"),"id":info.get("id"),"jobPostingId":info.get("jobPostingId"),"externalUrl":info.get("externalUrl"),"canApply":info.get("canApply"),"posted":info.get("posted"),"jobReqId":info.get("jobReqId"),"startDate":info.get("startDate"),"endDate":info.get("endDate"),"postedOn":info.get("postedOn"),"applyUrl":info.get("applyUrl"),"externalPath":ext,"description_chars":len(info.get("jobDescription") or ""),"description_snippet":(info.get("jobDescription") or "")[:200]}))
+                      except Exception as exc:
+                          print("V326_WORKDAY_ERROR",json.dumps({"company":name,"type":type(exc).__name__,"error":str(exc)[:260]}))
+              finally:
+                  await h.close()
+          asyncio.run(probe())
+          PY

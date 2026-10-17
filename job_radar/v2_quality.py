@@ -174,6 +174,9 @@ LANGUAGES = (
     "polish", "portuguese", "finnish", "swedish", "danish", "norwegian",
     "czech", "slovak", "hungarian", "romanian", "greek", "turkish",
     "arabic", "russian", "ukrainian", "french", "spanish", "english",
+    "japanese", "mandarin", "chinese", "korean", "hindi", "hebrew",
+    "bulgarian", "slovenian", "serbian", "croatian", "albanian",
+    "icelandic", "indonesian", "malay", "thai", "vietnamese",
 )
 _LANGUAGE_PATTERN = re.compile(r"\b(?:" + "|".join(LANGUAGES) + r")\b", re.I)
 _MANDATORY_CUE = re.compile(r"\b(required|mandatory|essential|must|necessar(?:y|ily)|obligator(?:y|io|ia)|exig(?:e|ido|ida)|erforderlich|erforderliche)\b", re.I)
@@ -249,6 +252,28 @@ def _required_section_language_gaps(description: str, known: set[str]) -> set[st
     return missing
 
 
+def _title_mandatory_languages(title: str, known: set[str]) -> set[str]:
+    """'Italian-speaking AML Specialist' names a required language.
+
+    Some Workday requisitions make their language mandatory in the title
+    but not in a machine-labelled Requirements section. Treat explicit
+    'speaking/speaker/fluent/language' title signals as role requirements.
+    Alternative 'German OR Spanish' title groups remain satisfiable by
+    Spanish (also French OR German by French). Mere geography isn't a
+    mandatory language requirement.
+    """
+    value = norm_text(title)
+    mentions = set(_LANGUAGE_PATTERN.findall(value))
+    if not mentions:
+        return set()
+    if not re.search(
+        r"\b(?:speaking|speaker|fluency|fluent|bilingual|language|"
+        r"native|mother tongue)\b", value
+    ):
+        return set()
+    return _unmet_language_groups(value, mentions, known)
+
+
 def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
     """Languages unequivocally required but absent from the configured CV.
 
@@ -282,6 +307,7 @@ def unmet_mandatory_languages(job: Job, known_languages) -> list[str]:
         # Alternative languages: one proven language satisfies this clause.
         missing.update(_unmet_language_groups(clause, present, known))
     missing.update(_required_section_language_gaps(job.description or "", known))
+    missing.update(_title_mandatory_languages(job.title or "", known))
     return sorted(missing)
 
 

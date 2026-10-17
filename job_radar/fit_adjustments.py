@@ -215,6 +215,47 @@ def _gap_placement(job: Job, profile: dict) -> tuple[int, int, list[str], list[s
     return bonus, max(-35, penalty), duty_reasons, requirement_reasons, req_only
 
 
+def _required_luxembourg_funds_experience_gap(job: Job, profile: dict) -> bool:
+    """A proven domain must-have is different from transferable corporate KYB.
+
+    Do not treat a job mentioning a Luxembourg office, or optional familiarity
+    with funds, as a hard stop. Require an explicit prior/relevant experience
+    requirement in the Luxembourg fund industry plus the profile's declared
+    absence of that hands-on jurisdictional specialization.
+    """
+    gaps = {norm_text(str(x)) for x in profile.get("jurisdiction_gaps", [])}
+    if "luxembourg funds aml kyc" not in gaps:
+        return False
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(job.description or "", "html.parser")
+    blocks = [
+        x.get_text(" ", strip=True)
+        for x in soup.find_all(["li", "p"])
+        if not (x.name == "p" and x.find_parent("li"))
+    ]
+    if not blocks:
+        blocks = re.split(r"[.;\n]+", soup.get_text(" ", strip=True))
+    for block in blocks:
+        clause = norm_text(block)
+        if re.search(r"\b(?:preferred|advantage|desirable|optional|nice to have)\b", clause):
+            continue
+        if re.search(
+            r"\b(?:relevant|proven|prior|previous|practical|hands on)\s+"
+            r"experience\s+(?:in|of|with)\s+(?:the\s+)?"
+            r"luxembo?urg\b.{0,95}\bfund(?:s)?\b",
+            clause,
+        ):
+            return True
+        if re.search(
+            r"\b(?:relevant|proven|prior|previous|practical|hands on)\s+"
+            r"experience\s+(?:in|of|with)\s+(?:the\s+)?"
+            r"(?:fund|funds|fund administration)\b.{0,95}\bluxembo?urg\b",
+            clause,
+        ):
+            return True
+    return False
+
+
 def apply_fit_adjustments(job: Job, profile: dict, originally_ok: bool) -> tuple[Job, bool]:
     bonus, penalty, duty_reasons, requirement_reasons, req_only = _gap_placement(job, profile)
 
@@ -238,6 +279,13 @@ def apply_fit_adjustments(job: Job, profile: dict, originally_ok: bool) -> tuple
 
     # Preserve the base matcher's hard gates (location, age, domain relevance). The section
     # adjustment refines fit; it must not resurrect an otherwise out-of-scope vacancy.
+    if _required_luxembourg_funds_experience_gap(job, profile):
+        # Asset-management fund AML/KYC *experience* in Luxembourg is a
+        # stated must-have, not mere geographic location or a preference.
+        job.score_reason = ((job.score_reason or "") +
+                            " · hard gap: experiencia AML/KYC previa en fondos luxemburgueses requerida")
+        return job, False
+
     if not originally_ok:
         return job, False
     return job, job.score >= int(profile.get("minimum_score", 62))
