@@ -41,12 +41,12 @@ jobs:
                           rows=raw.get("jobPostings") or []
                           print("V326_WORKDAY_BOARD",json.dumps({"company":name,"url":url,"status":r.status_code,"count":len(rows),"total":raw.get("total"),"sample":[{"title":x.get("title"),"postedOn":x.get("postedOn"),"externalPath":x.get("externalPath")} for x in rows[:3]]}))
                           if not rows: continue
-                          chosen=rows[0];ext=str(chosen.get("externalPath") or "")
+                          chosen=next((x for x in rows if re.search(r"(?i)posted (?:today|yesterday|[123] days? ago)",str(x.get("postedOn") or ""))),rows[0]);ext=str(chosen.get("externalPath") or "")
                           if not ext.startswith("/job/"): continue
                           rr=await h.get(base+ext)
                           obj=rr.json() if rr.status_code==200 else {}
                           info=obj.get("jobPostingInfo") or {}
-                          print("V326_WORKDAY_DETAIL",json.dumps({"company":name,"status":rr.status_code,"keys":list(obj.keys()),"info_keys":list(info.keys()),"title":info.get("title"),"jobReqId":info.get("jobReqId"),"startDate":info.get("startDate"),"endDate":info.get("endDate"),"postedOn":info.get("postedOn"),"applyUrl":info.get("applyUrl"),"externalPath":ext,"description_chars":len(info.get("jobDescription") or ""),"description_snippet":(info.get("jobDescription") or "")[:200]}))
+                          print("V326_WORKDAY_DETAIL",json.dumps({"company":name,"status":rr.status_code,"keys":list(obj.keys()),"info_keys":list(info.keys()),"title":info.get("title"),"id":info.get("id"),"jobPostingId":info.get("jobPostingId"),"externalUrl":info.get("externalUrl"),"canApply":info.get("canApply"),"posted":info.get("posted"),"jobReqId":info.get("jobReqId"),"startDate":info.get("startDate"),"endDate":info.get("endDate"),"postedOn":info.get("postedOn"),"applyUrl":info.get("applyUrl"),"externalPath":ext,"description_chars":len(info.get("jobDescription") or ""),"description_snippet":(info.get("jobDescription") or "")[:200]}))
                       except Exception as exc:
                           print("V326_WORKDAY_ERROR",json.dumps({"company":name,"type":type(exc).__name__,"error":str(exc)[:260]}))
               finally:
