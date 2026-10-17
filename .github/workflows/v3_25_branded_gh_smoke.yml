@@ -1,0 +1,60 @@
+name: v3.25 - branded ATS native application integrity
+on:
+  push:
+    branches: ["fix/v3-25-branded-greenhouse-native-applications"]
+    paths: [".github/workflows/v3_25_branded_gh_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile and run all tests including 6 new native application tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Live 500-company scan with 187 authenticated first-party provider configs
+        run: python radar.py scan
+      - name: Verify policy, provider inventory, published payload and lifetime seen
+        run: |
+          python - <<'PY'
+          import json,yaml
+          from pathlib import Path
+          root=Path('.')
+          p=yaml.safe_load((root/'config/profile.yaml').read_text(encoding='utf-8'))
+          sources=json.loads((root/'public/sources.json').read_text(encoding='utf-8'))
+          state=json.loads((root/'data/state.json').read_text(encoding='utf-8'))
+          audit=json.loads((root/'data/quality_audit.json').read_text(encoding='utf-8'))
+          counts={k:sources[k] for k in ('direct_configured','ats_explicit','direct_with_records','direct_errors','direct_reachable_zero','direct_not_checked')}
+          print('V325_SOURCE_COUNTS',json.dumps(counts))
+          print('V325_AUDIT_COUNTS',json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print('V325_RESULT',json.dumps({'active':len(state['jobs']),'seen':len(state['seen']),'stats':state.get('stats')}))
+          print('V325_VISIBLE',json.dumps([{'company':x['company'],'title':x['title'],'url':x['apply_url'],'posted_at':x['posted_at']} for x in state['jobs'].values()]))
+          assert p['max_post_age_hours']==96 and p['strict_quality_gate'] and p['exclude_management_roles']
+          assert p['remote_scope']=='Spain' and p['minimum_score']==62
+          assert counts['direct_configured']==500
+          assert counts['ats_explicit']==187
+          assert counts['direct_not_checked']==0
+          assert len(state['seen'])>=309
+          assert len(audit.get('verified_score_rejects',[]))<=120
+          assert audit['verified_score_accepted']+audit['verified_score_rejected']==audit['official_apply_page_verified']
+          assert all(x.get('apply_verified_at') and x.get('posted_at') for x in state['jobs'].values())
+          assert (root/'public/recall.json').is_file()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-25-verified-ats-and-quality-report
+          path: |
+            public/sources.json
+            public/recall.json
+            data/quality_audit.json
+          if-no-files-found: warn
