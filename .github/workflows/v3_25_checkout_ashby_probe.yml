@@ -1,0 +1,37 @@
+name: v3.25 probe Checkout.com first-party Ashby feed
+on:
+  push:
+    branches: ["fix/v3-25-branded-greenhouse-native-applications"]
+    paths: [".github/workflows/v3_25_checkout_ashby_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Read-only provider-endpoint job identity, URLs and original timestamps
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.ashby import fetch_ashby
+          async def main():
+              h=Http(concurrency=4,timeout=25)
+              try:
+                  name,slug="Checkout.com","checkout.com"
+                  jobs=await fetch_ashby(h,{"name":name,"sector":"Payments"},slug)
+                  relevant=[x for x in jobs if any(t in x.title.casefold() for t in ("fincrime","financial crime","aml","compliance","transaction monitoring","screening","sanctions","kyc","kyb","risk"))]
+                  print("V325_CHECKOUT_SUMMARY",json.dumps({"count":len(jobs),"relevant_count":len(relevant),"has_date":sum(bool(j.posted_at) for j in jobs),"has_id":sum(bool(j.external_id) for j in jobs),"has_individual_link":sum(x.apply_url.startswith("https://jobs.ashbyhq.com/checkout.com/") for x in jobs)}))
+                  print("V325_CHECKOUT_SAMPLES",json.dumps([{"title":j.title,"location":j.location,"posted_at":j.posted_at,"id":j.external_id,"apply_url":j.apply_url} for j in relevant[:20]]))
+                  assert len(jobs)>0
+                  assert all(j.company==name and j.source=="Ashby:checkout.com" for j in jobs)
+                  assert any(j.apply_url.startswith("https://jobs.ashbyhq.com/checkout.com/") for j in relevant)
+              finally: await h.close()
+          asyncio.run(main())
+          PY
