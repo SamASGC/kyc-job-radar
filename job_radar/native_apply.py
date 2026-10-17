@@ -57,8 +57,9 @@ def _greenhouse_application_url(job: Job, slug: str, job_id: str) -> bool:
         "job-boards.greenhouse.io", "boards.greenhouse.io",
         "boards.eu.greenhouse.io",
     }:
-        # Original Greenhouse restriction stays as before.
-        return True
+        # Match the actual requisition path; the generic board homepage
+        # or another employer's posting is not applicant-specific proof.
+        return parsed.path.rstrip("/") == f"/{slug}/jobs/{job_id}"
     company = norm_text(job.company)
     query = parse_qs(parsed.query)
     if query.get("gh_jid") != [job_id]:
