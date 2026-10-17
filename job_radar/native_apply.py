@@ -54,8 +54,8 @@ def _greenhouse_application_url(job: Job, slug: str, job_id: str) -> bool:
     if parsed.scheme != "https" or parsed.username or parsed.password:
         return False
     if parsed.hostname in {
-        "job-boards.greenhouse.io", "boards.greenhouse.io",
-        "boards.eu.greenhouse.io",
+        "job-boards.greenhouse.io", "job-boards.eu.greenhouse.io",
+        "boards.greenhouse.io", "boards.eu.greenhouse.io",
     }:
         # Match the actual requisition path; the generic board homepage
         # or another employer's posting is not applicant-specific proof.
