@@ -174,6 +174,9 @@ LANGUAGES = (
     "polish", "portuguese", "finnish", "swedish", "danish", "norwegian",
     "czech", "slovak", "hungarian", "romanian", "greek", "turkish",
     "arabic", "russian", "ukrainian", "french", "spanish", "english",
+    "japanese", "mandarin", "chinese", "korean", "hindi", "hebrew",
+    "bulgarian", "slovenian", "serbian", "croatian", "albanian",
+    "icelandic", "indonesian", "malay", "thai", "vietnamese",
 )
 _LANGUAGE_PATTERN = re.compile(r"\b(?:" + "|".join(LANGUAGES) + r")\b", re.I)
 _MANDATORY_CUE = re.compile(r"\b(required|mandatory|essential|must|necessar(?:y|ily)|obligator(?:y|io|ia)|exig(?:e|ido|ida)|erforderlich|erforderliche)\b", re.I)
