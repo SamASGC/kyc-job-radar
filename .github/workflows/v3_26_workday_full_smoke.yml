@@ -1,0 +1,61 @@
+name: v3.26 Workday original dates and active applications full smoke
+on:
+  push:
+    branches: ["feat/v3-26-workday-first-party-date-and-recall"]
+    paths: [".github/workflows/v3_26_workday_full_smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile all sources and test every regression
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Live scan all 500 employers with bounded Workday details
+        run: python radar.py scan
+      - name: Check no degraded gate, source identity or history, inspect recovered results
+        run: |
+          python - <<'PY'
+          import json,yaml
+          from pathlib import Path
+          profile=yaml.safe_load(Path('config/profile.yaml').read_text(encoding='utf-8'))
+          source=json.loads(Path('public/sources.json').read_text(encoding='utf-8'))
+          audit=json.loads(Path('data/quality_audit.json').read_text(encoding='utf-8'))
+          state=json.loads(Path('data/state.json').read_text(encoding='utf-8'))
+          print('V326_SOURCE',json.dumps({k:source[k] for k in ('direct_configured','ats_explicit','direct_with_records','direct_errors','direct_reachable_zero','direct_not_checked')}))
+          print('V326_AUDIT',json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print('V326_STATE',json.dumps({'visible':len(state['jobs']),'seen':len(state['seen']),'stats':state.get('stats')}))
+          print('V326_JOBS',json.dumps([{'company':x['company'],'title':x['title'],'location':x['location'],'posted_at':x['posted_at'],'apply_url':x['apply_url']} for x in state['jobs'].values()]))
+          assert source['direct_configured']==500
+          assert source['ats_explicit']==188
+          assert source['direct_not_checked']==0
+          assert profile['minimum_score']==62
+          assert profile['max_post_age_hours']==96
+          assert profile['strict_quality_gate'] is True
+          assert profile['exclude_management_roles'] is True
+          assert profile['remote_scope']=='Spain'
+          assert len(state['seen'])>=309
+          assert audit['official_apply_page_verified']==audit['verified_score_accepted']+audit['verified_score_rejected']
+          assert Path('public/recall.json').exists()
+          assert all(x.get('apply_verified_at') and x.get('posted_at') and x.get('fingerprint') for x in state['jobs'].values())
+          assert all(not (x['company']=='Luminor' and x['title']=='Control Expert (Compliance)') for x in state['jobs'].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-26-workday-500-firm-audit
+          path: |
+            public/sources.json
+            public/recall.json
+            data/quality_audit.json
+          if-no-files-found: warn
