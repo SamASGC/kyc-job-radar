@@ -7,7 +7,7 @@ an ATS API failure as proof that a job is closed.
 from __future__ import annotations
 
 import re
-from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
 
 from job_radar.models import Job, norm_text, canonical_url
 
@@ -43,6 +43,39 @@ def _official_board(job: Job) -> tuple[str, str] | None:
     return family, slug
 
 
+def _greenhouse_application_url(job: Job, slug: str, job_id: str) -> bool:
+    """Employer-controlled Greenhouse job URLs, never generic landing pages.
+
+    Some employers serve the application under their own verified domain.
+    Only two live-probed provider-to-employer bindings are recognized.
+    Both the first-party ATS detail and the exact per-job URL must agree.
+    """
+    parsed = urlsplit(job.apply_url or "")
+    if parsed.scheme != "https" or parsed.username or parsed.password:
+        return False
+    if parsed.hostname in {
+        "job-boards.greenhouse.io", "job-boards.eu.greenhouse.io",
+        "boards.greenhouse.io", "boards.eu.greenhouse.io",
+    }:
+        # Match the actual requisition path; the generic board homepage
+        # or another employer's posting is not applicant-specific proof.
+        return parsed.path.rstrip("/") == f"/{slug}/jobs/{job_id}"
+    company = norm_text(job.company)
+    query = parse_qs(parsed.query)
+    if query.get("gh_jid") != [job_id]:
+        return False
+    if slug == "sumup" and company == "sumup":
+        return parsed.hostname in {"sumup.com", "www.sumup.com"} and bool(
+            re.fullmatch(rf"/careers/positions/{re.escape(job_id)}/?", parsed.path)
+        )
+    if slug == "stripe" and company == "stripe":
+        return (
+            parsed.hostname in {"stripe.com", "www.stripe.com"}
+            and parsed.path.rstrip("/") == "/jobs/search"
+        )
+    return False
+
+
 async def native_application_evidence(http, job: Job) -> bool:
     """Confirm exact currently published requisition and an ATS application.
 
@@ -71,10 +104,7 @@ async def native_application_evidence(http, job: Job) -> bool:
             isinstance(row, dict)
             and _same_job(row, job)
             and isinstance(row.get("questions"), list)
-            and _https_host(job.apply_url, {
-                "job-boards.greenhouse.io", "boards.greenhouse.io",
-                "boards.eu.greenhouse.io",
-            })
+            and _greenhouse_application_url(job, slug, str(job.external_id))
         )
 
     if family == "Lever":

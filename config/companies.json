@@ -1110,7 +1110,15 @@
     "sector": "Payments",
     "priority": "P2",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "checkout.com"
+      }
+    ],
+    "ats_evidence": "2026-10-17 official employer-branded Ashby public board https://jobs.ashbyhq.com/checkout.com verified in live GitHub Actions 39046502253: 169 distinct currently listed jobs with original publishedAt, complete jobUrl and posting ID; 11 compliance/financial crime/risk titles. These are raw leads; eligible positions still require 96-hour, geography, language and active apply verification.",
+    "verification_level": "official_ats_live_probe_passed"
   },
   {
     "name": "ClearBank",
