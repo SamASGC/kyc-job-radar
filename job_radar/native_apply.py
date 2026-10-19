@@ -47,7 +47,7 @@ def _greenhouse_application_url(job: Job, slug: str, job_id: str) -> bool:
     """Employer-controlled Greenhouse job URLs, never generic landing pages.
 
     Some employers serve the application under their own verified domain.
-    Only two live-probed provider-to-employer bindings are recognized.
+    Only live-probed provider-to-employer bindings are recognized.
     Both the first-party ATS detail and the exact per-job URL must agree.
     """
     parsed = urlsplit(job.apply_url or "")
@@ -72,6 +72,11 @@ def _greenhouse_application_url(job: Job, slug: str, job_id: str) -> bool:
         return (
             parsed.hostname in {"stripe.com", "www.stripe.com"}
             and parsed.path.rstrip("/") == "/jobs/search"
+        )
+    if slug == "n26" and company == "n26":
+        return (
+            parsed.hostname in {"n26.com", "www.n26.com"}
+            and parsed.path.rstrip("/") == f"/en-eu/careers/positions/{job_id}"
         )
     return False
 
