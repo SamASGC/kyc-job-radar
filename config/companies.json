@@ -1252,7 +1252,14 @@
     "priority": "P2",
     "origin": "Official employer recruitment portal verified 2026-10-13: https://career.mangopay.com/jobs",
     "enabled": true,
-    "verification_level": "official_careers_url_not_necessarily_api"
+    "verification_level": "official_ats_live_probe_passed",
+    "ats": [
+      {
+        "kind": "teamtailor",
+        "url": "https://career.mangopay.com/jobs"
+      }
+    ],
+    "ats_evidence": "2026-10-19 live Mangopay employer-owned Teamtailor career.mangopay.com/jobs: seven exact per-job /jobs/{id}-... pages with schema.org JobPosting.datePosted matching article:published_time, employer hiringOrganization Mangopay, Apply for this job CTA and full requirements; HTML/JSON-LD verified GitHub Actions runs #39276923852, #39277080325. article:modified_time is not an original posting date."
   },
   {
     "name": "Modulr",
