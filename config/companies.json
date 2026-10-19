@@ -849,7 +849,15 @@
     "sector": "Banca",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "monzo"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 first-party greenhouse public jobs feed, checked by GitHub Actions run 39249106173. 71 individual requisitions with provider's original publication date, job id, and distinct official job URLs. These are RAW records, not quality-approved new alerts."
   },
   {
     "name": "N26",
@@ -889,7 +897,15 @@
     "sector": "Banca",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "lever",
+        "slug": "qonto"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 first-party lever public jobs feed, checked by GitHub Actions run 39249106173. 50 individual requisitions with provider's original publication date, job id, and distinct official job URLs. These are RAW records, not quality-approved new alerts."
   },
   {
     "name": "Revolut",
@@ -928,7 +944,15 @@
     "sector": "Banca",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "tide"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 first-party greenhouse public jobs feed, checked by GitHub Actions run 39249106173. 108 individual requisitions with provider's original publication date, job id, and distinct official job URLs. These are RAW records, not quality-approved new alerts."
   },
   {
     "name": "Trade Republic",
@@ -967,7 +991,15 @@
     "sector": "Payments",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "smartrecruiters",
+        "slug": "Wise"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 provider-hosted SmartRecruiters public API for verified Wise employer account, 431 distinct original releasedDate posting records, first-party individual apply URLs, GitHub source probe 39249106173. Precise v1 detail jobAd.sections and published flag verified in detail trace 39249461831. Listings from the ATS are raw, require exact live job eligibility verification."
   },
   {
     "name": "Zopa",
@@ -1228,7 +1260,15 @@
     "sector": "Payments",
     "priority": "P2",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "ashby",
+        "slug": "mollie"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 first-party ashby public jobs feed, checked by GitHub Actions run 39249106173. 46 individual requisitions with provider's original publication date, job id, and distinct official job URLs. These are RAW records, not quality-approved new alerts."
   },
   {
     "name": "Moss",
