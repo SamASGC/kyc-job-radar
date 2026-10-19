@@ -112,7 +112,7 @@ def parse_teamtailor_job_page(raw_html: str, url: str, company: dict) -> Job | N
     if parsed_original is None or parsed_published is None or parsed_original != parsed_published:
         original = ""
     description = BeautifulSoup(html.unescape(str(info.get("description") or "")),
-                                "html.parser").get_text(" ", strip=True)
+                                "html.parser").get_text(" ; ", strip=True)
     location, remote_hint = _job_location(info, soup)
     match = _PATH.fullmatch(urlsplit(url).path)
     return Job(
