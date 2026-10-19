@@ -991,7 +991,15 @@
     "sector": "Payments",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "smartrecruiters",
+        "slug": "Wise"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 provider-hosted SmartRecruiters public API for verified Wise employer account, 431 distinct original releasedDate posting records, first-party individual apply URLs, GitHub source probe 39249106173. Precise v1 detail jobAd.sections and published flag verified in detail trace 39249461831. Listings from the ATS are raw, require exact live job eligibility verification."
   },
   {
     "name": "Zopa",
