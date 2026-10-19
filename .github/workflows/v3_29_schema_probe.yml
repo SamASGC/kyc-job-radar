@@ -1,0 +1,45 @@
+name: v3.29 Teamtailor JSON-LD exact publication evidence
+on:
+  push:
+    branches: ["feat/v3-29-mangopay-teamtailor-first-party"]
+    paths: [".github/workflows/v3_29_schema_probe.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - run: |
+          python - <<'PY'
+          import asyncio,json,re
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+          from job_radar.http import Http
+          async def main():
+            h=Http(concurrency=3,timeout=16)
+            try:
+              index=await h.get("https://career.mangopay.com/jobs")
+              soup=BeautifulSoup(index.text,"html.parser")
+              urls=list(dict.fromkeys(urljoin(str(index.url),x["href"]) for x in soup.select('a[href]') if re.search(r"^/jobs/[0-9]+-",x.get("href",""))))
+              print("V329_TEAMTAILOR_COUNT",len(urls))
+              for u in urls[:10]:
+                r=await h.get(u);ss=BeautifulSoup(r.text,"html.parser")
+                scripts=[]
+                for x in ss.select('script[type="application/ld+json"]'):
+                  try:
+                    o=json.loads(x.string or x.get_text() or "")
+                    if isinstance(o,dict):scripts.append(o)
+                  except Exception:pass
+                org=[{"type":o.get("@type"),"title":o.get("title"),"datePosted":o.get("datePosted"),"validThrough":o.get("validThrough"),"hiringOrganization":o.get("hiringOrganization"),"jobLocation":o.get("jobLocation"),"jobLocationType":o.get("jobLocationType"),"employmentType":o.get("employmentType"),"directApply":o.get("directApply"),"applicationContact":o.get("applicationContact")} for o in scripts]
+                meta={t.get("property") or t.get("name"):t.get("content") for t in ss.select("meta[content]") if re.search(r"(?i)published|modified|date",str(t.get("property") or t.get("name")))}
+                forms=[{"action":x.get("action"),"inputs":[y.get("name") for y in x.select('input[name]')[:8]]} for x in ss.select("form")[:4]]
+                texts=ss.get_text(" ",strip=True)
+                print("V329_TEAMTAILOR_JOB",json.dumps({"url":u,"code":r.status_code,"jsonld":org[:3],"meta":meta,"forms":forms,"apply_labels":list(dict.fromkeys(re.findall(r"(?i)apply for this job|apply now|apply for this position|send application|submit application|apply for this role",texts)))[:5]},ensure_ascii=False)[:4800])
+            finally:await h.close()
+          asyncio.run(main())
+          PY
