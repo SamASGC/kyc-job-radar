@@ -1,0 +1,51 @@
+name: v3.27 first-party ATS candidates source probe
+on:
+  push:
+    branches: ["feat/v3-27-official-ats-source-health"]
+    paths: [".github/workflows/v3_27_source_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Validate employer-owned applicant ATS and original dates
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.lever import fetch_lever
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          from job_radar.sources.smartrecruiters import fetch_smartrecruiters
+          async def main():
+            h=Http(concurrency=5,timeout=15)
+            try:
+              plans=[
+                 ("Qonto","lever","qonto"),
+                 ("Mollie","ashby","mollie"),
+                 ("Monzo","greenhouse","monzo"),
+                 ("Tide","greenhouse","tide"),
+                 ("Wise","smartrecruiters","Wise"),
+                 ("Swan","lever","swan"),
+                 ("Klarna","greenhouse","klarna"),
+              ]
+              for company,kind,slug in plans:
+                try:
+                  org={"name":company,"sector":"Fintech"}
+                  fun={"lever":fetch_lever,"ashby":fetch_ashby,"greenhouse":fetch_greenhouse,"smartrecruiters":fetch_smartrecruiters}[kind]
+                  rows=await fun(h,org,slug)
+                  matches=[x for x in rows if any(t in x.title.lower() for t in ("kyc","aml","compliance","financial crime","fraud","sanction","due diligence","monitoring","risk"))]
+                  first=(matches or rows)[:7]
+                  print("V327_PROBE",json.dumps({"company":company,"kind":kind,"slug":slug,"rows":len(rows),"verified_urls":sum(bool(j.apply_url and j.external_id) for j in rows),"original_dates":sum(bool(j.posted_at) for j in rows),"matching_titles":len(matches),"sample":[{"title":j.title,"location":j.location,"posted_at":j.posted_at,"id":j.external_id,"url":j.apply_url,"desc_length":len(j.description)} for j in first]},ensure_ascii=False))
+                except Exception as ex:
+                  print("V327_SOURCE_ERROR",json.dumps({"company":company,"kind":kind,"slug":slug,"type":type(ex).__name__,"error":str(ex)[:260]}))
+            finally: await h.close()
+          asyncio.run(main())
+          PY
