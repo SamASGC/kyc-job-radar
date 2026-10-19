@@ -155,4 +155,14 @@ async def fetch_teamtailor(http, company: dict, board_url: str) -> list[Job]:
             except Exception:
                 return None
     found = await asyncio.gather(*(one(u) for u in urls))
-    return [j for j in found if j is not None]
+    valid = [j for j in found if j is not None]
+    if not valid:
+        # A first-party board with *visible job links* but not even one
+        # verifiable detail is NOT a legitimately empty employer feed.
+        # Report it as unavailable so the source dashboard can expose it.
+        # Zero listing links above remains a genuine reachable-empty case.
+        raise RuntimeError(
+            f"Teamtailor detail extraction failed for all {len(urls)} visible "
+            "job links; refusing silent empty-source success"
+        )
+    return valid
