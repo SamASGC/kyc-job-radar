@@ -13,6 +13,14 @@ on:
 permissions:
   contents: read
 
+# Pull requests get a fresh quality run on every push. Older queued copies
+# validate superseded code and slow release acceptance when many small fixes
+# land. Retain only the newest quality run per PR/ref; the independent
+# production pipeline and its historical integrity guard are unaffected.
+concurrency:
+  group: v2-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
