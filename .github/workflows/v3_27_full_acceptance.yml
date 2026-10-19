@@ -1,0 +1,71 @@
+name: v3.27 - five official ATS and fail closed reliability acceptance
+on:
+  push:
+    branches: ["feat/v3-27-official-ats-source-health"]
+    paths: [".github/workflows/v3_27_full_acceptance.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: All regressions and verified-source contract tests
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Full live scan, 500 direct firms, 193 ATS
+        run: python radar.py scan
+      - name: Fail closed on source outage, vanished history, bad applicants
+        shell: bash
+        run: |
+          git show HEAD:data/state.json > /tmp/radar-prior-state.json
+          python -m job_radar.production_guard --prior /tmp/radar-prior-state.json
+      - name: Assert source identities and report real scan funnel
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          firms=[]
+          for p in ("config/companies.json","config/extra_companies.json"):
+              firms+=json.loads(Path(p).read_text(encoding="utf-8"))
+          state=json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          audit=json.loads(Path("data/quality_audit.json").read_text(encoding="utf-8"))
+          sources=json.loads(Path("public/sources.json").read_text(encoding="utf-8"))
+          names={x["name"]:x for x in firms}
+          expected={
+              "Qonto":("lever","qonto"),"Mollie":("ashby","mollie"),
+              "Monzo":("greenhouse","monzo"),"Tide":("greenhouse","tide"),
+              "Wise":("smartrecruiters","Wise"),
+          }
+          assert len(firms)==500 and len(names)==500
+          for name,(kind,slug) in expected.items():
+              x=names[name]
+              assert x["ats"]==[{"kind":kind,"slug":slug}], (name,x.get("ats"))
+              assert x["verification_level"]=="official_ats_live_probe_passed"
+          assert sources["ats_explicit"]>=193
+          assert sources["direct_not_checked"]==0
+          assert len(state["seen"])>=314
+          assert audit["official_apply_page_verified"]==audit["verified_score_accepted"]+audit["verified_score_rejected"]
+          assert len(json.loads(Path("public/recall.json").read_text())["examples"])<=60
+          print("V327_SOURCES",json.dumps({k:sources.get(k) for k in ("direct_configured","ats_explicit","direct_with_records","direct_errors","direct_reachable_zero","direct_not_checked")}))
+          print("V327_FUNNEL",json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)}))
+          print("V327_STATE",json.dumps({"active":len(state["jobs"]),"seen":len(state["seen"]),"stats":state.get("stats")}))
+          print("V327_JOBS",json.dumps([{"company":v.get("company"),"title":v.get("title"),"location":v.get("location"),"posted_at":v.get("posted_at"),"url":v.get("apply_url")} for v in state["jobs"].values()][:30]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-27-five-ats-and-integrity-diagnostics
+          path: |
+            public/sources.json
+            public/recall.json
+            data/quality_audit.json
+          if-no-files-found: warn
