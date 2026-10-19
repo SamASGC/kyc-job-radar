@@ -99,6 +99,20 @@ class MangopayTeamtailorTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(await verify_application_page(h,jobs[0]))
         self.assertEqual(jobs[0].verification_reason,"official_live_page_with_apply_action")
 
+    async def test_nonempty_board_with_no_valid_detail_is_source_error(self):
+        h=Http("<html><p>Provider schema changed; no JobPosting details</p></html>")
+        with self.assertRaisesRegex(RuntimeError, "failed for all 1 visible"):
+            await fetch_teamtailor(h,ORG,INDEX)
+
+    async def test_genuinely_empty_board_is_not_a_source_error(self):
+        class Empty(Http):
+            async def get(self,url,**kwargs):
+                self.requests.append(url)
+                return Response(url, "<html><h1>No current vacancies</h1></html>")
+        h=Empty(job_html())
+        self.assertEqual(await fetch_teamtailor(h,ORG,INDEX), [])
+        self.assertEqual(h.requests,[INDEX])
+
     async def test_no_applicant_cta_and_stale_date_deny_alert(self):
         for page in (job_html(apply=False),job_html(original=date(days=15))):
             with self.subTest(page=page[-60:]):
