@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
-    # v3.26: first-party Workday job-detail startDate + posted/canApply and real requirements (12 boards); retain 188 ATS, 500 firms, original <=96h, verified live apply, geo/language/IC and lifetime seen.
+    # v3.27: 5 live-checked ATS added (193 direct ATS): Qonto, Mollie, Monzo, Tide, Wise; nested Wise JDs fixed, bounded retrieval and fail-closed predeploy health/seen guard.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
     # GitHub-hosted cron may be delayed; status.html shows last actual run.
@@ -55,6 +55,12 @@ jobs:
         run: python radar.py scan
         env:
           JOB_OPPORTUNITIES_API_KEY: ${{ secrets.JOB_OPPORTUNITIES_API_KEY }}
+
+      - name: Verify source coverage and preserve all historical job fingerprints
+        shell: bash
+        run: |
+          git show HEAD:data/state.json > /tmp/radar-prior-state.json
+          python -m job_radar.production_guard --prior /tmp/radar-prior-state.json
 
       - name: Commit meaningful dataset changes
         shell: bash
