@@ -25,7 +25,7 @@ jobs:
             try:
               index=await h.get("https://career.mangopay.com/jobs")
               soup=BeautifulSoup(index.text,"html.parser")
-              urls=list(dict.fromkeys(urljoin(str(index.url),x["href"]) for x in soup.select('a[href]') if re.search(r"^/jobs/[0-9]+-",x.get("href",""))))
+              urls=list(dict.fromkeys(urljoin(str(index.url),x["href"]) for x in soup.select('a[href]') if re.search(r"/jobs/[0-9]+-",urljoin(str(index.url),x.get("href","")))))
               print("V329_TEAMTAILOR_COUNT",len(urls))
               for u in urls[:10]:
                 r=await h.get(u);ss=BeautifulSoup(r.text,"html.parser")
