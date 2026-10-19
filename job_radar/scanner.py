@@ -63,10 +63,12 @@ async def fetch_target(http: Http, company: dict, target: dict) -> list[Job]:
     if kind == "teamtailor":
         return await fetch_teamtailor(http, company, target.get("url") or "")
     if kind == "workday":
-        return await fetch_workday(
-            http, company, target.get("url") or company["careers_url"],
-            search_terms=target.get("search_terms")
-        )
+        url = target.get("url") or company["careers_url"]
+        if target.get("search_terms"):
+            return await fetch_workday(http, company, url, search_terms=target["search_terms"])
+        # Preserve existing positional Workday call contract on all
+        # previously integrated boards (important for regression mocks).
+        return await fetch_workday(http, company, url)
     if kind == "recruitee":
         return await fetch_recruitee(http, company, slug)
     if kind == "breezy":
