@@ -1,0 +1,67 @@
+name: v3.29 first-party Mangopay and BBVA full acceptance
+on:
+  push:
+    branches: ["feat/v3-29-mangopay-teamtailor-first-party"]
+    paths: [".github/workflows/v3_29_full_acceptance.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compile every source and run security/recency/language regressions
+        run: |
+          python -m compileall -q radar.py job_radar tests
+          python -m unittest discover -s tests -v
+      - name: Probe all 500 direct firms using 196 official ATS configurations
+        run: python radar.py scan
+      - name: Confirm immutable 314-plus previous historical seen and no catastrophic outage
+        run: |
+          git show HEAD:data/state.json > /tmp/v329-prior.json
+          python -m job_radar.production_guard --prior /tmp/v329-prior.json
+      - name: Audit exact Mangopay and BBVA official feed coverage
+        run: |
+          python - <<'PY'
+          import json,yaml
+          from pathlib import Path
+          p=Path(".")
+          firms=json.loads((p/"config/companies.json").read_text(encoding="utf-8"))
+          firms+=json.loads((p/"config/extra_companies.json").read_text(encoding="utf-8"))
+          names={x["name"]:x for x in firms}
+          src=json.loads((p/"public/sources.json").read_text(encoding="utf-8"))
+          state=json.loads((p/"data/state.json").read_text(encoding="utf-8"))
+          audit=json.loads((p/"data/quality_audit.json").read_text(encoding="utf-8"))
+          prof=yaml.safe_load((p/"config/profile.yaml").read_text(encoding="utf-8"))
+          result={x["company"]:x for x in src["sources"] if x["origin_class"]=="direct"}
+          assert len(firms)==len(names)==500
+          assert sum(bool(x.get("ats")) for x in firms)==196
+          assert src["direct_configured"]==500 and src["ats_explicit"]==196
+          assert src["direct_not_checked"]==0
+          assert result["Mangopay"]["jobs_found"]>=5,result["Mangopay"]
+          assert result["BBVA"]["jobs_found"]>=5,result["BBVA"]
+          assert src["direct_with_records"]>=280
+          assert len(state["seen"])>=314
+          assert audit["official_apply_page_verified"]==audit["verified_score_accepted"]+audit["verified_score_rejected"]
+          assert prof["max_post_age_hours"]==96 and prof["minimum_score"]==62
+          assert prof["strict_quality_gate"] and prof["exclude_management_roles"]
+          print("V329_COUNTS",json.dumps({k:src.get(k) for k in ("direct_configured","ats_explicit","direct_with_records","direct_errors","direct_degraded","direct_reachable_zero","direct_not_checked")}))
+          print("V329_EMPLOYERS",json.dumps({k:result[k] for k in ("Mangopay","BBVA")},ensure_ascii=False)[:4500])
+          print("V329_FUNNEL",json.dumps({k:v for k,v in audit.items() if not isinstance(v,list)},ensure_ascii=False)[:4500])
+          print("V329_STATE",json.dumps({"active":len(state["jobs"]),"seen":len(state["seen"]),"jobs":[{"company":v["company"],"title":v["title"],"date":v["posted_at"],"url":v["apply_url"]} for v in state["jobs"].values()]},ensure_ascii=False)[:5000])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v3-29-real-source-coverage-and-date-audit
+          path: |
+            public/sources.json
+            public/recall.json
+            data/quality_audit.json
+          if-no-files-found: warn
