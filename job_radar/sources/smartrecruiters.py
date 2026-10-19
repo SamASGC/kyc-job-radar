@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 
 from job_radar.models import Job
 
@@ -125,8 +126,8 @@ async def fetch_smartrecruiters(http, company: dict, slug: str) -> list[Job]:
         def allowed_location(item):
             loc = item.get("location") or {}
             text = str(loc.get("fullLocation") or loc.get("country") or "") if isinstance(loc, dict) else str(loc)
-            return bool(__import__("re").search(
-                r"(?i)\\b(spain|es|luxembourg|lu|switzerland|ch|estonia|ee|lithuania|lt)\\b", text))
+            return bool(re.search(
+                r"(?i)\b(spain|es|luxembourg|lu|switzerland|ch|estonia|ee|lithuania|lt)\b", text))
         others = [item for item in recent if item not in relevant and allowed_location(item)]
         chosen = (relevant + others)[:120]
         chosen_ids = {str(x.get("id") or x.get("uuid") or "") for x in chosen}
