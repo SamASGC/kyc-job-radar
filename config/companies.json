@@ -865,7 +865,15 @@
     "sector": "Banca",
     "priority": "P1",
     "origin": "PDF target list",
-    "enabled": true
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "greenhouse",
+        "slug": "n26"
+      }
+    ],
+    "verification_level": "official_ats_live_probe_passed",
+    "ats_evidence": "2026-10-19 official n26 Greenhouse board live API 34 individual dated requisitions, all original first_published, linked to n26.com/en-eu/careers/positions/{id}?gh_jid={id}; read-only detail 200, matching ID/title and 14 applicant questions, GitHub Actions #39253058501 and #39253218642. Public raw jobs, not preapproved alerts."
   },
   {
     "name": "Nickel",

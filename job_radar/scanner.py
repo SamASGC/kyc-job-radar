@@ -84,11 +84,17 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
     ]
     jobs: list[Job] = []
     errors = []
+    # A successful empty ATS response is valid reachability. Previously we
+    # reported the employer as DOWN if a subsequent, optional corporate page
+    # fallback returned 403—even though its official ATS API responded 200.
+    official_feed_reachable = False
+    fallback_reachable = False
 
     if targets:
         for target in targets:
             try:
                 got = await fetch_target(http, company, target)
+                official_feed_reachable = True
                 jobs.extend(got)
                 health["targets"].append(target)
             except Exception as e:
@@ -97,6 +103,7 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
         if not jobs and company.get("careers_url"):
             try:
                 generic_jobs, detected, final_url = await fetch_generic(http, company)
+                fallback_reachable = True
                 jobs.extend(generic_jobs)
                 detected = [t for t in detected
                             if ats_target_has_company_identity(company, t)]
@@ -109,6 +116,7 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
     else:
         try:
             generic_jobs, detected, final_url = await fetch_generic(http, company)
+            fallback_reachable = True
             jobs.extend(generic_jobs)
             detected = [t for t in detected
                         if ats_target_has_company_identity(company, t)]
@@ -120,6 +128,7 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
                 for target in detected:
                     try:
                         jobs.extend(await fetch_target(http, company, target))
+                        official_feed_reachable = True
                     except Exception as e:
                         errors.append(f"discovered {target.get('kind')}: {type(e).__name__}: {e}")
             else:
@@ -137,9 +146,14 @@ async def fetch_company(http: Http, company: dict, state: dict) -> tuple[list[Jo
             uniq[j.fingerprint] = j
     jobs = list(uniq.values())
     health["jobs"] = len(jobs)
+    health["ats_reachable"] = official_feed_reachable
+    health["careers_reachable"] = fallback_reachable
     if errors:
+        # Do not suppress diagnostics: a broken subsidiary/rediscovery URL
+        # still matters even when the official ATS feed remains functional.
         health["error"] = " | ".join(errors)[:1200]
-        if not jobs:
+        health["degraded"] = bool(official_feed_reachable or fallback_reachable or jobs)
+        if not jobs and not (official_feed_reachable or fallback_reachable):
             health["ok"] = False
     return jobs, health
 

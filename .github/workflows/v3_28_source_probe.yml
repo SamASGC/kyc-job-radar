@@ -1,0 +1,61 @@
+name: v3.28 probe N26, Mangopay and broken direct provider sources
+on:
+  push:
+    branches: ["feat/v3-28-repair-official-ats-and-errors"]
+    paths: [".github/workflows/v3_28_source_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: First-party ATS board checks, no applicants or POST
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          from job_radar.sources.workday import fetch_workday
+          from job_radar.sources.workable import fetch_workable
+          from job_radar.sources.ashby import fetch_ashby
+          from job_radar.sources.personio import fetch_personio
+          async def main():
+            http=Http(concurrency=6,timeout=16)
+            plans=[
+             ("N26","greenhouse","n26"),
+             ("Mangopay","greenhouse","mangopay"),
+             ("PayDo","greenhouse","paydo"),
+             ("Shift4","workday","https://shift4payments.wd108.myworkdayjobs.com/Shift4_External_CareerSite"),
+             ("Coinify","breezy","coinify"),
+             ("Clear Junction","workable","clearjunction"),
+             ("NomuPay","personio","nomupay"),
+             ("PPRO","ashby","ppro"),
+             ("TerraPay","workable","terrapay"),
+             ("Strise","workable","strise"),
+             ("Alma","greenhouse","alma31"),
+             ("Coinbase","greenhouse","coinbase"),
+             ("Trading 212","ashby","trading212"),
+             ("Viva.com","workable","viva")
+            ]
+            from job_radar.sources.breezy import fetch_breezy
+            funcs={"greenhouse":fetch_greenhouse,"workday":fetch_workday,
+                "workable":fetch_workable,"ashby":fetch_ashby,
+                "personio":fetch_personio,"breezy":fetch_breezy}
+            try:
+              async def one(name,kind,slug):
+                try:
+                  rows=await funcs[kind](http,{"name":name,"sector":"Payments"},slug)
+                  relevant=[j for j in rows if any(x in j.title.lower() for x in ("aml","financial crime","kyc","kyb","compliance","sanction","screening","fraud","risk"))]
+                  print("V328_SOURCE",json.dumps({"name":name,"kind":kind,"slug":slug,"jobs":len(rows),"dates":sum(bool(x.posted_at) for x in rows),"indiv_apply_ids":sum(bool(x.external_id and x.apply_url) for x in rows),"relevant_count":len(relevant),"sample":[{"title":j.title,"loc":j.location,"original_date":j.posted_at,"url":j.apply_url,"id":j.external_id,"desc_len":len(j.description)} for j in (relevant or rows)[:4]]},ensure_ascii=False))
+                except Exception as ex:
+                  print("V328_ERROR",json.dumps({"name":name,"kind":kind,"slug":slug,"error":f"{type(ex).__name__}: {str(ex)[:250]}"}))
+              await asyncio.gather(*(one(*q) for q in plans))
+            finally:await http.close()
+          asyncio.run(main())
+          PY

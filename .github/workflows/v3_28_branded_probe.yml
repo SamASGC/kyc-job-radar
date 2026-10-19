@@ -1,0 +1,39 @@
+name: v3.28 verify N26 and Coinbase first-party branded Greenhouse applications
+on:
+  push:
+    branches: ["feat/v3-28-repair-official-ats-and-errors"]
+    paths: [".github/workflows/v3_28_branded_probe.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Compare exact ATS requisition ID/title/application questions against employer-branded URL
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.sources.greenhouse import fetch_greenhouse
+          async def main():
+            http=Http(concurrency=4,timeout=20)
+            try:
+              for name,slug in (("N26","n26"),("Coinbase","coinbase")):
+                try:
+                  jobs=await fetch_greenhouse(http,{"name":name,"sector":"Banking"},slug)
+                  chosen=next((j for j in jobs if "compliance" in j.title.casefold() or "crime" in j.title.casefold()),jobs[0])
+                  detail_url=f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{chosen.external_id}?questions=true"
+                  resp=await http.get(detail_url)
+                  row=resp.json() if resp.status_code==200 else {}
+                  page=await http.get(chosen.apply_url)
+                  print("V328_BRANDED",json.dumps({"company":name,"slug":slug,"total":len(jobs),"sample_title":chosen.title,"sample_id":chosen.external_id,"sample_url":chosen.apply_url,"sample_date":chosen.posted_at,"detail_http":resp.status_code,"detail_id":row.get("id"),"detail_title":row.get("title"),"questions_is_list":isinstance(row.get("questions"),list),"questions_len":len(row.get("questions") or []),"page_http":page.status_code,"page_has_apply":any(x in page.text.lower() for x in ["apply now","apply for this","submit application","apply for this position"])}))
+                except Exception as e: print("V328_BRANDED_ERROR",json.dumps({"company":name,"reason":str(e)[:200]}))
+            finally:await http.close()
+          asyncio.run(main())
+          PY
