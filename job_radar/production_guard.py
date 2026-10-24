@@ -15,7 +15,7 @@ from job_radar.v2_quality import original_posted_at
 
 def check_release(companies: list[dict], coverage: dict, state: dict,
                   previous_state: dict, *, expected_direct: int = 500,
-                  min_ats: int = 194, min_with_records: int = 280,
+                  min_ats: int = 196, min_with_records: int = 280,
                   max_direct_errors: int = 120) -> dict:
     errors = []
     firms = [x for x in companies if x.get("enabled", True)]
