@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "description": "Persistent deduplication ledger for Radar Fintech Ocultas. Match by employer, role, city, ATS requisition ID, canonical URL and normalized description. This ledger is independent from the principal radar's state.json and should be checked before every future alert.",
+  "alerts": [
+    {
+      "company": "Adyen",
+      "role": "FinCrime Analyst",
+      "location": "Madrid, Spain",
+      "ats": "Greenhouse",
+      "requisition_id": "8300919",
+      "canonical_url": "https://job-boards.greenhouse.io/adyen/jobs/8300919",
+      "original_published_at": "2026-10-23T11:39:00Z",
+      "first_seen_at": "2026-10-23T11:47:00Z",
+      "alerted_at": "2026-10-26T01:49:00Z",
+      "description_fingerprint_terms": "investigate suspicious transactions daily screening alerts sar-ready case narratives merchant compliance risk profiles",
+      "report_filename": "radar_fintech_ocultas_2026-10-26.html"
+    }
+  ]
+}
