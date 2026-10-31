@@ -3627,8 +3627,24 @@
     "specialism": "Spanish banking: risk, payments compliance and financial crime",
     "priority": "P1",
     "origin": "Official employer-controlled careers page checked 2026-10-13: https://www.bbva.com/es/empleo/",
-    "verification_level": "official_careers_url_not_necessarily_api",
-    "enabled": true
+    "verification_level": "official_ats_live_probe_passed",
+    "enabled": true,
+    "ats": [
+      {
+        "kind": "workday",
+        "url": "https://bbva.wd3.myworkdayjobs.com/BBVA",
+        "search_terms": [
+          "compliance",
+          "aml",
+          "kyc",
+          "financial crime",
+          "fraud",
+          "cumplimiento",
+          "blanqueo"
+        ]
+      }
+    ],
+    "ats_evidence": "2026-10-19 live official BBVA public Workday CXS: https://bbva.wd3.myworkdayjobs.com/wday/cxs/bbva/BBVA/jobs, 200 with 47 searchText=compliance postings including absolute original startDate from exact /job/ detail, jobPostingId,title,posted:true,canApply:true, full JD. GitHub Actions #39277367860. Search terms limit breadth without inventing fresh dates; Spanish local role ranking still independently verified."
   },
   {
     "name": "CaixaBank",
