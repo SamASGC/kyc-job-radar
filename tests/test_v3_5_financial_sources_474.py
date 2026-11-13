@@ -74,7 +74,14 @@ class FinancialSourcesV35Tests(unittest.TestCase):
                 c=self.by_name[name.casefold()]
                 self.assertEqual(c["careers_url"],url)
                 self.assertIn(url,c["origin"])
-                self.assertEqual(c.get("ats",[]),[ATS[name]] if name in ATS else [])
+                if name == "Mangopay":
+                    # v3.29 verified Teamtailor schema.org JobPosting
+                    # original date + exact Mangopay hiringOrganization.
+                    self.assertEqual(c["verification_level"], "official_ats_live_probe_passed")
+                    self.assertEqual(c["ats"], [{"kind":"teamtailor","url":REPAIRED["Mangopay"]}])
+                    self.assertIn("39277080325",c["ats_evidence"])
+                else:
+                    self.assertEqual(c.get("ats",[]),[ATS[name]] if name in ATS else [])
 
     def test_does_not_equate_source_configuration_to_confirmed_vacancies(self):
         from job_radar.v2_quality import original_posted_at
