@@ -81,7 +81,7 @@ def verify_input_coverage(paths,expected_sources,require_complete=True):
         raise ValueError("Expected source mismatch: "+repr((set(all_sources),set(expected_sources))))
     return all_sources
 
-def select_and_merge(records,history,run_id=None):
+def select_and_merge(records,history,run_id=None,configured_sources=None):
     state=check_history(json.loads(json.dumps(history)))
     now=iso_utc()
     new_items={lane:[] for lane in LANES}
@@ -130,7 +130,8 @@ def select_and_merge(records,history,run_id=None):
     return state,{
         "checked_at_utc":now,
         "mode":RUN_MODE,
-        "source_count":len(set(source_id for source_id,_ in records)),
+        "source_count":len(configured_sources) if configured_sources is not None else len(set(source_id for source_id,_ in records)),
+        "sources_with_role_matches":len(set(source_id for source_id,_ in records)),
         "roles_evaluated":len(records),
         "qualifying_distinct_roles":len(observations),
         "history_before":prior_count,
@@ -196,6 +197,8 @@ def tests():
         try:check_history(corrupted)
         except ValueError:pass
         else:raise AssertionError("Malformed historical state was accepted")
+    no_match_source=select_and_merge([("company",r)],blank_history(),configured_sources=["company","empty"])[1]
+    assert no_match_source["source_count"]==2 and no_match_source["sources_with_role_matches"]==1
     print("E2E_ALERT_HISTORY_TESTS_PASSED",flush=True)
 
 def main():
@@ -215,7 +218,7 @@ def main():
     verify_input_coverage(args.evidence,sources,True)
     rows=read_evidence(args.evidence)
     before=load_history(args.state_in)
-    state,report=select_and_merge(rows,before,args.run_id)
+    state,report=select_and_merge(rows,before,args.run_id,configured_sources=sources)
     Path(args.state_out).parent.mkdir(parents=True,exist_ok=True)
     Path(args.json_out).parent.mkdir(parents=True,exist_ok=True)
     Path(args.state_out).write_text(json.dumps(state,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
