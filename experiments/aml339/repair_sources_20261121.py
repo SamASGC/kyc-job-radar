@@ -139,8 +139,15 @@ by["pwc-experienced"]["workday_search_terms"]=["AML","KYC","financial crime","sa
 by["state-street"]["workday_search_terms"]=["AML","KYC","financial crime","sanctions"]
 for ident in ("santander","pwc-experienced","state-street"):
     by[ident]["repair_status"]="Scoped Workday queries only, never claim complete employer catalogue"
-for ident in ("truelayer","capimoney","lt-nayax-global-legal-compliance"):
+for ident in ("capimoney","lt-nayax-global-legal-compliance"):
     by[ident]["repair_status"]="Unconfirmed official endpoint; blocked or 404, never claim zero jobs"
+# TrueLayer employer site migrated from Greenhouse EU to the first-party Ashby board.
+# Verified via HTTP 200, not a speculative ATS slug.
+by["truelayer"]["route"]=["ashby","api.ashbyhq.com","truelayer"]
+by["truelayer"]["careers_url"]="https://jobs.ashbyhq.com/truelayer"
+by["truelayer"]["repair_status"]="Official TrueLayer careers links to Ashby; first-party public API HTTP 200 with four jobs"
+by["truelayer"]["regulation"]["regulatory_source"]="https://www.lb.lt/en/sfi-financial-market-participants/truelayer-ireland-limited"
+by["truelayer"]["regulation"]["status"]="TrueLayer (Ireland) Limited is authorised in Ireland. The Lithuanian register confirms EEA cross-border services; verify hiring entity per vacancy."
 # Regulatory register data is source metadata, NOT a property of every vacancy.
 by["vinted"]["regulation"]={
     "licensed_entity":"Vinted Pay, UAB",
