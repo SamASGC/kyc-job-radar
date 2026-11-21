@@ -1,0 +1,80 @@
+name: AML339 isolated false negative audit of excluded titles
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_false_negative_pilot.yml, experiments/aml339/false_negative_audit.py]
+permissions:
+  contents: read
+jobs:
+  inspect-excluded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - group: baltics
+            ids: vinted,verifo-lithuania,demivolt-lithuania,n26
+          - group: global
+            ids: wise,airwallex,corpay,bvnk
+          - group: remaining
+            ids: openpayd,checkout-com,nium,transfergo
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Isolate and verify real AML339 parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_false_negative"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            allow={'amlradar/__init__.py','amlradar/model.py','amlradar/net.py','amlradar/employer_links.py','amlradar/sources.py','fuentes.json','VALIDAR_REAL_SIN_TOCAR_DATOS.py'}
+            assert set(z.namelist())==allow and sum(f.file_size for f in z.infolist())<800_000
+            assert all(not f.filename.startswith('/') and '..' not in Path(f.filename).parts for f in z.infolist())
+            z.extractall(Path(os.environ['RUNNER_TEMP'])/'aml339_false_negative')
+          PY
+          cp experiments/aml339/quality_audit.py experiments/aml339/false_negative_audit.py experiments/aml339/repair_sources_20261121.py "$RUNNER_TEMP/aml339_false_negative/"
+          cd "$RUNNER_TEMP/aml339_false_negative"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+          python3 -m compileall -q false_negative_audit.py
+      - name: Inspect descriptions of titles excluded by existing AML filter
+        shell: bash
+        env:
+          IDS: ${{ matrix.ids }}
+          SHARD: ${{ matrix.group }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_false_negative"
+          python3 false_negative_audit.py --ids "$IDS" --max-details 6 --minutes 3 --out "negative_$SHARD.json"
+      - name: Report candidate false negatives and preserve unexamined count
+        shell: bash
+        env:
+          SHARD: ${{ matrix.group }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path("negative_"+os.environ["SHARD"]+".json").read_text(encoding="utf-8"))
+          assert d["summary"]["sources"]==4
+          print("FALSE_NEGATIVE_AUDIT_SUMMARY",json.dumps(d["summary"],ensure_ascii=False),flush=True)
+          for source in d["sources"]:
+            for x in source["potential_false_negatives"]:
+              print("FALSE_NEGATIVE_POSSIBLE_MISS",json.dumps({"employer":source["name"],**x},ensure_ascii=False),flush=True)
+          PY
+        working-directory: ${{ runner.temp }}/aml339_false_negative
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-false-negatives-${{ matrix.group }}
+          path: ${{ runner.temp }}/aml339_false_negative/negative_*.json
+          retention-days: 10
+          if-no-files-found: warn
