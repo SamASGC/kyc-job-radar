@@ -179,6 +179,12 @@ jobs:
           targets={
               "paynt.html":"https://paynt.com/resources/careers/",
               "b4b.html":"https://employmenthero.com/uk/jobs/organisations/b4b-payments/",
+              "verifo.html":"https://verifo.com/career/",
+              "demivolt.html":"https://www.demivolt.com/careers",
+              "paystrax.html":"https://paystrax.com/career/",
+              "nikulipe.html":"https://nikulipe.com/careers/",
+              "finci.html":"https://www.finci.com/en/career",
+              "verifone.json":"https://boards-api.greenhouse.io/v1/boards/verifone/jobs?content=false",
           }
           manifest=[]
           for fname,url in targets.items():
