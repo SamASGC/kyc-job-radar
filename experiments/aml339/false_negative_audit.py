@@ -12,7 +12,7 @@ HINT=re.compile(r"\b(?:operations?|payments?|merchant|customer|client|trust|safe
 NON_FINANCIAL=re.compile(r"\b(?:marketing|copywriter|recruiting|sourcing|people partner|office manager|facilities|graphic|engineer|software|product designer|business development|sales|counsel|HR\b)\b",re.I)
 CORE=MAIN-{"Financial crime investigations"}
 
-def audit(source,max_details=8,timeout=10,minutes=3):
+def audit(source,max_details=8,timeout=10,minutes=3,offset=0,in_scope_only=False):
     board=Board(source,Client(timeout=timeout,deadline=time.monotonic()+minutes*60),max_minutes=minutes)
     result={"source_id":source["id"],"name":source["name"],"state":"listing_failed",
             "listed":None,"excluded_by_existing_title_filter":None,
@@ -23,22 +23,28 @@ def audit(source,max_details=8,timeout=10,minutes=3):
         raw=[j for j in jobs if not candidate(j)]
         # Only sample high-plausibility title misses; do not pretend all others were audited.
         ranked=[j for j in raw if HINT.search(clean(j.get("title"))) and not NON_FINANCIAL.search(clean(j.get("title")))]
+        if in_scope_only:
+            ranked=[j for j in ranked if role_geography(j.get("location")) not in (
+                "outside_scope","excluded_barcelona","swiss_future")]
         ranked.sort(key=lambda j:(0 if role_geography(j.get("location")) in ("target","remote_location_review") else 1,
                                   prioritize(j)))
         scope=lambda j: role_geography(j.get("location")) not in (
             "outside_scope","excluded_barcelona","swiss_future")
         scope_counts=dict(Counter(role_geography(j.get("location")) for j in ranked))
-        still_plausible=[j for j in ranked[max_details:] if scope(j)]
+        selected=ranked[offset:offset+max_details]
+        still_plausible=[j for j in ranked[offset+len(selected):] if scope(j)]
         result.update(state="listing_extracted",listed=len(jobs),
                       excluded_by_existing_title_filter=len(raw),
                       eligible_for_detail_review=len(ranked),
+                      audited_offset=offset,scope_only=in_scope_only,
+                      next_offset=(offset+len(selected) if offset+len(selected)<len(ranked) else None),
                       plausible_geography_counts=scope_counts,
-                      unexamined=max(0,len(ranked)-max_details),
+                      unexamined=max(0,len(ranked)-offset-len(selected)),
                       unexamined_potentially_in_scope=len(still_plausible),
                       unexamined_target_examples=[{
                           "title":clean(j.get("title")),"location":clean(j.get("location")),
                           "url":j.get("url")} for j in still_plausible[:20]])
-        for job in ranked[:max_details]:
+        for job in selected:
             error=None;verified=False
             try:
                 board.hydrate(job)
@@ -57,7 +63,7 @@ def audit(source,max_details=8,timeout=10,minutes=3):
                 "requirement_evidence":analysis["requirement_evidence"],
                 "duty_evidence":analysis.get("duty_evidence",[]),
                 "error":error}
-            if meaningful and not analysis["barriers"] and analysis["geography"] in ("target","remote_location_review","mixed_location_review"):
+            if meaningful and not analysis["barriers"] and analysis["geography"] in ("target","remote_location_review","mixed_location_review","unknown"):
                 result["potential_false_negatives"].append(record)
             else:
                 result["negative_controls"].append(record)
@@ -83,16 +89,18 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--ids",required=True)
     p.add_argument("--max-details",type=int,default=6)
+    p.add_argument("--offset",type=int,default=0)
+    p.add_argument("--in-scope-only",action="store_true")
     p.add_argument("--minutes",type=int,default=3)
     p.add_argument("--out",required=True)
     args=p.parse_args()
     run_tests()
-    if not 1<=args.max_details<=8 or not 1<=args.minutes<=4:raise SystemExit("Invalid bounds")
+    if not 1<=args.max_details<=8 or not 1<=args.minutes<=4 or not 0<=args.offset<=300:raise SystemExit("Invalid bounds")
     sources={x["id"]:x for x in json.loads(Path("fuentes.json").read_text(encoding="utf-8"))["sources"]}
     ids=[s.strip() for s in args.ids.split(",")]
     assert len(ids)<=5 and len(ids)==len(set(ids)) and all(x in sources for x in ids)
     before=Path("fuentes.json").read_bytes()
-    entries=[audit(sources[x],max_details=args.max_details,minutes=args.minutes) for x in ids]
+    entries=[audit(sources[x],max_details=args.max_details,minutes=args.minutes,offset=args.offset,in_scope_only=args.in_scope_only) for x in ids]
     assert before==Path("fuentes.json").read_bytes()
     summary={"sources":len(entries),
              "listings_extracted":sum(x["state"]=="listing_extracted" for x in entries),
