@@ -23,10 +23,10 @@ TARGET = {
     "PEP":r"\b(?:PEPs?|politically exposed persons?)\b",
     "Sanctions screening":r"\b(?:sanctions?|sanctioned (?:entities|individuals))\b",
     "Adverse media":r"\b(?:adverse media|negative media|negative news)\b",
-    "TM":r"\b(?:transaction(?:al)? monitoring|monitoring transactions|transaction alerts?|suspicious transactions?)\b",
+    "TM":r"\b(?:transaction(?:al)? monitoring|monitoring (?:of )?transactions|transaction alerts?|suspicious transactions?)\b",
     "SAR/STR":r"\b(?:SARs?|STRs?|suspicious (?:activity|transaction) reports?)\b",
     "CDD/EDD/KYB":r"\b(?:CDD|EDD|KYB|KYC|due diligence|customer onboarding)\b",
-    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat(?:e|ing|ion|ions) (?:suspicious|financial|potential|account|transaction)|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
+    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat\w*.{0,80}(?:money laundering|financial crime|fraud)|investigat(?:e|ing|ion|ions) (?:suspicious|financial|potential|account|transaction)|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
 }
 RX={k:re.compile(v,re.I) for k,v in TARGET.items()}
 MAIN=set(TARGET)-{"CDD/EDD/KYB"}
@@ -103,9 +103,13 @@ def evaluate(job, application_verified:bool):
         if mode!="requirements" or OPTIONAL.search(line):continue
         if len(line)>500:continue
         if UNSUPPORTED_LANGUAGE.search(line) and MANDATORY_WORDS.search(line):
-            barriers.append("Idioma adicional obligatorio no acreditado")
-            traces.append({"kind":"language_requirement","text":short_sentence(line)})
-        if re.search(r"\b(?:degree|bachelor|master|university diploma|law degree)\b",line,re.I) and MANDATORY_WORDS.search(line):
+            language_alternative=bool(re.search(
+                r"\b(?:English|Spanish|French)\s*(?:and\s*/\s*or|or|/)\s*(?:Maltese|Lithuanian|Estonian|Latvian|German|Russian|Italian|Polish|Dutch|Portuguese)\b|"
+                r"\b(?:Maltese|Lithuanian|Estonian|Latvian|German|Russian|Italian|Polish|Dutch|Portuguese)\s*(?:or|/)\s*(?:English|Spanish|French)\b",
+                line,re.I))
+            if not language_alternative:barriers.append("Idioma adicional obligatorio no acreditado")
+            traces.append({"kind":"language_alternative" if language_alternative else "language_requirement","text":short_sentence(line)})
+        if re.search(r"\b(?:bachelor(?:'s)?|master(?:'s)?|university|law)\s+(?:degree|diploma)\b|\b(?:university degree|degree in (?:law|finance|business|economics|accounting|banking)|completed degree)\b",line,re.I) and MANDATORY_WORDS.search(line):
             flags.append("Titulación universitaria terminada posiblemente obligatoria (Derecho en curso)")
             traces.append({"kind":"degree_requirement","text":short_sentence(line)})
         n=[int(m.group(1)) for m in YEAR_REQUIREMENT.finditer(line)]
@@ -259,6 +263,20 @@ def test():
     assert evaluate(dict(core,title="Sanctions & Fraud Manager"),True)["class"]=="not_recommended"
     assert role_geography("Limassol, Cyprus")=="outside_scope"
     assert role_geography("Tas-Sliema")=="target"
+    alt=dict(core,description=core["description"].replace(
+        "English fluency required.","Fluent in English and/or Russian."))
+    assert not any("Idioma adicional obligatorio" in x for x in evaluate(alt,True)["barriers"])
+    assert not any("Titulación universitaria" in x for x in evaluate(
+        dict(core,description=core["description"]+"\nExcellent analytical skills with a high degree of initiative."),True)["uncertainties"])
+    junior=dict(core,title="Junior AML",description="\n".join([
+        "Our junior specialist will receive extensive training on how to conduct investigations",
+        "to identify financial crime, including money laundering and fraud.",
+        "Key Responsibilities",
+        "Conducting investigations to identify financial crime and writing findings.",
+        "Criteria",
+        "Fluent English and analytical skills required."]))
+    assert "Financial crime investigations" in evaluate(junior,True)["functions"]
+    assert evaluate(junior,True)["training_mentioned"]
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
