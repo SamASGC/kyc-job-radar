@@ -26,7 +26,7 @@ TARGET = {
     "TM":r"\b(?:transaction(?:al)? monitoring|monitoring (?:of )?transactions|transaction alerts?|suspicious transactions?)\b",
     "SAR/STR":r"\b(?:SARs?|STRs?|suspicious (?:activity|transaction) reports?)\b",
     "CDD/EDD/KYB":r"\b(?:CDD|EDD|KYB|KYC|due diligence|customer onboarding)\b",
-    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat\w*.{0,80}(?:money laundering|financial crime|fraud)|investigat(?:e|ing|ion|ions) (?:suspicious (?:transactions?|activity)|financial crime|transaction (?:alerts?|fraud))|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
+    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat\w*.{0,80}(?:money laundering|financial crime|fraud)|investigat(?:e|ing|ion|ions) (?:suspicious (?:transactions?|activity)|financial crime|transaction (?:alerts?|fraud))|money laundering investigations?|research (?:regarding )?(?:prospective(?: and existing)?|existing) customers|determining whether activity presents indications of financial crime)\b",
 }
 RX={k:re.compile(v,re.I) for k,v in TARGET.items()}
 MAIN=set(TARGET)-{"CDD/EDD/KYB"}
@@ -152,9 +152,18 @@ def evaluate(job, application_verified:bool):
     recency=freshness(job.get("date"),hours=72)
     if recency!="fresh":flags.append("Publicación no confirmada dentro de las últimas 72 horas: "+recency)
     if not application_verified:flags.append("Candidatura directa no verificada")
-    role_training=[short_sentence(line) for mode,line in evidence if re.search(
-        r"(?:receive|provide|given|offer) (?:an? )?(?:extensive |structured |comprehensive |on.the.job )?training|training on how to",
-        line,re.I)][:3]
+    # Capture a local phrase, never the first 230 characters of an
+    # arbitrarily long employer page that merely contains a training claim.
+    role_training=[]
+    for mode,line in evidence:
+        for m in re.finditer(
+            r"(?:receive|provide|given|offer) (?:an? )?(?:extensive |structured |comprehensive |on.the.job )?training|training on how to",
+            line,re.I):
+            excerpt=line[max(0,m.start()-65):min(len(line),m.end()+200)]
+            if re.search(r"financial crime|money laundering|investigat|fraud|sanctions|screening|\bAML\b|\bKYC\b",excerpt,re.I):
+                role_training.append(clean(excerpt)[:250])
+                break
+        if len(role_training)>=3:break
     score=sum(WEIGHT[k] for k in skills)+sum(WEIGHT[k]//3 for k in duties)
     if geo=="target":score+=12
     if "SoF" in skills and "SoW" in skills:score+=5
@@ -303,6 +312,17 @@ def test():
         "Fluent English and analytical skills required."]))
     assert "Financial crime investigations" in evaluate(junior,True)["functions"]
     assert evaluate(junior,True)["training_mentioned"]
+    official_junior=dict(core,title="Junior AML",description="\n".join([
+        "Our company is seeking a junior AML specialist who will receive extensive training",
+        "on how to conduct investigations to identify financial crime.",
+        "Key Responsibilities",
+        "Determining whether activity presents indications of financial crime, including money laundering and fraud;",
+        "Research regarding prospective and existing customers to assess client risk.",
+        "Criteria",
+        "Fluent English is required."]))
+    reviewed=evaluate(official_junior,True)
+    assert "Financial crime investigations" in reviewed["explicit_duties"],reviewed
+    assert reviewed["training_mentioned"] and "training" in reviewed["training_evidence"][0].lower(),reviewed
     regulatory=dict(core,title="Junior Compliance Analyst",description="\n".join([
         "Duties & Responsibilities",
         "Supporting the Data Protection Officer, including investigating potential breaches",
