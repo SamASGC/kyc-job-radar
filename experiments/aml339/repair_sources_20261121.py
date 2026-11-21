@@ -141,5 +141,22 @@ for ident in ("santander","pwc-experienced","state-street"):
     by[ident]["repair_status"]="Scoped Workday queries only, never claim complete employer catalogue"
 for ident in ("truelayer","capimoney","lt-nayax-global-legal-compliance"):
     by[ident]["repair_status"]="Unconfirmed official endpoint; blocked or 404, never claim zero jobs"
+# Regulatory register data is source metadata, NOT a property of every vacancy.
+by["vinted"]["regulation"]={
+    "licensed_entity":"Vinted Pay, UAB",
+    "country":"Lithuania",
+    "licence_type":"Electronic money institution",
+    "regulator":"Bank of Lithuania",
+    "regulatory_source":"https://www.lb.lt/en/sfi-financial-market-participants//vinted-pay-uab",
+    "status":"Vinted Pay licence verified; the portal also contains Vinted Marketplace/Go roles. Do not assign licence to every vacancy."
+}
+by["caceis-europe"]["regulation"]={
+    "licensed_entity":"CACEIS Bank, Luxembourg branch",
+    "country":"Luxembourg",
+    "licence_type":"Credit institution branch",
+    "regulator":"Entity-dependent",
+    "regulatory_source":"https://www.bde.es/webbe/en/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-financieras-monetarias-pais/lista-mfi-lu.html",
+    "status":"CACEIS Bank Luxembourg branch confirmed; verify the hiring legal entity for each posting."
+}
 p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
 print("REPAIR339_APPLIED",len(by),flush=True)
