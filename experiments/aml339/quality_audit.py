@@ -41,8 +41,8 @@ TECH_TITLE=re.compile(r"\b(?:engineer|developer|architect|product owner|account 
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
-DUTY=re.compile(r"\b(?:responsibilit\w*|your role|what you(?:'ll| will) do|key duties|day.to.day|what you will be doing|main tasks|functions)\b",re.I)
-REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills)\b",re.I)
+DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will) do|key duties|day.to.day|what you will be doing|main tasks|functions)\b",re.I)
+REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills|criteria|your qualifications)\b",re.I)
 OPTIONAL=re.compile(r"\b(?:nice to have|preferred|desirable|would be a plus|advantageous|not required|or equivalent experience)\b",re.I)
 
 def short_sentence(line:str)->str:
@@ -54,7 +54,7 @@ def sections(description):
     for line in lines:
         if len(line)<105 and REQ.search(line):mode="requirements"
         elif len(line)<105 and DUTY.search(line):mode="duties"
-        elif len(line)<105 and re.search(r"what we offer|benefits|perks|about us|why join",line,re.I):mode="other"
+        elif len(line)<105 and re.search(r"what we offer|we offer|benefits|perks|about us|why join",line,re.I):mode="other"
         parsed.append((mode,line))
     return parsed
 
