@@ -1,0 +1,83 @@
+name: AML 339 - real extractor expanded ATS sample
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths:
+      - .github/workflows/aml339_expanded_ats.yml
+      - experiments/aml339/full_original_339_sources.zip
+permissions:
+  contents: read
+jobs:
+  live-original-ats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify original 339-source code archive and config
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_full"
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import os,json
+          archive=Path('experiments/aml339/full_original_339_sources.zip')
+          target=Path(os.environ['RUNNER_TEMP'])/'aml339_full'
+          expected={'amlradar/__init__.py','amlradar/model.py','amlradar/net.py','amlradar/employer_links.py','amlradar/sources.py','fuentes.json','VALIDAR_REAL_SIN_TOCAR_DATOS.py'}
+          with ZipFile(archive) as z:
+              assert set(z.namelist())==expected
+              assert sum(x.file_size for x in z.infolist())<800_000
+              z.extractall(target)
+          j=json.loads((target/'fuentes.json').read_text(encoding='utf-8'))
+          assert len(j['sources'])==len(set(x['id'] for x in j['sources']))==339
+          print('VERIFIED_REGISTERED_SOURCES',len(j['sources']),flush=True)
+          PY
+          python3 -m compileall -q "$RUNNER_TEMP/aml339_full/amlradar" "$RUNNER_TEMP/aml339_full/VALIDAR_REAL_SIN_TOCAR_DATOS.py"
+      - name: Real original extractor across eight new ATS employers
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_full"
+          python3 VALIDAR_REAL_SIN_TOCAR_DATOS.py \
+            --ids 'adyen,airwallex,bondora,enfuce,finom,inbank,mangopay,luminor' \
+            --timeout 10 --samples 0 --minutes 1
+      - name: Report honest source health, never modify state
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json
+          base=Path(os.environ['RUNNER_TEMP'])/'aml339_full'/'DIAGNOSTICOS'
+          candidates=sorted(base.glob('SMOKE_REAL_*.json'))
+          if not candidates:raise RuntimeError('No source-health report produced')
+          d=json.loads(candidates[-1].read_text(encoding='utf-8'))
+          s=d['summary']
+          assert d['source_config_unmodified'] is True and s['sources_probed']==8
+          print('ATS_339_SUMMARY',json.dumps(s,ensure_ascii=False),flush=True)
+          for item in d['sources']:
+              print('ATS_339_SOURCE',json.dumps({'id':item['source_id'],'state':item['state'],
+                'jobs':item.get('count'),'relevant':item.get('relevant_count'),'dated':item.get('dated_count'),
+                'error':item.get('error')},ensure_ascii=False),flush=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+              f.write('# Real 339-source code — ATS sample\n\n')
+              f.write(f"Checked {s['sources_probed']} distinct employers; extracted listings from {s['listing_extracted']}; found {s['jobs_found_in_listings']} jobs, of which {s['relevant_titles_in_listings']} title matches. This is not a full 339-site scan.\n\n")
+              for item in d['sources']:
+                  f.write(f"- {item['source_id']}: {item['state']} ({item.get('count')} listed)\n")
+          if s['listing_extracted']<5:raise RuntimeError('Too few successful sources; inspect source health artifact')
+          PY
+      - name: Attach immutable diagnostic JSON and Markdown
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-real-expanded-ats
+          path: ${{ runner.temp }}/aml339_full/DIAGNOSTICOS
+          retention-days: 10
+          if-no-files-found: warn
