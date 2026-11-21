@@ -88,7 +88,7 @@ jobs:
               )
               try:
                   with urllib.request.urlopen(req, timeout=17, context=ssl.create_default_context()) as resp:
-                      body = resp.read(500000)
+                      body = resp.read(2500000)
                       item["status"] = resp.status
                       item["final_url"] = resp.url
                       item["body_bytes"] = len(body)
@@ -105,6 +105,20 @@ jobs:
                       item["headings"] = parser.headings[:15]
                       item["candidate_links_count"] = len(parser.links)
                       item["candidate_links"] = parser.links[:12]
+          if name == "paynt_employer_careers":
+              trusted = {"www.linkedin.com", "linkedin.com", "it.linkedin.com"}
+              matching = [x for x in parser.links if
+                          urllib.parse.urlparse(x["url"]).hostname in trusted and
+                          re.fullmatch(r"/jobs/view/\d+/?", urllib.parse.urlparse(x["url"]).path) and
+                          re.fullmatch(r"Read More about\s+(.+)", x["text"], re.I)]
+              item["trusted_role_links_count"] = len(matching)
+              item["trusted_role_links"] = matching[:6]
+          if name == "b4b_employmenthero":
+              matching = [x for x in parser.links if
+                          urllib.parse.urlparse(x["url"]).hostname == "employmenthero.com" and
+                          re.fullmatch(r"/(?:uk/)?jobs/position/[^/?#]+/?", urllib.parse.urlparse(x["url"]).path)]
+              item["official_job_links_count"] = len(matching)
+              item["official_job_links"] = matching[:8]
                       item["linkedin_job_links_count"] = sum(
                           "/jobs/view/" in x["url"] and "linkedin.com" in x["url"] for x in parser.links
                       )
