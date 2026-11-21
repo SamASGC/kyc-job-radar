@@ -1,0 +1,91 @@
+name: AML 339 - priority real posting and application audit
+on:
+  push:
+    branches: ["experiment/aml339-http-diagnostic-20261121"]
+    paths: [".github/workflows/aml339_priority_details.yml"]
+permissions:
+  contents: read
+jobs:
+  priority-details:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify actual original 339-source legacy code
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_details"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os,json
+          dst=Path(os.environ["RUNNER_TEMP"])/"aml339_details"
+          expected={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+            "amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+            assert set(z.namelist())==expected and sum(x.file_size for x in z.infolist())<800000
+            z.extractall(dst)
+          j=json.loads((dst/"fuentes.json").read_text(encoding="utf-8"))
+          assert len(j["sources"])==339 and len(set(s["id"] for s in j["sources"]))==339
+          print("VERIFIED_SOURCES",len(j["sources"]),flush=True)
+          PY
+      - name: Verify up to three actual AML-related postings per priority employer
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_details"
+          set +e
+          python3 VALIDAR_REAL_SIN_TOCAR_DATOS.py \
+            --ids 'julius-baer,lombard-odier,mirabaud,n26,iq-eq,bvnk,checkout-com,convera,corpay,dws,blackrock,nium' \
+            --timeout 12 --samples 3 --minutes 2
+          rc=$?
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+      - name: Report actual application and date evidence (not just matching titles)
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from collections import Counter
+          import json,os
+          base=Path(os.environ["RUNNER_TEMP"])/"aml339_details"/"DIAGNOSTICOS"
+          files=sorted(base.glob("SMOKE_REAL_*.json"))
+          assert len(files)==1
+          d=json.loads(files[0].read_text(encoding="utf-8"))
+          assert d["source_config_unmodified"] and d["summary"]["sources_probed"]==12
+          summary=d["summary"]
+          classes=Counter(x["detail"] for r in d["sources"] for x in r["samples"])
+          print("PRIORITY_DETAILS_SUMMARY",json.dumps(summary,ensure_ascii=False),flush=True)
+          print("PRIORITY_DETAILS_CLASSIFICATION",json.dumps(classes,ensure_ascii=False),flush=True)
+          for r in d["sources"]:
+            print("PRIORITY_DETAILS_SOURCE",json.dumps({
+              "id":r["source_id"],"state":r["state"],"total_jobs":r.get("count"),
+              "relevant":r.get("relevant_count"),
+              "samples":[{"title":x.get("title"),"date":x.get("posting_date"),
+                "freshness":x.get("freshness"),"verification":x.get("detail"),
+                "location":x.get("location") or x.get("location_initial")}
+                for x in r["samples"]]
+            },ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("# AML 339 - priority detail audit\n\n")
+            f.write("12 employer portals, up to three actual jobs sampled per source, 72-hour threshold.\n\n")
+            f.write("- Verified applications: "+str(summary["applications_with_verification_passed"])+"\n")
+            f.write("- Confirmed recent and verified: "+str(summary["confirmed_recent_jobs"])+"\n")
+            f.write("- Unverified, external or failed: "+str(sum(classes.values())-summary["applications_with_verification_passed"])+"\n")
+          PY
+      - name: Upload source-by-source real detailed evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-priority-detailed-evidence
+          path: ${{ runner.temp }}/aml339_details/DIAGNOSTICOS/
+          retention-days: 10
+          if-no-files-found: warn
