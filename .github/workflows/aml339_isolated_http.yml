@@ -169,6 +169,36 @@ jobs:
               f.write("## B4B curl\n\n" + json.dumps(curl_result, ensure_ascii=False) + "\n")
           print("AML339_REMOTE_EVIDENCE", json.dumps(report, ensure_ascii=False), flush=True)
           PY
+      - name: Preserve official public HTML snapshots for offline real-parser tests
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, urllib.request, urllib.error
+          paths=pathlib.Path("snapshot_html")
+          paths.mkdir(exist_ok=True)
+          targets={
+              "paynt.html":"https://paynt.com/resources/careers/",
+              "b4b.html":"https://employmenthero.com/uk/jobs/organisations/b4b-payments/",
+          }
+          manifest=[]
+          for fname,url in targets.items():
+              try:
+                  req=urllib.request.Request(url,headers={
+                      "User-Agent":"Mozilla/5.0 (compatible; AMLJobRadar/1.0; public read-only careers search)",
+                      "Accept":"text/html,application/json;q=0.9,*/*;q=0.8"})
+                  with urllib.request.urlopen(req,timeout=18) as resp:
+                      raw=resp.read(3_000_000)
+                      status=resp.status
+                      final=resp.url
+                  if status!=200 or len(raw)>=3_000_000: raise ValueError("Unexpected response or oversized page")
+                  (paths/fname).write_bytes(raw)
+                  manifest.append({"file":fname,"status":status,"final_url":final,
+                                   "bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest()})
+              except Exception as exc:
+                  manifest.append({"file":fname,"error":type(exc).__name__+": "+str(exc)[:250]})
+          (paths/"manifest.json").write_text(json.dumps(manifest,indent=2),encoding="utf-8")
+          print("SNAPSHOT_MANIFEST",json.dumps(manifest),flush=True)
+          PY
       - name: Preserve JSON and Markdown evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -177,5 +207,6 @@ jobs:
           path: |
             aml339_http_diagnostic.json
             aml339_http_diagnostic.md
+            snapshot_html/
           if-no-files-found: warn
           retention-days: 7
