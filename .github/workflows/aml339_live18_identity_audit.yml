@@ -1,0 +1,84 @@
+name: AML339 stable ATS identity check against 18 new live HTTP lists
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_live18_identity_audit.yml, experiments/aml339/compare_live18.py]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Read saved actual HTTP listing baltics
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937306450
+          github-token: ${{ github.token }}
+          name: aml339-live18-baltics
+          path: live/baltics
+      - name: Read saved actual HTTP listing international
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937306450
+          github-token: ${{ github.token }}
+          name: aml339-live18-international
+          path: live/international
+      - name: Read saved actual HTTP listing financial
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937306450
+          github-token: ${{ github.token }}
+          name: aml339-live18-financial
+          path: live/financial
+      - name: Read earlier fully inspected 197 posting descriptions
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937125476
+          github-token: ${{ github.token }}
+          name: aml339-e2e18-dry-run-report
+          path: baseline
+      - name: Reconcile job IDs and dates, not merely title punctuation or URL slugs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/compare_live18.py --self-test --baseline baseline/e2e18_merged_quality.json
+          python3 experiments/aml339/compare_live18.py \
+            --baseline baseline/e2e18_merged_quality.json \
+            --out live18_reconciled_delta.json \
+            live/baltics/live_baltics.json \
+            live/international/live_international.json \
+            live/financial/live_financial.json
+      - name: Summarise real changes and block speculation about freshness
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path('live18_reconciled_delta.json').read_text(encoding='utf-8'))
+          summary=d['summary']
+          assert summary['sources']==18
+          print('AML339_LIVE18_STABLE_SUMMARY',json.dumps(summary),flush=True)
+          for source in d['sources']:
+            if source['status']!='unchanged':
+              print('AML339_LIVE18_CHANGED_SOURCE',json.dumps(source,ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write('# AML 339 — real HTTP listing comparison\n\n')
+            f.write('18 source inventories, stable ATS job identities.\n\n')
+            f.write('Statuses: '+json.dumps(summary)+'\n\n')
+            f.write('A changed job ID requires a new description/date/application verification. No alerts were sent.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aml339-live18-stable-identity-result
+          path: live18_reconciled_delta.json
+          retention-days: 20
