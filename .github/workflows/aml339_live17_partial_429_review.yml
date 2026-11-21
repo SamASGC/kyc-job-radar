@@ -1,0 +1,106 @@
+name: AML339 17-live-source PARTIAL E2E preview while Payabl 429 cools down
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_live17_partial_429_review.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  partial-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Download all 18 original live HTTP source reports, including Payabl error
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937777439
+          github-token: ${{ github.token }}
+          pattern: aml339-live-full-source-*
+          path: sources
+      - name: Verify that exactly one source was blocked and no others were incomplete
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          files=sorted(Path('sources').rglob('source_*.json'))
+          assert len(files)==18,len(files)
+          entries=[(p,json.loads(p.read_text(encoding='utf-8'))['sources'][0]) for p in files]
+          errors=[x for p,x in entries if x['state']!='listing_extracted' or not x['list_complete']]
+          assert len(errors)==1 and errors[0]['source_id']=='payabl'
+          assert 'HTTP 429' in ' '.join(errors[0]['errors'])
+          good=[(p,x) for p,x in entries if x['source_id']!='payabl']
+          assert len(good)==17
+          assert all(len(x['audited'])==x['relevant_leads'] for p,x in good)
+          summary={'source_count':17,'blocked_source':'payabl','rate_limit_error':errors[0]['errors'][0],
+            'matched':sum(x['relevant_leads'] for p,x in good),
+            'geo_excluded':sum(x['skipped_details_outside_geo'] for p,x in good),
+            'details_attempted':sum(x['attempted_in_scope_details'] for p,x in good),
+            'unverified_details':sum(x['unverified_in_scope'] for p,x in good),
+            'source_status':'INCOMPLETE_18_FULL_E2E_NO_HISTORY_CHECKPOINT'}
+          assert summary['matched']==195 and summary['details_attempted']==67 and summary['unverified_details']==0
+          Path('source_paths.txt').write_text('\n'.join(str(p) for p,x in good)+'\n',encoding='utf-8')
+          Path('partial17_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('PARTIAL17_PREFLIGHT',json.dumps(summary,ensure_ascii=False),flush=True)
+          PY
+      - name: Read existing 18-source history solely for temporary preview
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937357980
+          github-token: ${{ github.token }}
+          name: aml339-e2e18-isolated-state
+          path: restored
+      - name: Evaluate ONLY the 17 accessible sources, without persisting state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s restored/isolated_alert_history.json
+          mkdir -p previews temporary_state
+          mapfile -t files < source_paths.txt
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,airwallex,mollie,truelayer \
+            --state-in restored/isolated_alert_history.json \
+            --state-out temporary_state/not_persisted_history.json \
+            --json-out previews/partial_alerts.json --md-out previews/partial_alerts.md \
+            "${files[@]}"
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,airwallex,mollie,truelayer \
+            --state-in temporary_state/not_persisted_history.json \
+            --state-out temporary_state/replay_not_persisted.json \
+            --json-out previews/replay.json --md-out previews/replay.md \
+            "${files[@]}"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          first=json.loads(Path('previews/partial_alerts.json').read_text())
+          replay=json.loads(Path('previews/replay.json').read_text())
+          prev=json.loads(Path('restored/isolated_alert_history.json').read_text())
+          assert first['source_count']==17 and first['roles_evaluated']==195
+          assert replay['new_counts']=={'confirmed_recent':0,'promising_date_unconfirmed':0}
+          print('PARTIAL17_DRY_RUN',json.dumps({'sources':17,'roles':195,
+            'prior_history':len(prev['records']),'simulated_new':first['new_counts'],
+            'replay':replay['new_counts'],'warning':'NO persistent history checkpoint because Payabl 429'},
+            ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write('# AML339 — 17/18 full HTTP sources; Payabl rate limited\n\n')
+            f.write('195 title matches reviewed; 67 target/unknown detail requests.\n\n')
+            f.write('No history persisted or emails sent.\n\n')
+            f.write('Partial simulated alerts: '+json.dumps(first['new_counts'])+'\n')
+          PY
+      - name: Keep diagnostic evidence but DO NOT upload historical state
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-partial17-429-evidence-only
+          path: |
+            partial17_summary.json
+            previews/
+          retention-days: 20
+          if-no-files-found: error
