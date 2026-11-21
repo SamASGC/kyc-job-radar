@@ -1,0 +1,85 @@
+name: AML339 isolated follow-up quality evidence batches
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_quality_followup.yml]
+permissions:
+  contents: read
+jobs:
+  audit-next:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - group: wise-corpay
+            ids: wise,corpay
+          - group: airwallex-bvnk
+            ids: airwallex,bvnk
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify and unpack isolated original job source parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_next"
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+            allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+              "amlradar/employer_links.py","amlradar/sources.py",
+              "fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==allowed
+            assert sum(x.file_size for x in z.infolist())<800000
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_next")
+          PY
+          cp experiments/aml339/quality_audit.py experiments/aml339/repair_sources_20261121.py "$RUNNER_TEMP/aml339_next/"
+          cd "$RUNNER_TEMP/aml339_next"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Audit the next twelve ranked leads per company (offset 7)
+        env:
+          IDS: ${{ matrix.ids }}
+          SHARD: ${{ matrix.group }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_next"
+          python3 quality_audit.py --ids "$IDS" --offset 7 --max-details 12 \
+            --timeout 10 --minutes-per-source 4 --out quality_followup_$SHARD.json
+      - name: Verify non-silent pagination and save evidence
+        env:
+          SHARD: ${{ matrix.group }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_next"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          d=json.loads(Path("quality_followup_"+os.environ["SHARD"]+".json").read_text())
+          assert d["total_configured_sources"]==339 and len(d["sources"])==2
+          for r in d["sources"]:
+            assert r["audited_offset"]==7
+            assert r["skipped_before"]==7
+            if r["next_offset"] is not None:assert r["next_offset"]>7
+            print("FOLLOWUP_339_SOURCE",json.dumps({"id":r["source_id"],
+              "leads":r["relevant_leads"],"reviewed":len(r["audited"]),
+              "remaining":r.get("skipped_after"),"next_offset":r.get("next_offset"),
+              "classes":[x["evaluation"]["class"] for x in r["audited"]]},ensure_ascii=False),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-quality-followup-${{ matrix.group }}
+          path: ${{ runner.temp }}/aml339_next/quality_followup_*.json
+          if-no-files-found: warn
+          retention-days: 10
