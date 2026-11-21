@@ -1,0 +1,193 @@
+name: AML339 - exhaustive target-country false negative title audit (106)
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_in_scope_false_negative_106.yml]
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - source: wise
+            offset: 0
+            expected: 11
+          - source: wise
+            offset: 8
+            expected: 11
+          - source: airwallex
+            offset: 0
+            expected: 44
+          - source: airwallex
+            offset: 8
+            expected: 44
+          - source: airwallex
+            offset: 16
+            expected: 44
+          - source: airwallex
+            offset: 24
+            expected: 44
+          - source: airwallex
+            offset: 32
+            expected: 44
+          - source: airwallex
+            offset: 40
+            expected: 44
+          - source: corpay
+            offset: 0
+            expected: 8
+          - source: bvnk
+            offset: 0
+            expected: 6
+          - source: vinted
+            offset: 0
+            expected: 13
+          - source: vinted
+            offset: 8
+            expected: 13
+          - source: verifo-lithuania
+            offset: 0
+            expected: 1
+          - source: demivolt-lithuania
+            offset: 0
+            expected: 1
+          - source: n26
+            offset: 0
+            expected: 1
+          - source: checkout-com
+            offset: 0
+            expected: 18
+          - source: checkout-com
+            offset: 8
+            expected: 18
+          - source: checkout-com
+            offset: 16
+            expected: 18
+          - source: transfergo
+            offset: 0
+            expected: 3
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify unmodified source archive and load patched parser in scratch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_negative_scope"
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            wanted={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py","amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==wanted and sum(f.file_size for f in z.infolist())<800000
+            assert all(not f.filename.startswith('/') and '..' not in Path(f.filename).parts for f in z.infolist())
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_negative_scope")
+          PY
+          cp experiments/aml339/quality_audit.py experiments/aml339/false_negative_audit.py experiments/aml339/repair_sources_20261121.py "$RUNNER_TEMP/aml339_negative_scope/"
+          cd "$RUNNER_TEMP/aml339_negative_scope"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Audit exactly eight candidate roles starting at selected offset
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+          OFFSET: ${{ matrix.offset }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_negative_scope"
+          python3 false_negative_audit.py --ids "$SOURCE" --in-scope-only --offset "$OFFSET" --max-details 8 --minutes 4 --out "scope_${SOURCE}_${OFFSET}.json"
+      - name: Verify source pages and offset completeness
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+          OFFSET: ${{ matrix.offset }}
+          EXPECTED: ${{ matrix.expected }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_negative_scope"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path("scope_"+os.environ["SOURCE"]+"_"+os.environ["OFFSET"]+".json").read_text(encoding="utf-8"))
+          assert len(d["sources"])==1
+          src=d["sources"][0]
+          assert src["state"]=="listing_extracted" and src["source_id"]==os.environ["SOURCE"],src
+          assert src["scope_only"] and src["audited_offset"]==int(os.environ["OFFSET"])
+          assert src["eligible_for_detail_review"]==int(os.environ["EXPECTED"]),(src["eligible_for_detail_review"],os.environ["EXPECTED"])
+          expected=min(8,int(os.environ["EXPECTED"])-int(os.environ["OFFSET"]))
+          assert src["examined"]==expected,(src["examined"],expected)
+          print("SCOPE_106_SHARD",json.dumps({"source":src["source_id"],"offset":src["audited_offset"],
+             "examined":src["examined"],"total":src["eligible_for_detail_review"],
+             "possible_misses":len(src["potential_false_negatives"])},ensure_ascii=False),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-fn-in-scope-${{ matrix.source }}-${{ matrix.offset }}
+          path: ${{ runner.temp }}/aml339_negative_scope/scope_*.json
+          retention-days: 10
+          if-no-files-found: warn
+  aggregate:
+    if: always()
+    needs: [scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-fn-in-scope-*
+          path: incoming
+      - name: Consolidate all 106 individually inspected titles without gaps
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,collections,datetime,os
+          from pathlib import Path
+          paths=sorted(Path("incoming").rglob("scope_*.json"))
+          expected={"wise":11,"airwallex":44,"corpay":8,"bvnk":6,"vinted":13,"verifo-lithuania":1,"demivolt-lithuania":1,"n26":1,"checkout-com":18,"transfergo":3}
+          all_rows=collections.defaultdict(list)
+          for path in paths:
+            src=json.loads(path.read_text(encoding="utf-8"))["sources"][0]
+            all_rows[src["source_id"]].append(src)
+          merged={}
+          for name,n in expected.items():
+            shards=sorted(all_rows[name],key=lambda r:r["audited_offset"])
+            offsets=list(range(0,n,8))
+            assert [x["audited_offset"] for x in shards]==offsets,(name,[x["audited_offset"] for x in shards],offsets)
+            reviewed=sum(x['examined'] for x in shards)
+            assert reviewed==n,(name,reviewed,n)
+            positives=[rec for x in shards for rec in x['potential_false_negatives']]
+            negatives=[rec for x in shards for rec in x['negative_controls']]
+            assert len(positives)+len(negatives)==n
+            urls=[x['url'] for x in positives+negatives]
+            merged[name]={'total':n,'audited':reviewed,'potential_false_negatives':positives,
+                 'negative_controls':len(negatives),'duplicate_urls':len(urls)-len(set(urls))}
+          total=sum(x['audited'] for x in merged.values())
+          assert total==106 and len(paths)==19,(total,len(paths))
+          report={"checked_at_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "method":"Every geo-plausible title excluded by existing filter in these ten employer boards; excludes outside-geo roles",
+            "total_reviewed":total,"potential_false_negatives":sum(len(x["potential_false_negatives"]) for x in merged.values()),
+            "sources":merged}
+          Path("aml339_scope_false_negatives_106.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print("SCOPE_106_FINAL",json.dumps({"reviewed":total,"potential_misses":report["potential_false_negatives"],
+           "per_source":{k:{"reviewed":v["audited"],"misses":len(v["potential_false_negatives"])} for k,v in merged.items()}},ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("# 106/106 in-scope candidate false negatives inspected\n\n")
+            f.write("Possible role misses: "+str(report["potential_false_negatives"])+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-fn-in-scope-merged
+          path: aml339_scope_false_negatives_106.json
+          retention-days: 10
+          if-no-files-found: warn
