@@ -8,7 +8,7 @@ p=root/"amlradar/sources.py"
 s=p.read_text(encoding="utf-8")
 needle="from email.utils import parsedate_to_datetime\n"
 assert needle in s
-s=s.replace(needle,needle+"import json\n",1)
+s=s.replace(needle,needle+"import json\nimport datetime as dt\n",1)
 start=s.index('        elif k=="vinted_html":')
 end=s.index('        elif k=="teamtailor":',start)
 s=s[:start]+'''        elif k=="vinted_html":
@@ -23,7 +23,17 @@ s=s[:start]+'''        elif k=="vinted_html":
                 except (ValueError,TypeError):continue
                 if isinstance(candidate,dict) and isinstance(candidate.get("props"),dict) and isinstance(candidate["props"].get("jobs"),dict):
                     payload=candidate;break
-            if payload is None:raise SourceError("Vinted: Next.js jobs data not available")
+            if payload is None:
+                fallback=[]
+                for link in p.links:
+                    u=up.urlparse(link["url"])
+                    m=re.fullmatch(r"/jobs/j/(\d+)",u.path)
+                    if u.hostname=="careers.vinted.com" and m:
+                        fallback.append({"id":m[1],"absolute_url":link["url"],"title":link["text"]})
+                m=re.search(r"Showing\s+\d+\s+out\s+of\s+(\d+)",p.visible(),re.I)
+                payload={"props":{"jobs":{"dataMap":{"fallback":{"jobs":fallback}}},
+                    "jobsCount":int(m[1]) if m else None}}
+                self.complete=False
             props=payload["props"]; data_map=props["jobs"].get("dataMap")
             if not isinstance(data_map,dict):raise SourceError("Vinted: jobs dataMap missing")
             seen=set()
@@ -61,7 +71,7 @@ s=s[:start]+'''        elif k=="vinted_html":
 old='''            for query in terms:
                 offset=0; seen_in_query=set(); advertised=None'''
 new='''            for query in terms:
-                if time.monotonic()+max(2,self.client.timeout)>=self.deadline:
+                if time.monotonic()+max(2,getattr(self.client,'timeout',0))>=self.deadline:
                     if not jobs:raise SourceError("Workday: time exhausted without any results")
                     self.complete=False;self.warnings.append("Workday: remaining searches not checked")
                     break
@@ -70,7 +80,7 @@ assert old in s;s=s.replace(old,new)
 old='''                while True:
                     d=self.js(base+"/jobs",{"limit":20,"offset":offset,"searchText":query})'''
 new='''                while True:
-                    if time.monotonic()+max(2,self.client.timeout)>=self.deadline:
+                    if time.monotonic()+max(2,getattr(self.client,'timeout',0))>=self.deadline:
                         if not jobs:raise SourceError("Workday: time limit before first result")
                         self.complete=False;self.warnings.append("Workday: incomplete by time limit")
                         break
@@ -82,14 +92,47 @@ new='''                    if len(seen_in_query)==before:
                         self.complete=False;self.warnings.append(f"Workday '{query}': repeated page, partial listing")
                         break'''
 assert old in s;s=s.replace(old,new)
+# CACEIS same-host fallback if the English page has no job links.
+old='''            if queue:
+                self.complete=False
+                self.warnings.append(f"Listado incompleto: límite de {max_pages} páginas alcanzado")'''
+new='''            fallback_url=self.source.get("repair_fallback_url")
+            if not jobs and fallback_url:
+                if up.urlparse(fallback_url).hostname!=h or not safe_url(fallback_url):
+                    raise SourceError("Fallback fuera del dominio oficial")
+                replacement=dict(self.source,careers_url=fallback_url,catalog_count_url=fallback_url,repair_fallback_url=None)
+                backup=Board(replacement,self.client,max_minutes=max(1,(self.deadline-time.monotonic())/60))
+                rows=backup.listing()
+                self.complete=backup.complete;self.total=backup.total
+                self.warnings.extend(backup.warnings)
+                return rows
+            if queue:
+                self.complete=False
+                self.warnings.append(f"Listado incompleto: límite de {max_pages} páginas alcanzado")'''
+assert old in s;s=s.replace(old,new,1)
+old='''            if self.source.get("rfc2822_date"):
+                match=re.search('''
+new='''            if self.source.get("detail_date_regex") and not j.get("date"):
+                m=re.search(self.source["detail_date_regex"],p.visible(),re.I)
+                if m:
+                    try:
+                        j["date"]=dt.datetime.strptime(m.group(1),"%d/%m/%Y").date().isoformat()
+                        j["date_field"]="Official employer detail: publication date"
+                        j["date_semantics"]="Date de parution declared by employer"
+                    except (ValueError,IndexError):pass
+            if self.source.get("rfc2822_date"):
+                match=re.search('''
+assert old in s;s=s.replace(old,new,1)
 p.write_text(s,encoding="utf-8")
 p=root/"fuentes.json"
 d=json.loads(p.read_text(encoding="utf-8"))
 by={x["id"]:x for x in d["sources"]}
 assert len(by)==len(d["sources"])==339
 c=by["caceis-europe"]
-c["careers_url"]="https://jobs.caceis.com/offre-de-emploi/liste-toutes-offres.aspx?LCID=1036&showSearchUrl=1"
+c["careers_url"]="https://jobs.caceis.com/offre-de-emploi/liste-toutes-offres.aspx?LCID=2057&page=1"
+c["repair_fallback_url"]="https://jobs.caceis.com/offre-de-emploi/liste-toutes-offres.aspx?LCID=1036&showSearchUrl=1"
 c["catalog_count_url"]=c["careers_url"]
+c["detail_date_regex"]=r"(?:Date de parution|Publication date)\s*(\d{2}/\d{2}/\d{4})"
 c["repair_status"]="Experimental: official French listing; pagination not yet fully validated"
 by["santander"]["workday_search_terms"]=["AML","KYC","sanctions","financial crime"]
 by["pwc-experienced"]["workday_search_terms"]=["AML","KYC","financial crime","sanctions"]
