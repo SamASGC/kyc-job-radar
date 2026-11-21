@@ -123,6 +123,10 @@ def evaluate(job, application_verified:bool):
         flags.append("Sección de requisitos no delimitada; no afirmar ausencia de experiencia previa")
     if not any(mode=="duties" for mode,_ in evidence):
         flags.append("Responsabilidades no delimitadas; comprobar si las funciones son prácticas")
+    if re.search(r"\bFrench\b",body,re.I) and re.search(r"\b(?:C1|C2|native)\b.{0,45}\bFrench\b|\bFrench\b.{0,45}\b(?:C1|C2|native)\b",body,re.I):
+        flags.append("Francés C1/C2 o nativo posiblemente exigido; perfil acreditado B2")
+    if re.search(r"\b(?:Ashby.publishedAt|last publication)\b",str(job.get("date_field",""))+" "+str(job.get("date_semantics","")),re.I):
+        flags.append("Fecha Ashby podría reflejar republicación: no equivale a primera publicación demostrada")
     if not (skills & MAIN):
         flags.append("No acredita screening, SoF/SoW, TM o SAR; sólo CDD/EDD u otra función")
     recency=freshness(job.get("date"),hours=72)
@@ -143,6 +147,7 @@ def evaluate(job, application_verified:bool):
         "explicit_duties":sorted(duties),"barriers":list(dict.fromkeys(barriers)),
         "uncertainties":list(dict.fromkeys(flags)),
         "requirement_evidence":traces[:7],
+        "duty_evidence":[{"skill":k,"text":short_sentence(line)} for mode,line in evidence if mode=="duties" for k,rx in RX.items() if rx.search(line) and k in MAIN][:8],
         "publication_status":recency,"original_posting_date":job.get("date"),
         "date_field":job.get("date_field"),"application_verified":application_verified,
         "training_confirmed":False,
