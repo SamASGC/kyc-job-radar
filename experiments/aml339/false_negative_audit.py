@@ -25,10 +25,19 @@ def audit(source,max_details=8,timeout=10,minutes=3):
         ranked=[j for j in raw if HINT.search(clean(j.get("title"))) and not NON_FINANCIAL.search(clean(j.get("title")))]
         ranked.sort(key=lambda j:(0 if role_geography(j.get("location")) in ("target","remote_location_review") else 1,
                                   prioritize(j)))
+        scope=lambda j: role_geography(j.get("location")) not in (
+            "outside_scope","excluded_barcelona","swiss_future")
+        scope_counts=dict(Counter(role_geography(j.get("location")) for j in ranked))
+        still_plausible=[j for j in ranked[max_details:] if scope(j)]
         result.update(state="listing_extracted",listed=len(jobs),
                       excluded_by_existing_title_filter=len(raw),
                       eligible_for_detail_review=len(ranked),
-                      unexamined=max(0,len(ranked)-max_details))
+                      plausible_geography_counts=scope_counts,
+                      unexamined=max(0,len(ranked)-max_details),
+                      unexamined_potentially_in_scope=len(still_plausible),
+                      unexamined_target_examples=[{
+                          "title":clean(j.get("title")),"location":clean(j.get("location")),
+                          "url":j.get("url")} for j in still_plausible[:20]])
         for job in ranked[:max_details]:
             error=None;verified=False
             try:
@@ -57,7 +66,7 @@ def audit(source,max_details=8,timeout=10,minutes=3):
             "listed":result["listed"],"nonmatches":len(raw),
             "reviewable":len(ranked),"examined":result["examined"],
             "potential_misses":len(result["potential_false_negatives"]),
-            "remaining_not_checked":result["unexamined"]},ensure_ascii=False),flush=True)
+            "remaining_not_checked":result["unexamined"],"remaining_possible_scope":result["unexamined_potentially_in_scope"],"geography_counts":result["plausible_geography_counts"]},ensure_ascii=False),flush=True)
     except Exception as e:
         result["errors"].append(type(e).__name__+": "+str(e)[:190])
         print("FALSE_NEGATIVE_ERROR",json.dumps(result["errors"],ensure_ascii=False),flush=True)
@@ -91,7 +100,8 @@ def main():
              "plausible_titles":sum(x["eligible_for_detail_review"] or 0 for x in entries),
              "details_examined":sum(x["examined"] for x in entries),
              "potential_false_negatives":sum(len(x["potential_false_negatives"]) for x in entries),
-             "unexamined_plausible_titles":sum(x["unexamined"] for x in entries)}
+             "unexamined_plausible_titles":sum(x["unexamined"] for x in entries),
+             "unexamined_possible_scope":sum(x.get("unexamined_potentially_in_scope") or 0 for x in entries)}
     Path(args.out).write_text(json.dumps({
         "checked_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
         "scope":"Targeted, non-exhaustive false negative check of nonmatched job titles",
