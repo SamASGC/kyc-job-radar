@@ -1,8 +1,9 @@
 name: AML339 18-source FULL LIVE E2E quality and history dry-run
 on:
+  workflow_dispatch:
   push:
     branches: [experiment/aml339-http-diagnostic-20261121]
-    paths: [.github/workflows/aml339_live_e2e18_full.yml]
+    paths: [.github/workflows/aml339_live_e2e18_full.yml, experiments/aml339/payabl_rate_limit_guard.py]
 permissions:
   contents: read
   actions: read
@@ -10,7 +11,34 @@ concurrency:
   group: aml339-live-full-isolated-history
   cancel-in-progress: false
 jobs:
+  payabl_cooldown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      allowed: ${{ steps.gate.outputs.allowed }}
+      not_before_utc: ${{ steps.gate.outputs.not_before_utc }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Check mandatory 429 cooldown WITHOUT making Payabl HTTP requests
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/payabl_rate_limit_guard.py --self-test
+          python3 experiments/aml339/payabl_rate_limit_guard.py --status-out payabl_cooldown_status.json
+      - name: Preserve cutoff evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-payabl-cooldown-decision
+          path: payabl_cooldown_status.json
+          retention-days: 30
+          if-no-files-found: error
   scan:
+    needs: [payabl_cooldown]
+    if: ${{ needs.payabl_cooldown.outputs.allowed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -60,8 +88,8 @@ jobs:
           retention-days: 10
           if-no-files-found: warn
   e2e:
-    needs: [scan]
-    if: always()
+    needs: [payabl_cooldown, scan]
+    if: ${{ always() && needs.payabl_cooldown.outputs.allowed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
