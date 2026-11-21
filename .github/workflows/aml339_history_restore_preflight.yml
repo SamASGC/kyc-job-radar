@@ -1,0 +1,58 @@
+name: AML339 verify last REAL history across cooldown-deferred GitHub runs
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_history_restore_preflight.yml, experiments/aml339/restore_live_e2e18_history.py]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Pure regression tests without provider requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/restore_live_e2e18_history.py \
+            --repo SamASGC/kyc-job-radar \
+            --branch experiment/aml339-http-diagnostic-20261121 \
+            --run-id 999999999999 \
+            --github-output /dev/null --self-test
+      - name: Recover state from successful historical run, ignoring guarded deferral
+        id: recover
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/restore_live_e2e18_history.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --run-id "$GITHUB_RUN_ID" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Assert no reset, download previously recorded three simulated alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p restored
+          gh run download "${{ steps.recover.outputs.prior_run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "${{ steps.recover.outputs.prior_artifact_name }}" --dir restored
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('restored/isolated_alert_history.json').read_text(encoding='utf-8'))
+          assert d['schema']==1 and len(d['records'])==3
+          assert all(v['delivered_lanes'] for v in d['records'].values())
+          print('LIVE18_HISTORY_RECOVERED',json.dumps({'records':len(d['records']),
+            'schema':d['schema']}),flush=True)
+          PY
+          echo 'Verified history only: no HTTP requests to Payabl, no state mutation.'
