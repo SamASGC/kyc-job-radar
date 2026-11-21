@@ -1,0 +1,30 @@
+name: AML339 TrueLayer official Ashby API probe
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_truelayer_ashby_probe.yml]
+permissions:
+  contents: read
+jobs:
+  ashby:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Verify first-party Ashby public board
+        run: |
+          python3 - <<'PY'
+          import json,urllib.request,urllib.error
+          for slug in ("truelayer","capimoney"):
+            url="https://api.ashbyhq.com/posting-api/job-board/"+slug
+            o={"name":slug,"url":url}
+            try:
+              req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (compatible; AMLJobRadar/1.0; read-only public board)"})
+              with urllib.request.urlopen(req,timeout=15) as r:
+                d=json.load(r);o["status"]=r.status
+              jobs=d.get("jobs",[])
+              o.update(count=len(jobs),listed=sum(x.get("isListed") is not False for x in jobs),
+                  titles=[x.get("title") for x in jobs[:5]])
+            except urllib.error.HTTPError as e:o["status"]=e.code
+            except Exception as e:o["error"]=type(e).__name__+": "+str(e)[:120]
+            print("ASHBY_FIRST_PARTY",json.dumps(o),flush=True)
+          PY
