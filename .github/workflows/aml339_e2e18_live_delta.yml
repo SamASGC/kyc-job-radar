@@ -1,0 +1,148 @@
+name: AML339 - independent LIVE refresh of 18 employer listings
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_e2e18_live_delta.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  read-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - group: baltics
+            ids: vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor
+          - group: international
+            ids: n26,wise,corpay,openpayd,transfergo,bvnk
+          - group: financial
+            ids: bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify source zip and unpack only exact audited library files
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/live18"
+          python3 - <<'PY'
+          import os
+          from zipfile import ZipFile
+          from pathlib import Path
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py","amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==allowed and sum(f.file_size for f in z.infolist())<800000
+            assert all(not f.filename.startswith('/') and '..' not in Path(f.filename).parts for f in z.infolist())
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"live18")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py experiments/aml339/quality_audit.py experiments/aml339/two_lane_alert_preview.py experiments/aml339/e2e18_live_listing.py "$RUNNER_TEMP/live18/"
+          cd "$RUNNER_TEMP/live18"
+          python3 repair_sources_20261121.py
+      - name: GET all current job listings and record every title-match identity
+        shell: bash
+        env:
+          GROUP: ${{ matrix.group }}
+          IDS: ${{ matrix.ids }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/live18"
+          python3 e2e18_live_listing.py --ids "$IDS" --minutes 3 --out "live_${GROUP}.json"
+      - name: Preserve complete listings (no production writes)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-live18-${{ matrix.group }}
+          path: ${{ runner.temp }}/live18/live_*.json
+          retention-days: 10
+          if-no-files-found: warn
+  compare:
+    if: always()
+    needs: [read-live]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-live18-*
+          path: scanned
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44937125476
+          github-token: ${{ github.token }}
+          name: aml339-e2e18-dry-run-report
+          path: baseline
+      - name: Compare live job titles with full 197-role audit and preserve discrepancies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime as dt,json,re,urllib.parse
+          from collections import Counter
+          from pathlib import Path
+          paths=sorted(Path('scanned').rglob('live_*.json'))
+          if len(paths)!=3:raise ValueError('Expected exactly three HTTP shard reports')
+          baseline=json.loads(Path('baseline/e2e18_merged_quality.json').read_text(encoding='utf-8'))
+          assert baseline['summary']['sources']==18 and baseline['summary']['roles']==197
+          sources=[]
+          for p in paths:
+            d=json.loads(p.read_text(encoding='utf-8'))
+            assert d['configured_sources']==339 and len(d['sources'])==6
+            sources.extend(d['sources'])
+          assert len(sources)==18 and len({s['source_id'] for s in sources})==18
+          def norm(url,title):
+            u=urllib.parse.urlsplit(url or '')
+            keep=[(k,v) for k,v in urllib.parse.parse_qsl(u.query) if k in ('gh_jid','job_id','jobId','jid') and not re.search(r'/\d{6,}',u.path)]
+            return urllib.parse.urlunsplit((u.scheme,u.netloc.lower(),u.path.rstrip('/'),urllib.parse.urlencode(keep),''))+'|'+str(title or '').strip().casefold()
+          old={s['source_id']:s for s in baseline['sources']}
+          comparisons=[]
+          for s in sorted(sources,key=lambda x:x['source_id']):
+            sid=s['source_id']
+            entry={'source':sid,'current_status':s['state'],'listed_jobs':s.get('jobs'),
+                   'current_matching_titles':s.get('title_matches'),'old_matching_titles':old[sid]['relevant_leads']}
+            if s['state']!='listing_extracted' or not s.get('complete') or s.get('duplicates'):
+              entry.update(status='blocked_unverified',issue=s.get('error') or s.get('anomaly') or 'incomplete')
+            else:
+              older={norm(j['url'],j['title']):j for j in old[sid]['audited']}
+              newer={norm(j['url'],j['title']):j for j in s['records']}
+              add=sorted(set(newer)-set(older));gone=sorted(set(older)-set(newer))
+              date_changed=[]
+              for k in set(older)&set(newer):
+                old_date=older[k]['evaluation'].get('original_posting_date')
+                new_date=newer[k].get('date')
+                if old_date and new_date and old_date!=new_date:
+                  date_changed.append({'title':newer[k]['title'],'old_date':old_date,'new_date':new_date,
+                                       'date_field':newer[k].get('date_field')})
+              entry.update(status='needs_detail_recheck' if add or gone or date_changed else 'unchanged',
+                new_count=len(add),missing_count=len(gone),changed_date_count=len(date_changed),
+                new=[newer[k] for k in add[:30]],missing=[older[k]['title'] for k in gone[:30]],
+                dates_changed=date_changed[:30])
+            comparisons.append(entry)
+          counts=dict(Counter(x['status'] for x in comparisons))
+          doc={'checked_at_utc':dt.datetime.now(dt.timezone.utc).isoformat(),
+              'scope':'Fresh GET across 18 employer boards vs earlier 197 captured posting details. List-only comparison.',
+              'counts':counts,'sources':comparisons,
+              'warning':'Changed listings are not individually verified or alertable until details and dates are rechecked.'}
+          Path('live18_delta_report.json').write_text(json.dumps(doc,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print('LIVE18_DELTAS',json.dumps({'counts':counts,'sources_changed':[x for x in comparisons if x['status']!='unchanged']},ensure_ascii=False),flush=True)
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write('# AML339 — new HTTP snapshot of 18 employer boards\n\n')
+            f.write('Outcomes: '+json.dumps(counts)+'\n\n')
+            f.write('Listings changed or failed require re-verification before any real alert.\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-live18-delta-consolidated
+          path: live18_delta_report.json
+          if-no-files-found: warn
+          retention-days: 10
