@@ -34,11 +34,11 @@ WEIGHT={"SoF":20,"SoW":20,"PEP":13,"Sanctions screening":16,"Adverse media":16,
         "TM":9,"SAR/STR":7,"CDD/EDD/KYB":3,"Financial crime investigations":8}
 COUNTRY=re.compile(r"\b(?:Spain|España|Madrid|Lithuania|Lietuva|Vilnius|Kaunas|Estonia|Tallinn|Malta|Luxembourg)\b",re.I)
 SWISS=re.compile(r"\b(?:Switzerland|Swiss|Zurich|Zürich|Geneva|Genève|Basel|Lugano)\b",re.I)
-OUTSIDE=re.compile(r"\b(?:United States|USA|Canada|India|Singapore|Australia|Brazil|Mexico|Hong Kong|China|Japan|Philippines|Pakistan|Bangladesh|UAE|Dubai|South Africa|New York|London|Berlin|Paris|Bangalore|Bengaluru|Mumbai|Chennai|Delhi|Hyderabad|Manila|Sydney)\b",re.I)
+OUTSIDE=re.compile(r"\b(?:United States|USA|Canada|Toronto|Swindon|Birmingham|UK|United Kingdom|India|Singapore|Australia|Brazil|Mexico|Hong Kong|China|Japan|Philippines|Pakistan|Bangladesh|UAE|Dubai|South Africa|New York|London|Berlin|Paris|Bangalore|Bengaluru|Mumbai|Chennai|Malaysia|Kuala Lumpur|Hungary|Budapest|Thailand|Bangkok|New Zealand|Auckland|Turkey|Istanbul|Indonesia|Jakarta|Delhi|Hyderabad|Manila|Sydney)\b",re.I)
 UNSUPPORTED_LANGUAGE=re.compile(r"\b(?:Maltese|Lithuanian|Estonian|Latvian|German|Deutsch|Dutch|Italian|Polish|Portuguese|Russian|Swedish|Finnish|Danish)\b",re.I)
 MANDATORY_WORDS=re.compile(r"\b(?:must|required|mandatory|essential|need to|minimum|at least|fluen\w*|native|proficien\w*|excellent|C1\b|C2\b)\b",re.I)
 SENIOR_TITLE=re.compile(r"\b(?:head of|director|chief|deputy mlro|mlro|vice president|vp\b|senior manager|assistant manager|manager|team lead|principal|staff (?:officer|analyst)|global head)\b",re.I)
-TECH_TITLE=re.compile(r"\b(?:engineer|engineering|developer|architect|product owner|account executive|sales|devops|data scientist|designer|cybersecurity)\b",re.I)
+TECH_TITLE=re.compile(r"\b(?:IT compliance|IT risk|engineer|engineering|developer|architect|product owner|account executive|sales|devops|data scientist|designer|cybersecurity)\b",re.I)
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
@@ -97,6 +97,8 @@ def evaluate(job, application_verified:bool):
     if geo=="swiss_future":flags.append("Suiza: vía profesional futura; no asumir elegibilidad actual")
     if SENIOR_TITLE.search(title):barriers.append("Puesto directivo o de alta responsabilidad")
     if TECH_TITLE.search(title):barriers.append("Función técnica/comercial ajena al objetivo")
+    if re.search(r"\b(?:Thai|Maltese|Lithuanian|Estonian|Latvian|German|Dutch|Italian|Polish|Portuguese|Russian|Swedish|Finnish|Danish)\s+speaking\b",title,re.I):
+        barriers.append("El título exige un idioma adicional no acreditado")
     if re.search(r"\bnight shifts?\b",title,re.I):barriers.append("Turnos nocturnos explícitos en el puesto")
     if not body or len(body)<120:flags.append("Descripción insuficiente; responsabilidades y requisitos no comprobados")
     # Read mandatory requirements as distinct from job duties and desirable qualifications.
@@ -274,6 +276,11 @@ def test():
     assert evaluate(dict(core,title="Sanctions & Fraud Manager"),True)["class"]=="not_recommended"
     assert role_geography("Limassol, Cyprus")=="outside_scope"
     assert role_geography("Tas-Sliema")=="target"
+    assert role_geography("Budapest, Hungary")=="outside_scope"
+    assert role_geography("Toronto - Cross Border")=="outside_scope"
+    assert role_geography("Kuala Lumpur, Malaysia")=="outside_scope"
+    assert evaluate(dict(core,title="IT Compliance Analyst"),True)["class"]=="not_recommended"
+    assert evaluate(dict(core,title="FinCrime Investigator - Fraud (Thai Speaking)"),True)["class"]=="not_recommended"
     alt=dict(core,description=core["description"].replace(
         "English fluency required.","Fluent in English and/or Russian."))
     assert not any("Idioma adicional obligatorio" in x for x in evaluate(alt,True)["barriers"])
