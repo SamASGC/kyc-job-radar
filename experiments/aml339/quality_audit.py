@@ -52,10 +52,18 @@ def short_sentence(line:str)->str:
 def sections(description):
     lines=[clean(x) for x in plain(description).splitlines() if clean(x)]
     mode="unknown"; parsed=[]
+    # Section headings (including Essential / Desirable) must reset the previous
+    # category. Otherwise optional AML knowledge can be falsely counted as a
+    # hands-on responsibility in unrelated payment operations roles.
+    h_req=re.compile(r"^(?:what we need from you|essential(?: skills| requirements| qualifications)?|minimum qualifications?|skills(?: and| &)? experience|requirements?|qualifications?|criteria|your profile|what you(?:'ll| will) bring|competencies(?: and| &)? experience)\\s*:?$",re.I)
+    h_optional=re.compile(r"^(?:desirable|nice to have|preferred(?: skills| qualifications)?|additional qualifications?|bonus points)\\s*:?$",re.I)
+    h_other=re.compile(r"^(?:what (?:you can expect|we offer)|we offer|our benefits|benefits|perks|about us|why join)\\s*:?$",re.I)
     for line in lines:
-        if len(line)<105 and REQ.search(line):mode="requirements"
-        elif len(line)<105 and DUTY.search(line):mode="duties"
-        elif len(line)<105 and re.search(r"what we offer|we offer|benefits|perks|about us|why join",line,re.I):mode="other"
+        heading=line.strip()
+        if len(heading)<110 and h_optional.fullmatch(heading):mode="optional"
+        elif len(heading)<110 and (h_req.fullmatch(heading) or REQ.search(heading)):mode="requirements"
+        elif len(heading)<110 and DUTY.search(heading):mode="duties"
+        elif len(heading)<110 and h_other.fullmatch(heading):mode="other"
         parsed.append((mode,line))
     return parsed
 
@@ -303,6 +311,20 @@ def test():
         "Proficiency with MS Office and banking legislation."]))
     assert evaluate(regulatory,True)["class"]=="low_incremental_learning"
     assert "Financial crime investigations" not in evaluate(regulatory,True)["functions"]
+    optional_role=dict(core,title="Payment Operations Analyst",description="\\n".join([
+        "Key Areas of Responsibilities",
+        "Assist with incoming payments and merchant settlements.",
+        "What we need from you:",
+        "Essential",
+        "Previous payments operations experience required.",
+        "Desirable",
+        "Knowledge of EMI operations and AML/compliance processes, including RFIs and transaction monitoring.",
+        "What you can expect from us:",
+        "Hybrid work."]))
+    parsed=sections(optional_role["description"])
+    assert any(mode=="optional" and "transaction monitoring" in line for mode,line in parsed),parsed
+    assert not any(mode=="duties" and "transaction monitoring" in line for mode,line in parsed),parsed
+    assert "TM" not in evaluate(optional_role,True)["explicit_duties"]
     assert evaluate(dict(core,title="Engineering Lead - Fincrime"),True)["class"]=="not_recommended"
     assert evaluate(dict(core,title="Senior KYC Analyst (Night shifts)"),True)["class"]=="not_recommended"
     print("QUALITY_SELFTEST_PASSED",flush=True)
