@@ -1,0 +1,151 @@
+name: AML339 experimental end-to-end dry-run with persistent history
+on:
+  workflow_dispatch:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths:
+      - .github/workflows/aml339_e2e_dry_run.yml
+      - experiments/aml339/alert_history.py
+      - experiments/aml339/restore_experimental_history.py
+      - experiments/aml339/two_lane_alert_preview.py
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: aml339-experiment-dedup-state
+  cancel-in-progress: false
+jobs:
+  e2e-dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original 339-source code and prepare isolated working directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_e2e"
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+              "amlradar/employer_links.py","amlradar/sources.py",
+              "fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==allowed
+            assert sum(f.file_size for f in z.infolist())<800000
+            assert all(not f.filename.startswith("/") and ".." not in Path(f.filename).parts for f in z.infolist())
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_e2e")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py experiments/aml339/quality_audit.py experiments/aml339/two_lane_alert_preview.py experiments/aml339/alert_history.py "$RUNNER_TEMP/aml339_e2e/"
+          cd "$RUNNER_TEMP/aml339_e2e"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+          python3 two_lane_alert_preview.py --self-test
+          python3 alert_history.py --self-test
+          python3 -m compileall -q amlradar quality_audit.py two_lane_alert_preview.py alert_history.py
+      - name: Find last successful experimental state (fail closed if missing)
+        id: prior
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/restore_experimental_history.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "experiment/aml339-http-diagnostic-20261121" \
+            --current-run-id "$GITHUB_RUN_ID" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Restore previous persistent GitHub Actions artifact
+        if: ${{ steps.prior.outputs.prior_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p previous
+          gh run download "${{ steps.prior.outputs.prior_run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name aml339-e2e-isolated-state --dir previous
+          test -s previous/isolated_alert_history.json
+      - name: Run real HTTP extraction, detail verification, original dates and requirement audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_e2e"
+          python3 quality_audit.py \
+            --ids verifo-lithuania,demivolt-lithuania,vinted \
+            --max-details 12 --minutes-per-source 3 --timeout 12 \
+            --out e2e_quality.json
+      - name: Select two alert lanes and update ISOLATED history only
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_e2e"
+          mkdir -p state previews
+          previous_args=()
+          if [[ -n "${{ steps.prior.outputs.prior_run_id }}" ]]; then
+            test -s "$GITHUB_WORKSPACE/previous/isolated_alert_history.json"
+            previous_args=(--state-in "$GITHUB_WORKSPACE/previous/isolated_alert_history.json")
+          fi
+          python3 alert_history.py "${previous_args[@]}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --state-out state/isolated_alert_history.json \
+            --json-out previews/alerts.json --md-out previews/alerts.md \
+            --expect-sources verifo-lithuania,demivolt-lithuania,vinted \
+            e2e_quality.json
+      - name: Second pass on identical results must produce ZERO duplicate alerts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_e2e"
+          python3 alert_history.py \
+            --state-in state/isolated_alert_history.json \
+            --state-out state/replay_history.json \
+            --json-out previews/replay_alerts.json --md-out previews/replay_alerts.md \
+            --expect-sources verifo-lithuania,demivolt-lithuania,vinted \
+            e2e_quality.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          initial=json.loads(Path('previews/alerts.json').read_text(encoding='utf-8'))
+          replay=json.loads(Path('previews/replay_alerts.json').read_text(encoding='utf-8'))
+          first=json.loads(Path('state/isolated_alert_history.json').read_text(encoding='utf-8'))
+          second=json.loads(Path('state/replay_history.json').read_text(encoding='utf-8'))
+          assert replay["new_counts"]=={"confirmed_recent":0,"promising_date_unconfirmed":0},replay
+          assert first["records"]==second["records"],"History mutated after exact replay"
+          assert initial["source_count"]==3 and initial["mode"]=="E2E_DRY_RUN_NO_NOTIFICATIONS"
+          assert initial["roles_evaluated"]>0
+          print("E2E_NO_DUPLICATE_REPLAY_VERIFIED",json.dumps({"first_alerts":initial["new_counts"],
+             "replay_alerts":replay["new_counts"],"history":len(first["records"])},ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("# AML339 isolated end-to-end dry-run\n\n")
+            f.write("Sources: 3, examined roles: "+str(initial["roles_evaluated"])+"\n\n")
+            f.write("New simulated alerts: "+json.dumps(initial["new_counts"])+"\n\n")
+            f.write("Immediate duplicate replay: 0 alerts\n\n")
+            f.write("No production state changed; no real notifications sent.\n")
+          PY
+      - name: Preserve experimental historical state for NEXT workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-e2e-isolated-state
+          path: ${{ runner.temp }}/aml339_e2e/state/isolated_alert_history.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Preserve full HTTP evidence, both simulated email digests and replay proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-e2e-dry-run-evidence
+          path: |
+            ${{ runner.temp }}/aml339_e2e/e2e_quality.json
+            ${{ runner.temp }}/aml339_e2e/previews/
+          retention-days: 30
+          if-no-files-found: warn
