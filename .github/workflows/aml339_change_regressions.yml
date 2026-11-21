@@ -1,0 +1,30 @@
+name: AML339 deterministic vacancy-change and cooldown regressions
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_change_regressions.yml, experiments/aml339/test_controlled_change_logic.py]
+permissions:
+  contents: read
+jobs:
+  assertions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Test cooldown boundaries and simulate new, old, edited and promoted vacancies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/payabl_rate_limit_guard.py --self-test
+          cd experiments/aml339
+          python3 two_lane_alert_preview.py --self-test
+          python3 alert_history.py --self-test
+          python3 test_controlled_change_logic.py
+          python3 restore_live_e2e18_history.py \
+            --repo SamASGC/kyc-job-radar \
+            --branch experiment/aml339-http-diagnostic-20261121 \
+            --run-id 999999999999 --github-output /dev/null --self-test
+          echo 'No real provider requests; no emails, no production writes.'
