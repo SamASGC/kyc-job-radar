@@ -1,0 +1,92 @@
+name: AML339 evidence-based role fit, isolated pilot
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_quality_pilot.yml]
+permissions:
+  contents: read
+jobs:
+  detailed-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - group: baltics
+            ids: vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor
+          - group: international
+            ids: n26,wise,corpay,openpayd,transfergo,bvnk
+          - group: financial
+            ids: bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify original code, apply source-only repairs and self-test classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_quality"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          archive=ZipFile("experiments/aml339/full_original_339_sources.zip")
+          expected={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+            "amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+          assert set(archive.namelist())==expected and sum(x.file_size for x in archive.infolist())<800000
+          assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in archive.infolist())
+          archive.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_quality")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py "$RUNNER_TEMP/aml339_quality/"
+          cp experiments/aml339/quality_audit.py "$RUNNER_TEMP/aml339_quality/"
+          cd "$RUNNER_TEMP/aml339_quality"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+          python3 -m compileall -q amlradar quality_audit.py
+      - name: Inspect actual role requirements, published dates and application routes
+        shell: bash
+        env:
+          SOURCE_IDS: ${{ matrix.ids }}
+          SHARD: ${{ matrix.group }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_quality"
+          python3 quality_audit.py --ids "$SOURCE_IDS" --max-details 7 --timeout 10 --minutes-per-source 2 --out quality_$SHARD.json
+      - name: Summarize evidence with explicit exclusions and unknowns
+        shell: bash
+        env:
+          SHARD: ${{ matrix.group }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_quality"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path("quality_"+os.environ["SHARD"]+".json").read_text())
+          assert d["total_configured_sources"]==339 and len(d["sources"])==6
+          print("QUALITY_TOTAL",json.dumps(d["summary"],ensure_ascii=False),flush=True)
+          for source in d["sources"]:
+            for role in source["audited"]:
+              classification=role["evaluation"]["class"]
+              if classification in ("possible_match_confirmed_recent","manual_review"):
+                print("QUALITY_CANDIDATE",json.dumps({
+                  "employer":source["employer"],"title":role["title"],
+                  "location":role["location"],"url":role["url"],"class":classification,
+                  "skills":role["evaluation"]["functions"],
+                  "date":role["evaluation"]["original_posting_date"],
+                  "date_status":role["evaluation"]["publication_status"],
+                  "apply_verified":role["evaluation"]["application_verified"],
+                  "uncertainties":role["evaluation"]["uncertainties"]},ensure_ascii=False),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-quality-${{ matrix.group }}
+          path: ${{ runner.temp }}/aml339_quality/quality_*.json
+          if-no-files-found: warn
+          retention-days: 10
