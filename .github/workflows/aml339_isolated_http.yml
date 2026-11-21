@@ -15,6 +15,7 @@ jobs:
       - name: Public GET checks - no checkout or state mutations
         shell: bash
         run: |
+          python - <<'PY'
           import datetime
           import html
           import json
@@ -153,6 +154,7 @@ jobs:
                   f.write(f"- Enlaces candidatos: {item.get('candidate_links_count', 'no evaluado')}\n\n")
               f.write("## B4B curl\n\n" + json.dumps(curl_result, ensure_ascii=False) + "\n")
           print("AML339_REMOTE_EVIDENCE", json.dumps(report, ensure_ascii=False), flush=True)
+          PY
       - name: Preserve JSON and Markdown evidence
         if: always()
         uses: actions/upload-artifact@v4
