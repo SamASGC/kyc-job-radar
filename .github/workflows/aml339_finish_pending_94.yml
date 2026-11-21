@@ -1,0 +1,176 @@
+name: AML339 - exhaust 94 pending Wise Airwallex leads
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_finish_pending_94.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - source: wise
+            offset: 19
+            expected_leads: 84
+          - source: wise
+            offset: 31
+            expected_leads: 84
+          - source: wise
+            offset: 43
+            expected_leads: 84
+          - source: wise
+            offset: 55
+            expected_leads: 84
+          - source: wise
+            offset: 67
+            expected_leads: 84
+          - source: wise
+            offset: 79
+            expected_leads: 84
+          - source: airwallex
+            offset: 19
+            expected_leads: 48
+          - source: airwallex
+            offset: 31
+            expected_leads: 48
+          - source: airwallex
+            offset: 43
+            expected_leads: 48
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify immutable original archive and unpack isolated copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_pending"
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py","amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==allowed
+            assert sum(x.file_size for x in z.infolist())<800_000
+            assert all(".." not in Path(x.filename).parts and not x.filename.startswith("/") for x in z.infolist())
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_pending")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py experiments/aml339/quality_audit.py "$RUNNER_TEMP/aml339_pending/"
+          cd "$RUNNER_TEMP/aml339_pending"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Read next 12 individual posting details and requirements
+        shell: bash
+        env:
+          SOURCE_ID: ${{ matrix.source }}
+          AUDIT_OFFSET: ${{ matrix.offset }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_pending"
+          python3 quality_audit.py --ids "$SOURCE_ID" --offset "$AUDIT_OFFSET" --max-details 12 --timeout 10 --minutes-per-source 4 --out "pending_${SOURCE_ID}_${AUDIT_OFFSET}.json"
+      - name: Verify exact offset and preserve every lead classification
+        shell: bash
+        env:
+          SOURCE_ID: ${{ matrix.source }}
+          AUDIT_OFFSET: ${{ matrix.offset }}
+          EXPECTED_LEADS: ${{ matrix.expected_leads }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_pending"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path("pending_"+os.environ["SOURCE_ID"]+"_"+os.environ["AUDIT_OFFSET"]+".json").read_text(encoding="utf-8"))
+          assert d["total_configured_sources"]==339 and len(d["sources"])==1
+          r=d["sources"][0]
+          assert r["source_id"]==os.environ["SOURCE_ID"] and r["state"]=="listing_extracted",r
+          assert r["audited_offset"]==int(os.environ["AUDIT_OFFSET"])
+          assert r["relevant_leads"]==int(os.environ["EXPECTED_LEADS"]),(r["relevant_leads"],os.environ["EXPECTED_LEADS"])
+          expected=min(12,int(os.environ["EXPECTED_LEADS"])-int(os.environ["AUDIT_OFFSET"]))
+          assert len(r["audited"])==expected,(len(r["audited"]),expected)
+          print("PENDING_339_SHARD",json.dumps({"source":r["source_id"],"offset":r["audited_offset"],
+            "reviewed":len(r["audited"]),"remaining":r["skipped_after"],"total":r["relevant_leads"],
+            "classes":{key:sum(x["evaluation"]["class"]==key for x in r["audited"])
+              for key in ["not_recommended","manual_review","low_incremental_learning","possible_match_confirmed_recent"]}},ensure_ascii=False),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-pending-${{ matrix.source }}-${{ matrix.offset }}
+          path: ${{ runner.temp }}/aml339_pending/pending_*.json
+          retention-days: 10
+          if-no-files-found: warn
+  aggregate:
+    if: always()
+    needs: [audit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-pending-*
+          path: incoming
+      - name: Audit exact coverage, uniqueness, and representative false negatives
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,collections,datetime,os
+          from pathlib import Path
+          paths=sorted(Path("incoming").rglob("pending_*.json"))
+          batches=collections.defaultdict(list)
+          for p in paths:
+            d=json.loads(p.read_text(encoding="utf-8"))
+            assert d["total_configured_sources"]==339 and len(d["sources"])==1
+            x=d["sources"][0]
+            assert x["state"]=="listing_extracted"
+            batches[x["source_id"]].append(x)
+          expected={"wise":(84,[19,31,43,55,67,79]),"airwallex":(48,[19,31,43])}
+          report={}
+          for name,(total,offsets) in expected.items():
+            rows=sorted(batches[name],key=lambda x:x['audited_offset'])
+            observed=[x['audited_offset'] for x in rows]
+            assert observed==offsets,(name,observed,offsets)
+            indexed=[]
+            for row in rows:
+              assert row['relevant_leads']==total
+              indexed.extend((row['audited_offset']+i,role) for i,role in enumerate(row['audited']))
+            indices=[i for i,_ in indexed]
+            assert indices==list(range(19,total)),(name,indices)
+            urls=[role['url'] for _,role in indexed]
+            duplicates=len(urls)-len(set(urls))
+            reviewed=[role for _,role in indexed]
+            distribution=dict(collections.Counter(x['evaluation']['class'] for x in reviewed))
+            report[name]={'expected_remaining':total-19,'reviewed':len(reviewed),'offsets':offsets,
+               'duplicated_urls':duplicates,'classes':distribution,
+               'possible':[{ 'title':x['title'],'url':x['url'],'location':x['location'],
+                'date_status':x['evaluation']['publication_status'],
+                'class':x['evaluation']['class'],'barriers':x['evaluation']['barriers'],
+                'uncertainties':x['evaluation']['uncertainties']} for x in reviewed
+                  if x["evaluation"]["class"] in ("manual_review","possible_match_confirmed_recent")]}
+          result={'checked_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'scope':'94 formerly pending title-matched leads; no production alerts or applications',
+            'summary':{'sources':2,'reviewed':sum(x['reviewed'] for x in report.values()),
+              'classes':dict(collections.Counter(k for s in batches.values() for row in s for r in row['audited'] for k in [r['evaluation']['class']]))},
+            'sources':report}
+          assert len(paths)==9 and result['summary']['reviewed']==94
+          Path("pending94_merged.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          print("PENDING_94_AGGREGATE",json.dumps(result,ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("# AML339 — all 94 previously pending leads\n\n")
+            f.write("**94/94** individually examined: "+json.dumps(result["summary"]["classes"])+".\n\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-pending94-merged
+          path: pending94_merged.json
+          retention-days: 10
+          if-no-files-found: warn
