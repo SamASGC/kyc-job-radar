@@ -1,0 +1,90 @@
+name: AML 339 - real legacy extractor isolated pilot
+on:
+  push:
+    branches:
+      - experiment/aml339-http-diagnostic-20261121
+    paths:
+      - .github/workflows/aml339_actual_parser.yml
+      - experiments/aml339/pilot_actual_extractor.zip
+permissions:
+  contents: read
+jobs:
+  actual-parser-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - name: Checkout isolated experimental branch only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Python without third-party dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify archived original code and unpack to temporary directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "01e62683cd314ec892164b91160386019cbdf3ed9acb29c62dd3858d5151f54a  experiments/aml339/pilot_actual_extractor.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_actual"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import json,os
+          archive=Path('experiments/aml339/pilot_actual_extractor.zip')
+          target=Path(os.environ['RUNNER_TEMP'])/'aml339_actual'
+          expected={'amlradar/__init__.py','amlradar/model.py','amlradar/net.py','amlradar/employer_links.py','amlradar/sources.py','fuentes.json','VALIDAR_REAL_SIN_TOCAR_DATOS.py'}
+          with ZipFile(archive) as z:
+              assert set(z.namelist())==expected
+              assert sum(i.file_size for i in z.infolist()) < 500_000
+              z.extractall(target)
+          sources=json.loads((target/'fuentes.json').read_text(encoding='utf-8'))['sources']
+          assert len(sources)==len({s['id'] for s in sources})==9
+          print('ARCHIVE_VERIFIED',len(sources),'source definitions, original parser modules')
+          PY
+          python3 -m compileall -q "$RUNNER_TEMP/aml339_actual/amlradar" "$RUNNER_TEMP/aml339_actual/VALIDAR_REAL_SIN_TOCAR_DATOS.py"
+      - name: Run original Board extractor (8 sources; Nayax HTTP 403 excluded)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_actual"
+          python3 VALIDAR_REAL_SIN_TOCAR_DATOS.py \
+            --ids 'verifone,verifo-lithuania,demivolt-lithuania,lt-b4b-employmenthero,lt-paystrax-official-external,lt-nikulipe-official,lt-paynt-direct-employer,lt-finci-inline-careers' \
+            --timeout 12 --samples 2 --minutes 1
+      - name: Summarize actual extraction and detect regressions
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          reports=sorted((Path(os.environ['RUNNER_TEMP'])/'aml339_actual'/'DIAGNOSTICOS').glob('SMOKE_REAL_*.json'))
+          if not reports: raise RuntimeError('Original diagnostic did not produce JSON evidence')
+          data=json.loads(reports[-1].read_text(encoding='utf-8'))
+          stats=data['summary']
+          assert data['source_config_unmodified'] is True
+          assert stats['sources_probed']==8
+          result={x['source_id']:x for x in data['sources']}
+          print('ACTUAL_PARSER_SUMMARY',json.dumps(stats,ensure_ascii=False),flush=True)
+          for x in data['sources']:
+              print('ACTUAL_PARSER_SOURCE',json.dumps({'id':x['source_id'],'status':x['state'],'count':x.get('count'),'aml':x.get('relevant_count'),'error':x.get('error'),'dated':x.get('dated_count')},ensure_ascii=False),flush=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+              f.write('# AML 339 — real extractor pilot\n\n')
+              f.write(f"Sources: {stats['sources_probed']}; listing-extracted: {stats['listing_extracted']}; jobs: {stats['jobs_found_in_listings']}; confirmed recently posted: {stats['confirmed_recent_jobs']}\n\n")
+              f.write('|Employer|State|Jobs|Relevant|\n|---|---|---:|---:|\n')
+              for x in data['sources']:
+                  f.write(f"|{x['source_id']}|{x['state']}|{x.get('count') or 0}|{x.get('relevant_count') or 0}|\n")
+              f.write('\nRead-only diagnostic; no production history, notification or main branch writes.\n')
+          if stats['listing_extracted']<6: raise RuntimeError('Fewer than 6 of 8 employer listings extracted')
+          if result['lt-paynt-direct-employer']['state'] not in ('listing_extracted','partial_listing'):
+              raise RuntimeError('Real Paynt extractor did not extract the live listing')
+          PY
+      - name: Save actual JSON and Markdown evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-real-parser-pilot
+          path: ${{ runner.temp }}/aml339_actual/DIAGNOSTICOS/
+          if-no-files-found: warn
+          retention-days: 10
+
