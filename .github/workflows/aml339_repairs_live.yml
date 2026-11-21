@@ -2,7 +2,7 @@ name: AML339 isolated repairs - original parser live acceptance
 on:
   push:
     branches: [experiment/aml339-http-diagnostic-20261121]
-    paths: [.github/workflows/aml339_repairs_live.yml]
+    paths: [.github/workflows/aml339_repairs_live.yml, experiments/aml339/repair_sources_20261121.py]
 permissions:
   contents: read
 jobs:
