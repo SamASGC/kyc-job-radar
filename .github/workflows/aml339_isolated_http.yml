@@ -1,0 +1,165 @@
+name: AML 339 - isolated public HTTP diagnostic
+on:
+  push:
+    branches:
+      - experiment/aml339-http-diagnostic-20261121
+    paths:
+      - .github/workflows/aml339_isolated_http.yml
+permissions:
+  contents: read
+jobs:
+  remote-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Public GET checks - no checkout or state mutations
+        shell: bash
+        run: |
+          import datetime
+          import html
+          import json
+          import re
+          import shutil
+          import ssl
+          import subprocess
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from html.parser import HTMLParser
+          
+          NOW = datetime.datetime.now(datetime.timezone.utc).isoformat()
+          URLS = {
+              "verifone_greenhouse_control": "https://boards-api.greenhouse.io/v1/boards/verifone/jobs?content=false",
+              "paynt_employer_careers": "https://paynt.com/resources/careers/",
+              "b4b_employmenthero": "https://employmenthero.com/uk/jobs/organisations/b4b-payments/",
+          }
+          
+          class Anchors(HTMLParser):
+              def __init__(self, origin):
+                  super().__init__(convert_charrefs=True)
+                  self.origin, self.href, self.parts = origin, None, []
+                  self.links = []
+                  self.headings = []
+                  self.in_heading = None
+          
+              def handle_starttag(self, tag, attrs):
+                  a = dict(attrs)
+                  if tag == "a":
+                      self.href = a.get("href", "")
+                      self.parts = []
+                  if tag in ("h2", "h3") and self.href is None:
+                      self.in_heading = tag
+                      self.heading_parts = []
+          
+              def handle_data(self, data):
+                  if self.href is not None:
+                      self.parts.append(data)
+                  if self.in_heading:
+                      self.heading_parts.append(data)
+          
+              def handle_endtag(self, tag):
+                  if tag == "a" and self.href is not None:
+                      url = urllib.parse.urljoin(self.origin, self.href)
+                      parsed = urllib.parse.urlparse(url)
+                      label = " ".join("".join(self.parts).split())[:150]
+                      if parsed.scheme in ("http", "https") and (
+                          "jobs/view/" in parsed.path or
+                          "jobs" in parsed.path or
+                          "career" in parsed.path or
+                          "position" in parsed.path or
+                          re.search(r"read more about|apply now|vacanc", label, re.I)
+                      ):
+                          self.links.append({"text": label, "url": url[:250]})
+                      self.href, self.parts = None, []
+                  if tag == self.in_heading:
+                      title = " ".join("".join(self.heading_parts).split())[:120]
+                      if title:
+                          self.headings.append(title)
+                      self.in_heading = None
+          
+          def read_one(name, url):
+              item = {"source": name, "url": url, "status": None}
+              req = urllib.request.Request(
+                  url,
+                  headers={"User-Agent": "Mozilla/5.0 (compatible; AMLJobRadar/1.0; public read-only careers search)",
+                           "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"},
+                  method="GET",
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=17, context=ssl.create_default_context()) as resp:
+                      body = resp.read(500000)
+                      item["status"] = resp.status
+                      item["final_url"] = resp.url
+                      item["body_bytes"] = len(body)
+                      item["content_type"] = resp.headers.get("Content-Type", "")[:100]
+                  decoded = body.decode("utf-8", "replace")
+                  if name == "verifone_greenhouse_control":
+                      data = json.loads(decoded)
+                      jobs = data.get("jobs") or []
+                      item["jobs_count"] = len(jobs)
+                      item["sample_titles"] = [str(x.get("title", ""))[:100] for x in jobs[:5]]
+                  else:
+                      parser = Anchors(item["final_url"])
+                      parser.feed(decoded)
+                      item["headings"] = parser.headings[:15]
+                      item["candidate_links_count"] = len(parser.links)
+                      item["candidate_links"] = parser.links[:12]
+                      item["linkedin_job_links_count"] = sum(
+                          "/jobs/view/" in x["url"] and "linkedin.com" in x["url"] for x in parser.links
+                      )
+              except urllib.error.HTTPError as err:
+                  item["status"] = err.code
+                  item["error"] = "HTTP " + str(err.code)
+              except Exception as err:
+                  item["error_class"] = type(err).__name__
+                  item["error"] = str(err)[:250]
+              return item
+          
+          checks = [read_one(name, url) for name, url in URLS.items()]
+          curl = shutil.which("curl")
+          curl_result = {"available": bool(curl)}
+          if curl:
+              args = [curl, "--location", "--max-redirs", "4", "--max-time", "18",
+                      "--silent", "--show-error", "--output", "/dev/null",
+                      "--write-out", "HTTP=%{http_code};SSLVERIFY=%{ssl_verify_result};URL=%{url_effective}",
+                      URLS["b4b_employmenthero"]]
+              try:
+                  p = subprocess.run(args, capture_output=True, text=True, timeout=23, check=False)
+                  curl_result.update(return_code=p.returncode, stdout=p.stdout[:350],
+                                     stderr=p.stderr[:350])
+              except Exception as err:
+                  curl_result.update(error=f"{type(err).__name__}: {err}"[:200])
+          report = {
+              "checked_at_utc": NOW,
+              "mode": "isolated_github_runner_public_get_no_production_state",
+              "sources": checks,
+              "b4b_curl": curl_result,
+              "limitations": [
+                  "Not the full 339-source local parser suite",
+                  "HTTP 200 does not verify the posting date or application",
+                  "No repository checkout, no tokens, no production state or alerts",
+                  "Nayax not retried because Windows returned HTTP 403",
+              ],
+          }
+          with open("aml339_http_diagnostic.json", "w", encoding="utf-8") as f:
+              json.dump(report, f, indent=2, ensure_ascii=False)
+          with open("aml339_http_diagnostic.md", "w", encoding="utf-8") as f:
+              f.write("# Diagnostico HTTP remoto AML 339\n\n")
+              f.write("UTC: " + NOW + "\n\n")
+              for item in checks:
+                  f.write(f"## {item['source']}\n\n")
+                  f.write(f"- Estado HTTP: {item.get('status')}\n")
+                  f.write(f"- Error: {item.get('error', 'ninguno')}\n")
+                  f.write(f"- Enlaces candidatos: {item.get('candidate_links_count', 'no evaluado')}\n\n")
+              f.write("## B4B curl\n\n" + json.dumps(curl_result, ensure_ascii=False) + "\n")
+          print("AML339_REMOTE_EVIDENCE", json.dumps(report, ensure_ascii=False), flush=True)
+      - name: Preserve JSON and Markdown evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-http-evidence
+          path: |
+            aml339_http_diagnostic.json
+            aml339_http_diagnostic.md
+          if-no-files-found: warn
+          retention-days: 7
