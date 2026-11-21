@@ -2,7 +2,7 @@ name: AML339 E2E 18-source isolated dry-run with migration and dedup
 on:
   push:
     branches: [experiment/aml339-http-diagnostic-20261121]
-    paths: [.github/workflows/aml339_e2e18_dry_run.yml]
+    paths: [.github/workflows/aml339_e2e18_dry_run.yml, experiments/aml339/alert_history.py, experiments/aml339/merge_e2e18_snapshots.py]
 permissions:
   contents: read
   actions: read
