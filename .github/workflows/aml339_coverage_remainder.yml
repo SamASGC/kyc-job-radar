@@ -1,0 +1,166 @@
+name: AML 339 - full remainder audit (275 untested employers)
+on:
+  push:
+    branches: ["experiment/aml339-http-diagnostic-20261121"]
+    paths: [".github/workflows/aml339_coverage_remainder.yml"]
+permissions:
+  contents: read
+jobs:
+  audit:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Integrity check and extract ONLY the archived laboratory code
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip" | sha256sum -c -
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from zipfile import ZipFile
+          p=Path("experiments/aml339/full_original_339_sources.zip")
+          target=Path(os.environ["RUNNER_TEMP"])/"aml339_coverage"
+          target.mkdir(exist_ok=True)
+          expected={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+            "amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+          with ZipFile(p) as z:
+            assert set(z.namelist())==expected
+            assert sum(a.file_size for a in z.infolist())<800_000
+            assert all(not a.filename.startswith("/") and ".." not in Path(a.filename).parts for a in z.infolist())
+            z.extractall(target)
+          rows=json.loads((target/"fuentes.json").read_text(encoding="utf-8"))["sources"]
+          assert len(rows)==len({r["id"] for r in rows})==339
+          print("SOURCE_REGISTRY_VERIFIED",len(rows),flush=True)
+          PY
+      - name: Probe next 12 not previously audited sources (no state changes)
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_coverage"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          rows=json.loads(Path("fuentes.json").read_text(encoding="utf-8"))["sources"]
+          checked={"verifone","verifo-lithuania","demivolt-lithuania","lt-b4b-employmenthero",
+            "lt-paystrax-official-external","lt-nikulipe-official","lt-paynt-direct-employer",
+            "lt-finci-inline-careers","adyen","airwallex","bondora","enfuce",
+            "finom","inbank","mangopay","luminor"}
+          ids=[r["id"] for r in rows if r["id"] not in checked][48:]
+          shard=int(os.environ["SHARD"])
+          picked=ids[shard*12:(shard+1)*12]
+          assert 1<=len(picked)<=12 and len(set(picked))==len(picked)
+          Path("picked.txt").write_text(",".join(picked),encoding="utf-8")
+          print("SHARD",shard,"SOURCE_IDS",json.dumps(picked),flush=True)
+          PY
+          set +e
+          python3 VALIDAR_REAL_SIN_TOCAR_DATOS.py --ids "$(cat picked.txt)" --timeout 10 --samples 0 --minutes 1
+          rc=$?
+          set -e
+          echo "DIAGNOSTIC_EXIT_CODE=$rc (1 can mean all listings failed; reported faithfully)"
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+      - name: Confirm read-only invariant and print individual outcomes
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          base=Path(os.environ["RUNNER_TEMP"])/"aml339_coverage"
+          reports=sorted((base/"DIAGNOSTICOS").glob("SMOKE_REAL_*.json"))
+          if len(reports)!=1: raise RuntimeError("Expected exactly one recorded source-health report")
+          d=json.loads(reports[0].read_text(encoding="utf-8"))
+          assert d["source_config_unmodified"] is True
+          assert len(d["sources"])==len((base/"picked.txt").read_text(encoding="utf-8").split(",")) and d["summary"]["sources_probed"]==len(d["sources"])
+          assert len({x["source_id"] for x in d["sources"]})==12
+          print("COVERAGE_SHARD_SUMMARY",json.dumps(d["summary"],ensure_ascii=False),flush=True)
+          for r in d["sources"]:
+            print("COVERAGE_SOURCE",json.dumps({
+              "id":r["source_id"],"state":r["state"],"jobs":r.get("count"),
+              "relevant":r.get("relevant_count"),"dates":r.get("dated_count"),
+              "error_class":r.get("error_class"),"error":r.get("error")
+            },ensure_ascii=False),flush=True)
+          PY
+      - name: Save individual source-level evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-remainder-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/aml339_coverage/DIAGNOSTICOS/
+          retention-days: 10
+          if-no-files-found: warn
+  aggregate:
+    if: always()
+    needs: [audit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-remainder-shard-*
+          path: incoming
+      - name: Merge independent reports without changing production
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,collections,datetime
+          files=sorted(Path("incoming").rglob("SMOKE_REAL_*.json"))
+          sources=[]
+          for p in files:
+            d=json.loads(p.read_text(encoding="utf-8"))
+            assert d["source_config_unmodified"] and 1<=d["summary"]["sources_probed"]<=12
+            sources.extend(d["sources"])
+          ids=[x["source_id"] for x in sources]
+          counts=collections.Counter(x["state"] for x in sources)
+          errors=collections.Counter(x.get("error_class") or "other" for x in sources if x["state"]=="listing_failed")
+          summary={
+            "reports":len(files),"sources_probed":len(sources),"unique_sources":len(set(ids)),
+            "state_counts":dict(counts),"failure_categories":dict(errors),
+            "jobs_detected":sum(x.get("count") or 0 for x in sources),
+            "relevant_title_matches":sum(x.get("relevant_count") or 0 for x in sources),
+            "dated_records":sum(x.get("dated_count") or 0 for x in sources),
+            "notes":["This is the 275-source remainder, in addition to 16 prior and 48 previously audited sources.",
+              "Date counts are unverified listing date fields; no applications or individual posts checked.",
+              "An empty adapter output does not prove no vacancies exist.",
+              "No changes to production, main, history, candidates or alerts."]}
+          report={"checked_at_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "summary":summary,"sources":sources}
+          Path("coverage_remainder.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          lines=["# AML 339 — isolated 275-source remainder audit","","Only listing extraction (zero detailed samples). Never infer recent active jobs from this audit.",
+            "","*Audited sources:* "+str(summary["sources_probed"]),
+            "*State counts:* "+json.dumps(summary["state_counts"]),
+            "*Failure classes:* "+json.dumps(summary["failure_categories"]),
+            "","| Source | State | Jobs | Matching titles | Error |","|---|---|---:|---:|---|"]
+          for r in sources:
+            lines.append(f"| {r['source_id']} | {r['state']} | {r.get('count') if r.get('count') is not None else '—'} | {r.get('relevant_count') if r.get('relevant_count') is not None else '—'} | {r.get('error_class') or ''} |")
+          Path("coverage_remainder.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+          print("COVERAGE_PILOT_AGGREGATE",json.dumps(summary,ensure_ascii=False),flush=True)
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("\n".join(lines[:11])+"\n")
+          if len(files)!=23 or len(sources)!=275 or len(set(ids))!=275:
+            raise RuntimeError("Incomplete remainder audit; see partial reports")
+          PY
+      - name: Preserve merged diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-coverage-remainder-merged
+          path: |
+            coverage_remainder.json
+            coverage_remainder.md
+          if-no-files-found: warn
+          retention-days: 10
