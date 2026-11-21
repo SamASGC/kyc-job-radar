@@ -1,0 +1,155 @@
+name: AML339 E2E 18-source isolated dry-run with migration and dedup
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_e2e18_dry_run.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: aml339-e2e18-dry-run-state
+  cancel-in-progress: false
+jobs:
+  full-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify reconstruction, alert rules and history migrations offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/merge_e2e18_snapshots.py --self-test
+          python3 experiments/aml339/two_lane_alert_preview.py --self-test
+          python3 experiments/aml339/alert_history.py --self-test
+          python3 experiments/aml339/restore_e2e18_history.py --repo SamASGC/kyc-job-radar --branch experiment/aml339-http-diagnostic-20261121 --current-run-id 0 --github-output /dev/null --self-test
+      - name: Download last observed HTTP-based quality evidence from six Baltic/global employers
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44934429522
+          github-token: ${{ github.token }}
+          pattern: aml339-quality-*
+          path: snapshots/initial
+      - name: Download already verified posting details from second page
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44934429509
+          github-token: ${{ github.token }}
+          pattern: aml339-quality-followup-*
+          path: snapshots/followup
+      - name: Download remaining 94 validated Wise and Airwallex postings
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44933667562
+          github-token: ${{ github.token }}
+          pattern: aml339-pending-*
+          path: snapshots/remaining
+      - name: Reconstruct exactly 197 posting evaluations across 18 sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected={'initial':3,'followup':2,'remaining':9}
+          files=[]
+          for folder,count in expected.items():
+            matched=sorted(Path('snapshots',folder).rglob('*.json'))
+            assert len(matched)==count,(folder,len(matched))
+            files.extend(matched)
+          Path('snapshot_paths.txt').write_text('\n'.join(str(x) for x in files)+'\n',encoding='utf-8')
+          print('E2E18_INPUT_FILES',json.dumps({'files':len(files),'groups':expected}),flush=True)
+          PY
+          mapfile -t inputs < snapshot_paths.txt
+          python3 experiments/aml339/merge_e2e18_snapshots.py \
+            --max-age-hours 12 --out e2e18_merged_quality.json "${inputs[@]}"
+      - name: Find last successful 18-source history, or migrate 3-source state
+        id: previous
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/restore_e2e18_history.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --current-run-id "$GITHUB_RUN_ID" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Restore immutable prior history; do NOT treat failure as blank
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p restored
+          gh run download "${{ steps.previous.outputs.prior_run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "${{ steps.previous.outputs.prior_artifact_name }}" --dir restored
+          test -s restored/isolated_alert_history.json
+      - name: Evaluate all matching roles and persist independent simulated-alert state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outgoing state
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in restored/isolated_alert_history.json \
+            --run-id "$GITHUB_RUN_ID" \
+            --state-out state/isolated_alert_history.json \
+            --json-out outgoing/alerts.json --md-out outgoing/alerts.md \
+            e2e18_merged_quality.json
+      - name: Verify duplicate protection on identical evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in state/isolated_alert_history.json \
+            --state-out state/replay_history.json \
+            --json-out outgoing/replay_alerts.json --md-out outgoing/replay_alerts.md \
+            e2e18_merged_quality.json
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          result=json.loads(Path('outgoing/alerts.json').read_text())
+          replay=json.loads(Path('outgoing/replay_alerts.json').read_text())
+          old=json.loads(Path('restored/isolated_alert_history.json').read_text())
+          now=json.loads(Path('state/isolated_alert_history.json').read_text())
+          second=json.loads(Path('state/replay_history.json').read_text())
+          assert result['source_count']==18 and result['roles_evaluated']==197
+          assert replay['new_counts']=={'confirmed_recent':0,'promising_date_unconfirmed':0},replay
+          assert second['records']==now['records']
+          assert set(old['records']).issubset(now['records']),'Historic role state was lost'
+          print('E2E18_STATEFUL_RESULT',json.dumps({'sources':result['source_count'],
+            'roles':result['roles_evaluated'],'prior_history':len(old['records']),
+            'new_by_lane':result['new_counts'],'history_after':len(now['records']),
+            'repeat':replay['new_counts']},ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write('# AML339: 18 employers, all 197 title-matched vacancies examined\n\n')
+            f.write('**This run uses recently captured real HTTP evidence, NOT freshly fetched vacancy pages.**\n\n')
+            f.write('New simulated alerts: '+json.dumps(result['new_counts'])+'\n\n')
+            f.write('Immediate replay: 0 notifications. No real messages sent.\n')
+          PY
+      - name: Preserve 18-source persistent deduplication history (independent of 3-source state)
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-e2e18-isolated-state
+          path: state/isolated_alert_history.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Preserve merged audits, two-lane previews and replay proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-e2e18-dry-run-report
+          path: |
+            e2e18_merged_quality.json
+            outgoing/
+          retention-days: 20
+          if-no-files-found: warn
