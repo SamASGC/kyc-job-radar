@@ -1,0 +1,176 @@
+name: AML339 18-source FULL LIVE E2E quality and history dry-run
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_live_e2e18_full.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: aml339-live-full-isolated-history
+  cancel-in-progress: false
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [vinted, verifo-lithuania, demivolt-lithuania, lt-neo-finance, swedbank, luminor, n26, wise, corpay, openpayd, transfergo, bvnk, bnf-bank-malta, medirect-bank-malta, payabl, airwallex, mollie, truelayer]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify and unpack the original 339-source parser into a temporary folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/liveselection"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+            allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py","amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+            assert set(z.namelist())==allowed and sum(x.file_size for x in z.infolist())<800_000
+            assert all(not x.filename.startswith('/') and '..' not in Path(x.filename).parts for x in z.infolist())
+            z.extractall(Path(os.environ["RUNNER_TEMP"])/"liveselection")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py experiments/aml339/quality_audit.py experiments/aml339/live_e2e18_full.py "$RUNNER_TEMP/liveselection/"
+          cd "$RUNNER_TEMP/liveselection"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: GET current listings and verify details of all geographically plausible matches
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/liveselection"
+          python3 live_e2e18_full.py --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
+      - name: Preserve each source's complete or failed evidence, even on error
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-live-full-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/liveselection/source_*.json
+          retention-days: 10
+          if-no-files-found: warn
+  e2e:
+    needs: [scan]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-live-full-source-*
+          path: sources
+      - name: Check source coverage and inspect unresolved employer applications
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          expected=["vinted","verifo-lithuania","demivolt-lithuania","lt-neo-finance","swedbank","luminor","n26","wise","corpay","openpayd","transfergo","bvnk","bnf-bank-malta","medirect-bank-malta","payabl","airwallex","mollie","truelayer"]
+          files=sorted(Path('sources').rglob('source_*.json'))
+          if len(files)!=len(expected):raise RuntimeError('Missing live evidence: '+str(len(files)))
+          allsrc=[]
+          for path in files:
+            d=json.loads(path.read_text(encoding='utf-8'))
+            assert d['total_configured_sources']==339 and len(d['sources'])==1
+            allsrc+=d['sources']
+          assert len({x['source_id'] for x in allsrc})==len(expected)
+          assert set(x['source_id'] for x in allsrc)==set(expected)
+          blocked=[x for x in allsrc if x['state']!='listing_extracted' or not x['list_complete'] or len(x['audited'])!=x['relevant_leads']]
+          summary={'sources':len(allsrc),'listings_succeeded':len(allsrc)-len(blocked),
+            'title_matches':sum(x.get('relevant_leads') or 0 for x in allsrc),
+            'outside_scope_detail_skips':sum(x['skipped_details_outside_geo'] for x in allsrc),
+            'inscope_details_attempted':sum(x['attempted_in_scope_details'] for x in allsrc),
+            'inscope_unverified':sum(x['unverified_in_scope'] for x in allsrc),
+            'failed_sources':[x['source_id'] for x in blocked]}
+          Path('live18_scope_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
+          print('LIVE_FULL18_PREFLIGHT',json.dumps(summary,ensure_ascii=False),flush=True)
+          if blocked:raise RuntimeError('Incomplete live employer evidence: refusing alert state update')
+          Path('source_paths.txt').write_text('\n'.join(str(p) for p in files)+'\n')
+          PY
+      - name: Restore most recent successful isolated full-live history; seed from prior 18-source pilot
+        id: prior
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/restore_live_e2e18_history.py \
+            --repo "$GITHUB_REPOSITORY" \
+            --branch "$GITHUB_REF_NAME" \
+            --run-id "$GITHUB_RUN_ID" \
+            --github-output "$GITHUB_OUTPUT"
+          mkdir -p restored
+          gh run download "${{ steps.prior.outputs.prior_run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "${{ steps.prior.outputs.prior_artifact_name }}" --dir restored
+          test -s restored/isolated_alert_history.json
+      - name: Evaluate current full 18-source evidence and save two simulated lanes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports state
+          mapfile -t files < source_paths.txt
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in restored/isolated_alert_history.json \
+            --run-id "$GITHUB_RUN_ID" \
+            --state-out state/isolated_alert_history.json \
+            --json-out reports/alerts.json --md-out reports/alerts.md \
+            "${files[@]}"
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in state/isolated_alert_history.json \
+            --state-out state/replay_history.json \
+            --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md \
+            "${files[@]}"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          cur=json.loads(Path('reports/alerts.json').read_text())
+          replay=json.loads(Path('reports/replay_alerts.json').read_text())
+          prev=json.loads(Path('restored/isolated_alert_history.json').read_text())
+          state=json.loads(Path('state/isolated_alert_history.json').read_text())
+          assert cur['source_count']==18
+          assert replay['new_counts']=={'confirmed_recent':0,'promising_date_unconfirmed':0}
+          assert set(prev['records']).issubset(state['records'])
+          print('LIVE_FULL18_E2E_RESULT',json.dumps({'sources':18,'roles':cur['roles_evaluated'],
+             'previous_records':len(prev['records']),'new_alerts':cur['new_counts'],
+             'final_records':len(state['records']),'no_repeat':replay['new_counts']},ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write('# AML339 — 18 employers LIVE end-to-end (no notifications)\n\n')
+            f.write('Reviewed '+str(cur['roles_evaluated'])+' title-matched roles.\n\n')
+            f.write('New simulated alerts: '+json.dumps(cur['new_counts'])+'\n\n')
+            f.write('Exact replay generated zero alerts.\n')
+          PY
+      - name: Persist new isolated dedup history ONLY on complete source audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-live18-full-state
+          path: state/isolated_alert_history.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Preserve full live source coverage and evidence even if a portal failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-live18-full-results
+          path: |
+            live18_scope_summary.json
+            reports/
+          retention-days: 20
+          if-no-files-found: warn
