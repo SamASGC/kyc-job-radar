@@ -19,7 +19,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
-          run-id: 44934022284
+          run-id: 44934429522
           github-token: ${{ github.token }}
           pattern: aml339-quality-*
           path: evidence/initial
@@ -27,7 +27,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
-          run-id: 44934022273
+          run-id: 44934429509
           github-token: ${{ github.token }}
           pattern: aml339-quality-followup-*
           path: evidence/followup
