@@ -26,7 +26,7 @@ TARGET = {
     "TM":r"\b(?:transaction(?:al)? monitoring|monitoring (?:of )?transactions|transaction alerts?|suspicious transactions?)\b",
     "SAR/STR":r"\b(?:SARs?|STRs?|suspicious (?:activity|transaction) reports?)\b",
     "CDD/EDD/KYB":r"\b(?:CDD|EDD|KYB|KYC|due diligence|customer onboarding)\b",
-    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat\w*.{0,80}(?:money laundering|financial crime|fraud)|investigat(?:e|ing|ion|ions) (?:suspicious|financial|potential|account|transaction)|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
+    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat\w*.{0,80}(?:money laundering|financial crime|fraud)|investigat(?:e|ing|ion|ions) (?:suspicious (?:transactions?|activity)|financial crime|transaction (?:alerts?|fraud))|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
 }
 RX={k:re.compile(v,re.I) for k,v in TARGET.items()}
 MAIN=set(TARGET)-{"CDD/EDD/KYB"}
@@ -277,6 +277,14 @@ def test():
         "Fluent English and analytical skills required."]))
     assert "Financial crime investigations" in evaluate(junior,True)["functions"]
     assert evaluate(junior,True)["training_mentioned"]
+    regulatory=dict(core,title="Junior Compliance Analyst",description="\n".join([
+        "Duties & Responsibilities",
+        "Supporting the Data Protection Officer, including investigating potential breaches",
+        "and subject access requests; checking regulatory compliance calendars.",
+        "Competencies & Experience",
+        "Proficiency with MS Office and banking legislation."]))
+    assert evaluate(regulatory,True)["class"]=="low_incremental_learning"
+    assert "Financial crime investigations" not in evaluate(regulatory,True)["functions"]
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
