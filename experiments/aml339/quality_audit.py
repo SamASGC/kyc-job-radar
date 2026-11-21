@@ -26,23 +26,24 @@ TARGET = {
     "TM":r"\b(?:transaction(?:al)? monitoring|monitoring transactions|transaction alerts?|suspicious transactions?)\b",
     "SAR/STR":r"\b(?:SARs?|STRs?|suspicious (?:activity|transaction) reports?)\b",
     "CDD/EDD/KYB":r"\b(?:CDD|EDD|KYB|KYC|due diligence|customer onboarding)\b",
+    "Financial crime investigations":r"\b(?:financial crime investigations?|investigat(?:e|ing|ion|ions) (?:suspicious|financial|potential|account|transaction)|money laundering investigations?|research (?:regarding )?(?:prospective|existing) customers)\b",
 }
 RX={k:re.compile(v,re.I) for k,v in TARGET.items()}
 MAIN=set(TARGET)-{"CDD/EDD/KYB"}
 WEIGHT={"SoF":20,"SoW":20,"PEP":13,"Sanctions screening":16,"Adverse media":16,
-        "TM":9,"SAR/STR":7,"CDD/EDD/KYB":3}
+        "TM":9,"SAR/STR":7,"CDD/EDD/KYB":3,"Financial crime investigations":8}
 COUNTRY=re.compile(r"\b(?:Spain|España|Madrid|Lithuania|Lietuva|Vilnius|Kaunas|Estonia|Tallinn|Malta|Luxembourg)\b",re.I)
 SWISS=re.compile(r"\b(?:Switzerland|Swiss|Zurich|Zürich|Geneva|Genève|Basel|Lugano)\b",re.I)
 OUTSIDE=re.compile(r"\b(?:United States|USA|Canada|India|Singapore|Australia|Brazil|Mexico|Hong Kong|China|Japan|Philippines|Pakistan|Bangladesh|UAE|Dubai|South Africa|New York|London|Berlin|Paris|Bangalore|Bengaluru|Mumbai|Chennai|Delhi|Hyderabad|Manila|Sydney)\b",re.I)
-UNSUPPORTED_LANGUAGE=re.compile(r"\b(?:Lithuanian|Estonian|Latvian|German|Deutsch|Dutch|Italian|Polish|Portuguese|Russian|Swedish|Finnish|Danish)\b",re.I)
+UNSUPPORTED_LANGUAGE=re.compile(r"\b(?:Maltese|Lithuanian|Estonian|Latvian|German|Deutsch|Dutch|Italian|Polish|Portuguese|Russian|Swedish|Finnish|Danish)\b",re.I)
 MANDATORY_WORDS=re.compile(r"\b(?:must|required|mandatory|essential|need to|minimum|at least|fluen\w*|native|proficien\w*|excellent|C1\b|C2\b)\b",re.I)
-SENIOR_TITLE=re.compile(r"\b(?:head of|director|chief|deputy mlro|mlro|vice president|vp\b|senior manager|team lead|principal|staff (?:officer|analyst)|global head)\b",re.I)
+SENIOR_TITLE=re.compile(r"\b(?:head of|director|chief|deputy mlro|mlro|vice president|vp\b|senior manager|assistant manager|manager|team lead|principal|staff (?:officer|analyst)|global head)\b",re.I)
 TECH_TITLE=re.compile(r"\b(?:engineer|developer|architect|product owner|account executive|sales|devops|data scientist|designer|cybersecurity)\b",re.I)
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
 DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will) do|key duties|day.to.day|what you will be doing|main tasks|functions)\b",re.I)
-REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills|criteria|your qualifications)\b",re.I)
+REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills|criteria|competenc(?:y|ies)\s*(?:&|and)\s*experience|your qualifications)\b",re.I)
 OPTIONAL=re.compile(r"\b(?:nice to have|preferred|desirable|would be a plus|advantageous|not required|or equivalent experience)\b",re.I)
 
 def short_sentence(line:str)->str:
@@ -71,6 +72,10 @@ def role_geography(loc):
     if COUNTRY.search(loc):return "target"
     if SWISS.search(loc):return "swiss_future"
     if OUTSIDE.search(loc):return "outside_scope"
+    if re.search(r"\b(?:Limassol|Nicosia|Cyprus|United Kingdom|Bulgaria|Greece|Latvia|Riga|Romania|France|Germany|Poland|Italy|Portugal|Netherlands|Belgium|Sweden|Finland|Denmark|Norway|Ireland|Dublin)\b",loc,re.I):
+        return "outside_scope"
+    if re.search(r"\b(?:Sliema|Tas-Sliema|Gzira|Birkirkara|Valletta|St\.? Julian(?:s|'s)?|St\.? Julians)\b",loc,re.I):
+        return "target"
     if re.search(r"\b(?:remote|hybrid|EMEA|Europe|worldwide)\b",loc,re.I):return "remote_location_review"
     return "unknown"
 
@@ -132,6 +137,9 @@ def evaluate(job, application_verified:bool):
     recency=freshness(job.get("date"),hours=72)
     if recency!="fresh":flags.append("Publicación no confirmada dentro de las últimas 72 horas: "+recency)
     if not application_verified:flags.append("Candidatura directa no verificada")
+    role_training=[short_sentence(line) for mode,line in evidence if re.search(
+        r"(?:receive|provide|given|offer) (?:an? )?(?:extensive |structured |comprehensive |on.the.job )?training|training on how to",
+        line,re.I)][:3]
     score=sum(WEIGHT[k] for k in skills)+sum(WEIGHT[k]//3 for k in duties)
     if geo=="target":score+=12
     if "SoF" in skills and "SoW" in skills:score+=5
@@ -150,8 +158,9 @@ def evaluate(job, application_verified:bool):
         "duty_evidence":[{"skill":k,"text":short_sentence(line)} for mode,line in evidence if mode=="duties" for k,rx in RX.items() if rx.search(line) and k in MAIN][:8],
         "publication_status":recency,"original_posting_date":job.get("date"),
         "date_field":job.get("date_field"),"application_verified":application_verified,
-        "training_confirmed":False,
-        "training_note":"No se presume formación técnica ni aceptación de candidatos sin experiencia práctica."}
+        "training_mentioned":bool(role_training),"training_evidence":role_training,
+        "training_note":"El anuncio puede mencionar formación, pero no demuestra acceso a todas las funciones objetivo." if role_training else
+        "No se presume formación técnica ni aceptación de candidatos sin experiencia práctica."}
 
 def candidate(job):
     title=clean(job.get("title"))
@@ -246,6 +255,10 @@ def test():
     assert evaluate(foreign,True)["class"]=="not_recommended"
     assert evaluate(dict(core,description="KYC and CDD only"),True)["class"]=="low_incremental_learning" or evaluate(dict(core,description="KYC and CDD only"),True)["class"]=="manual_review"
     assert role_geography("Madrid / Barcelona")=="mixed_location_review"
+    assert evaluate(dict(core,description=core["description"]+"\nExcellent English and Maltese required."),True)["class"]=="not_recommended"
+    assert evaluate(dict(core,title="Sanctions & Fraud Manager"),True)["class"]=="not_recommended"
+    assert role_geography("Limassol, Cyprus")=="outside_scope"
+    assert role_geography("Tas-Sliema")=="target"
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
