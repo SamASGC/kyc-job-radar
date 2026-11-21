@@ -2,7 +2,7 @@ name: AML339 isolated false negative audit of excluded titles
 on:
   push:
     branches: [experiment/aml339-http-diagnostic-20261121]
-    paths: [.github/workflows/aml339_false_negative_pilot.yml, experiments/aml339/false_negative_audit.py]
+    paths: [.github/workflows/aml339_false_negative_pilot.yml, experiments/aml339/false_negative_audit.py, experiments/aml339/quality_audit.py]
 permissions:
   contents: read
 jobs:
