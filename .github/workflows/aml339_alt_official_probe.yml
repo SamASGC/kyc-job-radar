@@ -1,0 +1,53 @@
+name: AML339 alternative official job portals probe
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_alt_official_probe.yml]
+permissions:
+  contents: read
+jobs:
+  check-official-alternatives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read public employer pages only
+        run: |
+          python3 - <<'PY'
+          import urllib.request,urllib.error,urllib.parse,json,re
+          from html.parser import HTMLParser
+          class A(HTMLParser):
+            def __init__(self,base):
+              super().__init__();self.base=base;self.href=None;self.text=[];self.links=[]
+            def handle_starttag(self,t,a):
+              if t=="a":self.href=dict(a).get("href","");self.text=[]
+            def handle_data(self,d):
+              if self.href is not None:self.text.append(d)
+            def handle_endtag(self,t):
+              if t=="a" and self.href is not None:
+                url=urllib.parse.urljoin(self.base,self.href)
+                title=" ".join("".join(self.text).split())
+                if re.search(r"career|/jobs|apply|ashby|greenhouse|comeet|opening|position",url+" "+title,re.I):
+                  self.links.append({"url":url[:210],"text":title[:90]})
+                self.href=None
+          targets={
+          "truelayer_own_jobs":"https://truelayer.com/jobs/",
+          "truelayer_careers":"https://truelayer.com/careers/",
+          "capi_corporate":"https://capimoney.com/",
+          "capi_ashby_board":"https://jobs.ashbyhq.com/capimoney",
+          "nayax_all_jobs":"https://www.nayax.com/careers/",
+          "nayax_compliance":"https://www.nayax.com/careers/department/legal-compliance/"
+          }
+          for name,url in targets.items():
+            row={"source":name,"url":url}
+            try:
+              req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (compatible; AMLJobRadar/1.0; public read-only careers search)"})
+              with urllib.request.urlopen(req,timeout=16) as r:
+                data=r.read(1600000);row["status"]=r.status;row["final_url"]=r.url
+              text=data.decode("utf-8","replace");p=A(row["final_url"]);p.feed(text)
+              row["body_bytes"]=len(data)
+              row["link_samples"]=p.links[:18];row["matching_links"]=len(p.links)
+              row["job_patterns"]={t:len(re.findall(t,text,re.I)) for t in ["job-boards","ashby","comeet","careers","job openings","jobPosting"]}
+            except urllib.error.HTTPError as e:row["status"]=e.code
+            except Exception as e:row["error"]=type(e).__name__+": "+str(e)[:200]
+            print("ALT_OFFICIAL",json.dumps(row,ensure_ascii=False),flush=True)
+          PY
