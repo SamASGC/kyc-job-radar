@@ -25,6 +25,7 @@ from job_radar.sources.ashby import fetch_ashby
 from job_radar.sources.smartrecruiters import fetch_smartrecruiters
 from job_radar.sources.workable import fetch_workable
 from job_radar.sources.personio import fetch_personio
+from job_radar.sources.teamtailor import fetch_teamtailor
 from job_radar.sources.workday import fetch_workday
 from job_radar.sources.recruitee import fetch_recruitee
 from job_radar.sources.breezy import fetch_breezy
@@ -59,8 +60,15 @@ async def fetch_target(http: Http, company: dict, target: dict) -> list[Job]:
         return await fetch_workable(http, company, slug)
     if kind == "personio":
         return await fetch_personio(http, company, slug)
+    if kind == "teamtailor":
+        return await fetch_teamtailor(http, company, target.get("url") or "")
     if kind == "workday":
-        return await fetch_workday(http, company, target.get("url") or company["careers_url"])
+        url = target.get("url") or company["careers_url"]
+        if target.get("search_terms"):
+            return await fetch_workday(http, company, url, search_terms=target["search_terms"])
+        # Preserve existing positional Workday call contract on all
+        # previously integrated boards (important for regression mocks).
+        return await fetch_workday(http, company, url)
     if kind == "recruitee":
         return await fetch_recruitee(http, company, slug)
     if kind == "breezy":

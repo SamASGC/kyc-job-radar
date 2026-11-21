@@ -47,9 +47,19 @@ class RealFinancialSourcesV34Tests(unittest.TestCase):
                 self.assertEqual(rec["careers_url"], EVIDENCE[name])
                 self.assertEqual(urlsplit(rec["careers_url"]).scheme, "https")
                 self.assertTrue(rec["enabled"])
-                self.assertFalse(rec.get("ats"), "Do not invent provider ATS")
-                self.assertEqual(rec["verification_level"],
-                                 "official_careers_url_not_necessarily_api")
+                if name == "BBVA":
+                    # v3.29: the original careers URL is preserved, and the
+                    # exact first-party Workday CXS source has now been PROVEN
+                    # live (GitHub Actions #39277367860). Do not guess ATS
+                    # providers for the eleven other historical firms.
+                    self.assertEqual(rec["verification_level"], "official_ats_live_probe_passed")
+                    self.assertEqual(rec["ats"][0]["kind"], "workday")
+                    self.assertEqual(rec["ats"][0]["url"], "https://bbva.wd3.myworkdayjobs.com/BBVA")
+                    self.assertIn("39277367860", rec["ats_evidence"])
+                else:
+                    self.assertFalse(rec.get("ats"), "Do not invent provider ATS")
+                    self.assertEqual(rec["verification_level"],
+                                     "official_careers_url_not_necessarily_api")
                 self.assertIn(rec["careers_url"], rec["origin"])
                 self.assertTrue(rec["specialism"])
 

@@ -1,0 +1,45 @@
+name: v3.29 probe BBVA first-party Workday CXS
+on:
+  push:
+    branches: ["feat/v3-29-mangopay-teamtailor-first-party"]
+    paths: [".github/workflows/v3_29_bbva_probe.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: BBVA exact public Workday tenant and original dates
+        run: |
+          python - <<'PY'
+          import asyncio,json
+          from job_radar.http import Http
+          from job_radar.workday_detail import workday_board
+          from job_radar.sources.workday import fetch_workday
+          async def run():
+            h=Http(concurrency=3,timeout=18)
+            try:
+              for link in ("https://bbva.wd3.myworkdayjobs.com/es/BBVA","https://bbva.wd3.myworkdayjobs.com/BBVA"):
+                try:
+                  ident=workday_board(link)
+                  print("V329_BBVA_IDENT",json.dumps({"url":link,"identity":ident}))
+                  if not ident:continue
+                  host,tenant,site,_=ident
+                  endpoint=f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
+                  r=await h.post(endpoint,json={"appliedFacets":{},"limit":12,"offset":0,"searchText":"compliance"},headers={"Content-Type":"application/json"})
+                  data=r.json() if r.status_code==200 else {}
+                  rows=data.get("jobPostings") or []
+                  print("V329_BBVA_BOARD",json.dumps({"url":link,"http":r.status_code,"total":data.get("total"),"rows":len(rows),"sample":[{"title":x.get("title"),"date":x.get("postedOn"),"location":x.get("locationsText"),"path":x.get("externalPath")} for x in rows[:4]]}))
+                  if rows and str(rows[0].get("externalPath") or "").startswith("/job/"):
+                    rr=await h.get(f"https://{host}/wday/cxs/{tenant}/{site}{rows[0]['externalPath']}")
+                    info=(rr.json() if rr.status_code==200 else {}).get("jobPostingInfo") or {}
+                    print("V329_BBVA_DETAIL",json.dumps({"http":rr.status_code,"id":info.get("id"),"title":info.get("title"),"date":info.get("startDate"),"posted":info.get("posted"),"canApply":info.get("canApply"),"posting":info.get("jobPostingId"),"description_len":len(info.get("jobDescription") or "")}))
+                except Exception as e:print("V329_BBVA_ERROR",json.dumps({"link":link,"type":type(e).__name__,"error":str(e)[:300]}))
+            finally:await h.close()
+          asyncio.run(run())
+          PY
