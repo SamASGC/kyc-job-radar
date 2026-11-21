@@ -1,0 +1,103 @@
+name: AML339 read-only two-lane alert simulation from real evidence
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_two_lane_preview.yml, experiments/aml339/two_lane_alert_preview.py]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Download read-only validated evidence from run 44934022284
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44934022284
+          github-token: ${{ github.token }}
+          pattern: aml339-quality-*
+          path: evidence/initial
+      - name: Download read-only validated evidence from run 44934022273
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44934022273
+          github-token: ${{ github.token }}
+          pattern: aml339-quality-followup-*
+          path: evidence/followup
+      - name: Download read-only validated evidence from run 44933667562
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 44933667562
+          github-token: ${{ github.token }}
+          pattern: aml339-pending-*
+          path: evidence/remaining
+      - name: Validate 197 original posting reports and preview two separate lanes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/two_lane_alert_preview.py --self-test
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected={"initial":3,"followup":2,"remaining":9}
+          paths=[]
+          for sub,count in expected.items():
+            found=sorted(Path("evidence",sub).rglob("*.json"))
+            assert len(found)==count,(sub,[str(x) for x in found])
+            paths.extend(found)
+          roles=0
+          for p in paths:
+            data=json.loads(p.read_text(encoding="utf-8"))
+            assert data["total_configured_sources"]==339
+            roles+=sum(len(x["audited"]) for x in data["sources"])
+          assert roles==197,roles
+          Path("evidence_files.txt").write_text("\n".join(str(x) for x in paths)+"\n",encoding="utf-8")
+          print("TWO_LANE_REAL_INPUTS",json.dumps({"files":len(paths),"roles":roles}),flush=True)
+          PY
+          mapfile -t inputs < evidence_files.txt
+          python3 experiments/aml339/two_lane_alert_preview.py \
+            --max-each 30 --out two_lane_preview_197.json "${inputs[@]}"
+      - name: Export separate previews and exclusion reasons without sending alerts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads(Path("two_lane_preview_197.json").read_text(encoding="utf-8"))
+          assert d["mode"]=="DRY_RUN_ONLY_NO_NOTIFICATIONS" and d["total_reviewed"]==197
+          sections=[("confirmed_recent","Novedades con fecha original verificada"),
+                    ("promising_date_unconfirmed","Prometedoras sin fecha fiable; NO son novedades")]
+          lines=["# AML339 — simulación de dos carriles (sin enviar alertas)","",
+                 "La muestra contiene 197 fichas; no es una auditoría de todas las vacantes."]
+          for lane,heading in sections:
+            items=d["preview"][lane]
+            lines.extend(["","## "+heading,"","Seleccionadas: "+str(d["eligible_before_display_limits"][lane]),""])
+            for item in items:
+              lines.append("- **"+str(item["title"])+"** — "+str(item["location"])+
+                " | "+item["employer_id"]+" | "+item["url"])
+          lines+=["","## Motivos de exclusión","",json.dumps(d["suppressed_reasons"],ensure_ascii=False,indent=2),
+                "","**Candidatura comprobada** solo significa acceso técnico, no aceptación o contratación."]
+          Path("two_lane_preview_197.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+          print("TWO_LANE_REAL_RESULT",json.dumps({"eligible":d["eligible_before_display_limits"],
+            "suppressed":d["suppressed_reasons"],"shown":{k:len(v) for k,v in d["preview"].items()}},
+            ensure_ascii=False),flush=True)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("\n".join(lines[:16])+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-two-lane-dry-run
+          path: |
+            two_lane_preview_197.json
+            two_lane_preview_197.md
+          retention-days: 10
+          if-no-files-found: warn
