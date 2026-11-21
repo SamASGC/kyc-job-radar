@@ -1,0 +1,68 @@
+name: AML 339 - repair endpoint evidence
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_repair_endpoint_probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Probe public job listings and retain original HTML
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request, urllib.error, urllib.parse, pathlib, hashlib
+          from html.parser import HTMLParser
+          S=pathlib.Path("live_probes"); S.mkdir(exist_ok=True)
+          urls={
+            "truelayer_eu":"https://job-boards.eu.greenhouse.io/truelayer",
+            "caceis_en":"https://jobs.caceis.com/offre-de-emploi/liste-toutes-offres.aspx?LCID=2057&page=1",
+            "caceis_alt":"https://jobs.caceis.com/offre-de-emploi/liste-toutes-offres.aspx?showSearchUrl=1",
+            "vinted":"https://careers.vinted.com/jobs",
+            "vinted_gh_us":"https://boards-api.greenhouse.io/v1/boards/vinted/jobs?content=false",
+            "capimoney_ashby":"https://api.ashbyhq.com/posting-api/job-board/capimoney",
+            "capimoney_careers":"https://www.capimoney.com/careers",
+          }
+          class Links(HTMLParser):
+            def __init__(self,base):
+              super().__init__(convert_charrefs=True);self.base=base;self.href=None;self.parts=[];self.links=[]
+            def handle_starttag(self,t,a):
+              if t=="a":self.href=dict(a).get("href","");self.parts=[]
+            def handle_data(self,txt):
+              if self.href is not None:self.parts.append(txt)
+            def handle_endtag(self,t):
+              if t=="a" and self.href is not None:
+                u=urllib.parse.urljoin(self.base,self.href);text=" ".join("".join(self.parts).split())
+                if re.search(r"job|emplo|offre|career|vacan|position|page=",u+" "+text,re.I):
+                  self.links.append({"url":u[:250],"label":text[:120]})
+                self.href=None;self.parts=[]
+          for key,url in urls.items():
+            d={"name":key,"url":url}
+            try:
+              req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (compatible; AMLJobRadar/1.0; public read-only careers search)"})
+              with urllib.request.urlopen(req,timeout=18) as r: data=r.read(12_000_000);d["status"]=r.status;d["final_url"]=r.url; d["mime"]=r.headers.get("Content-Type")
+              d["bytes"]=len(data);d["sha256"]=hashlib.sha256(data).hexdigest()
+              if len(data)<12_000_000 and d["status"]==200:
+                (S/(key+(".json" if "json" in (d["mime"] or "") else ".html"))).write_bytes(data)
+              body=data.decode("utf-8","replace")
+              p=Links(d["final_url"]);p.feed(body)
+              d["links_count"]=len(p.links)
+              d["links_sample"]=[x for x in p.links if re.search(r"offre-de-emploi/emploi-|/jobs/j/|/truelayer/jobs/|page=",x["url"],re.I)][:7]
+              if key=="vinted":
+                d["pagination_hints"]=sorted(set(re.findall(r"[^\s\"']{0,80}(?:cursor|page|loadMore|totalJobs|greenhouse)[^\s\"']{0,100}",body,re.I)))[:8]
+              if key=="capimoney_ashby" and body.startswith("{"):
+                j=json.loads(body);d["jobs"]=len(j.get("jobs",[]))
+            except urllib.error.HTTPError as e:d["status"]=e.code;d["error"]=str(e)
+            except Exception as e:d["error"]=type(e).__name__+": "+str(e)[:180]
+            print("AML339_REPAIR_PROBE",json.dumps(d,ensure_ascii=False),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-repair-endpoint-snapshots
+          path: live_probes/
+          retention-days: 7
+          if-no-files-found: warn
