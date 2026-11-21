@@ -47,7 +47,7 @@ jobs:
       - name: Probe next 12 not previously audited sources (no state changes)
         shell: bash
         env:
-          SHARD: \${{ matrix.shard }}
+          SHARD: ${{ matrix.shard }}
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339_coverage"
@@ -98,8 +98,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aml339-coverage-shard-\${{ matrix.shard }}
-          path: \${{ runner.temp }}/aml339_coverage/DIAGNOSTICOS/
+          name: aml339-coverage-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/aml339_coverage/DIAGNOSTICOS/
           retention-days: 10
           if-no-files-found: warn
   aggregate:
