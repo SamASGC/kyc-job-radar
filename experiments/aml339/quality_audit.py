@@ -55,9 +55,9 @@ def sections(description):
     # Section headings (including Essential / Desirable) must reset the previous
     # category. Otherwise optional AML knowledge can be falsely counted as a
     # hands-on responsibility in unrelated payment operations roles.
-    h_req=re.compile(r"^(?:what we need from you|essential(?: skills| requirements| qualifications)?|minimum qualifications?|skills(?: and| &)? experience|requirements?|qualifications?|criteria|your profile|what you(?:'ll| will) bring|competencies(?: and| &)? experience)\\s*:?$",re.I)
-    h_optional=re.compile(r"^(?:desirable|nice to have|preferred(?: skills| qualifications)?|additional qualifications?|bonus points)\\s*:?$",re.I)
-    h_other=re.compile(r"^(?:what (?:you can expect|we offer)|we offer|our benefits|benefits|perks|about us|why join)\\s*:?$",re.I)
+    h_req=re.compile(r"^(?:what we need from you|essential(?: skills| requirements| qualifications)?|minimum qualifications?|skills(?: and| &)? experience|requirements?|qualifications?|criteria|your profile|what you(?:'ll| will) bring|competencies(?: and| &)? experience)\s*:?$",re.I)
+    h_optional=re.compile(r"^(?:desirable|nice to have|preferred(?: skills| qualifications)?|additional qualifications?|bonus points)\s*:?$",re.I)
+    h_other=re.compile(r"^(?:what (?:you can expect|we offer)|we offer|our benefits|benefits|perks|about us|why join)\s*:?$",re.I)
     for line in lines:
         heading=line.strip()
         if len(heading)<110 and h_optional.fullmatch(heading):mode="optional"
@@ -311,7 +311,7 @@ def test():
         "Proficiency with MS Office and banking legislation."]))
     assert evaluate(regulatory,True)["class"]=="low_incremental_learning"
     assert "Financial crime investigations" not in evaluate(regulatory,True)["functions"]
-    optional_role=dict(core,title="Payment Operations Analyst",description="\\n".join([
+    optional_role=dict(core,title="Payment Operations Analyst",description="\n".join([
         "Key Areas of Responsibilities",
         "Assist with incoming payments and merchant settlements.",
         "What we need from you:",
