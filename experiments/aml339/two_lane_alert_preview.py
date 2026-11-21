@@ -30,7 +30,7 @@ def canonical_url(url):
 def key(employer_id,role):
     u=canonical_url(role.get("url") or role.get("apply_url"))
     if not u:return ""
-    return hashlib.sha256((employer_id+"|"+u).encode("utf-8")).hexdigest()[:24]
+    return hashlib.sha256((employer_id+"|"+u+"|"+(role.get("title") or "").strip().casefold()).encode("utf-8")).hexdigest()[:24]
 
 def triage(employer_id,role):
     evidence=role.get("evaluation") or {}
@@ -126,6 +126,9 @@ def tests():
     duplicate=role_template(url="https://careers.example.org/jobs/1234567?utm_campaign=email")
     d=preview([("company",role),("company",duplicate)])
     assert len(d["preview"]["promising_date_unconfirmed"])==1 and d["suppressed_reasons"]["duplicate_role_key"]==1
+    # Several first-party sites publish multiple inline job cards under one careers URL.
+    distinct_titles=preview([("company",role),("company",role_template(title="AML Screening Officer"))])
+    assert len(distinct_titles["preview"]["promising_date_unconfirmed"])==2
     print("TWO_LANE_POLICY_TESTS_PASSED",flush=True)
 
 def read_evidence(paths):
