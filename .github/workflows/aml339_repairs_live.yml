@@ -1,0 +1,105 @@
+name: AML339 isolated repairs - original parser live acceptance
+on:
+  push:
+    branches: [experiment/aml339-http-diagnostic-20261121]
+    paths: [.github/workflows/aml339_repairs_live.yml]
+permissions:
+  contents: read
+jobs:
+  test-repairs:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: vinted-caceis-blocked
+            ids: vinted,caceis-europe,truelayer,capimoney,lt-nayax-global-legal-compliance
+          - group: workday
+            ids: santander,pwc-experienced,state-street
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Check original archive and build patched copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339_repaired"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          z=ZipFile("experiments/aml339/full_original_339_sources.zip")
+          expected={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+            "amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+          assert set(z.namelist())==expected and sum(x.file_size for x in z.infolist())<800000
+          assert all(".." not in Path(x.filename).parts and not x.filename.startswith("/") for x in z.infolist())
+          z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339_repaired")
+          PY
+          cp experiments/aml339/repair_sources_20261121.py "$RUNNER_TEMP/aml339_repaired/repair_sources_20261121.py"
+          cd "$RUNNER_TEMP/aml339_repaired"
+          python3 repair_sources_20261121.py
+          python3 -m compileall -q amlradar VALIDAR_REAL_SIN_TOCAR_DATOS.py
+          python3 - <<'PY'
+          import json
+          rows=json.load(open("fuentes.json",encoding="utf-8"))["sources"]
+          assert len(rows)==len({r["id"] for r in rows})==339
+          print("REPAIRED_REGISTRY_VERIFIED",len(rows),flush=True)
+          PY
+      - name: Run actual patched extractor through public HTTP, no alerts
+        shell: bash
+        env:
+          IDS: ${{ matrix.ids }}
+          GROUP: ${{ matrix.group }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339_repaired"
+          set +e
+          python3 VALIDAR_REAL_SIN_TOCAR_DATOS.py --ids "$IDS" --timeout 10 --samples 1 --minutes 2
+          result=$?
+          set -e
+          if [ "$result" -gt 1 ]; then exit "$result"; fi
+          python3 - <<'PY'
+          import os,json
+          from pathlib import Path
+          reports=sorted(Path("DIAGNOSTICOS").glob("SMOKE_REAL_*.json"))
+          assert len(reports)==1
+          d=json.loads(reports[0].read_text())
+          assert d["source_config_unmodified"]
+          assert len(d["sources"])==len(os.environ["IDS"].split(","))
+          for x in d["sources"]:
+            print("REPAIR339_SOURCE",json.dumps({
+              "group":os.environ["GROUP"],"id":x["source_id"],"state":x["state"],
+              "jobs":x.get("count"),"dated":x.get("dated_count"),
+              "relevant":x.get("relevant_count"),"complete":x.get("complete"),
+              "warnings":x.get("warnings"),"error":x.get("error"),
+              "samples":x.get("samples",[])[:1]
+            },ensure_ascii=False),flush=True)
+          if os.environ["GROUP"]=="vinted-caceis-blocked":
+            v=next(x for x in d["sources"] if x["source_id"]=="vinted")
+            assert v["state"]=="listing_extracted"
+            assert (v.get("count") or 0)>=100
+            assert (v.get("dated_count") or 0)>=100
+            assert v["complete"]
+          PY
+          python3 - <<'PY'
+          from zipfile import ZipFile,ZIP_DEFLATED
+          with ZipFile("AML339_REPAIRED_LAB.zip","w",ZIP_DEFLATED) as z:
+            for p in ["amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+              "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+              "VALIDAR_REAL_SIN_TOCAR_DATOS.py","repair_sources_20261121.py"]:
+              z.write(p)
+          PY
+      - name: Preserve diagnostic and isolated patched source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-repair-${{ matrix.group }}
+          path: |
+            ${{ runner.temp }}/aml339_repaired/DIAGNOSTICOS/
+            ${{ runner.temp }}/aml339_repaired/AML339_REPAIRED_LAB.zip
+          retention-days: 10
+          if-no-files-found: warn
