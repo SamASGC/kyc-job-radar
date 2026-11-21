@@ -38,7 +38,7 @@ OUTSIDE=re.compile(r"\b(?:United States|USA|Canada|India|Singapore|Australia|Bra
 UNSUPPORTED_LANGUAGE=re.compile(r"\b(?:Maltese|Lithuanian|Estonian|Latvian|German|Deutsch|Dutch|Italian|Polish|Portuguese|Russian|Swedish|Finnish|Danish)\b",re.I)
 MANDATORY_WORDS=re.compile(r"\b(?:must|required|mandatory|essential|need to|minimum|at least|fluen\w*|native|proficien\w*|excellent|C1\b|C2\b)\b",re.I)
 SENIOR_TITLE=re.compile(r"\b(?:head of|director|chief|deputy mlro|mlro|vice president|vp\b|senior manager|assistant manager|manager|team lead|principal|staff (?:officer|analyst)|global head)\b",re.I)
-TECH_TITLE=re.compile(r"\b(?:engineer|developer|architect|product owner|account executive|sales|devops|data scientist|designer|cybersecurity)\b",re.I)
+TECH_TITLE=re.compile(r"\b(?:engineer|engineering|developer|architect|product owner|account executive|sales|devops|data scientist|designer|cybersecurity)\b",re.I)
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
@@ -97,6 +97,7 @@ def evaluate(job, application_verified:bool):
     if geo=="swiss_future":flags.append("Suiza: vía profesional futura; no asumir elegibilidad actual")
     if SENIOR_TITLE.search(title):barriers.append("Puesto directivo o de alta responsabilidad")
     if TECH_TITLE.search(title):barriers.append("Función técnica/comercial ajena al objetivo")
+    if re.search(r"\bnight shifts?\b",title,re.I):barriers.append("Turnos nocturnos explícitos en el puesto")
     if not body or len(body)<120:flags.append("Descripción insuficiente; responsabilidades y requisitos no comprobados")
     # Read mandatory requirements as distinct from job duties and desirable qualifications.
     for mode,line in evidence:
@@ -185,7 +186,7 @@ def prioritize(job):
     date_ts=interval[0].timestamp() if interval else 0
     return (geo_rank, fresh_rank, -relevance, -date_ts, title.casefold())
 
-def collect(sources,limit=8,timeout=10,minutes=2):
+def collect(sources,limit=8,timeout=10,minutes=2,offset=0):
     records=[];counters=Counter()
     for source in sources:
         c=Client(timeout=timeout,deadline=time.monotonic()+minutes*60)
@@ -197,10 +198,20 @@ def collect(sources,limit=8,timeout=10,minutes=2):
             all_jobs=board.listing()
             candidates=[j for j in all_jobs if candidate(j)]
             candidates.sort(key=prioritize)
+            selected=candidates[offset:offset+limit]
+            remainder=candidates[offset+limit:]
             result.update(state="listing_extracted",total_listed=len(all_jobs),
                           relevant_leads=len(candidates),list_complete=board.complete,
-                          skipped_leads=max(0,len(candidates)-limit))
-            for job in candidates[:limit]:
+                          audited_offset=offset,
+                          skipped_before=min(offset,len(candidates)),
+                          skipped_after=len(remainder),
+                          next_offset=offset+len(selected) if remainder else None,
+                          skipped_leads=max(0,len(candidates)-len(selected)),
+                          unreviewed_next=[{
+                              "title":clean(x.get("title")),"url":x.get("url"),
+                              "location":clean(x.get("location")),"date":x.get("date")}
+                              for x in remainder[:15]])
+            for job in selected:
                 verification=False;err=""
                 if source["route"][0]=="employer_external_jobs" or job.get("listing_only_external"):
                     err="El enlace externo no prueba que la ficha y candidatura sigan activas"
@@ -285,12 +296,15 @@ def test():
         "Proficiency with MS Office and banking legislation."]))
     assert evaluate(regulatory,True)["class"]=="low_incremental_learning"
     assert "Financial crime investigations" not in evaluate(regulatory,True)["functions"]
+    assert evaluate(dict(core,title="Engineering Lead - Fincrime"),True)["class"]=="not_recommended"
+    assert evaluate(dict(core,title="Senior KYC Analyst (Night shifts)"),True)["class"]=="not_recommended"
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--ids",default="vinted,verifo-lithuania,demivolt-lithuania,n26,corpay,wise")
     p.add_argument("--max-details",type=int,default=8)
+    p.add_argument("--offset",type=int,default=0)
     p.add_argument("--minutes-per-source",type=int,default=2)
     p.add_argument("--timeout",type=int,default=10)
     p.add_argument("--out",default="quality_results.json")
@@ -298,14 +312,14 @@ def main():
     args=p.parse_args()
     test()
     if args.self_test:return
-    if not 1<=args.max_details<=12 or not 1<=args.minutes_per_source<=4:raise SystemExit("Limits exceeded")
+    if not 1<=args.max_details<=12 or not 1<=args.minutes_per_source<=4 or not 0<=args.offset<=5000:raise SystemExit("Limits exceeded")
     by={x["id"]:x for x in json.loads(Path("fuentes.json").read_text(encoding="utf-8"))["sources"]}
     ids=[x.strip() for x in args.ids.split(",") if x.strip()]
     if not ids or len(ids)>8 or len(set(ids))!=len(ids):raise SystemExit("1-8 distinct IDs required")
     if any(x not in by for x in ids):raise SystemExit("Unconfigured source")
     before=Path("fuentes.json").read_bytes()
     records,counts=collect([by[x] for x in ids],limit=args.max_details,
-                           timeout=args.timeout,minutes=args.minutes_per_source)
+                           timeout=args.timeout,minutes=args.minutes_per_source,offset=args.offset)
     assert before==Path("fuentes.json").read_bytes()
     ranks=Counter(x["evaluation"]["class"] for r in records for x in r["audited"])
     result={"checked_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
