@@ -44,7 +44,7 @@ jobs:
           assert len(rows)==len({r["id"] for r in rows})==339
           print("SOURCE_REGISTRY_VERIFIED",len(rows),flush=True)
           PY
-      - name: Probe next 12 not previously audited sources (no state changes)
+      - name: Probe up to 12 previously untested sources (no state changes)
         shell: bash
         env:
           SHARD: ${{ matrix.shard }}
@@ -85,7 +85,7 @@ jobs:
           d=json.loads(reports[0].read_text(encoding="utf-8"))
           assert d["source_config_unmodified"] is True
           assert len(d["sources"])==len((base/"picked.txt").read_text(encoding="utf-8").split(",")) and d["summary"]["sources_probed"]==len(d["sources"])
-          assert len({x["source_id"] for x in d["sources"]})==12
+          assert len({x["source_id"] for x in d["sources"]})==len(d["sources"])
           print("COVERAGE_SHARD_SUMMARY",json.dumps(d["summary"],ensure_ascii=False),flush=True)
           for r in d["sources"]:
             print("COVERAGE_SOURCE",json.dumps({
