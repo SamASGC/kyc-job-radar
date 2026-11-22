@@ -2,8 +2,8 @@
 """Payabl/Workable rate-limit safeguard for the isolated AML339 GitHub workflow.
 
 Never probes the provider to determine whether the cooldown has expired.
-Only computes a conservative UTC not-before time from the actual HTTP 429
-observed by GitHub Actions on 2026-11-21.
+Only computes a conservative UTC not-before time from the latest HTTP 429
+observed by GitHub Actions on 2026-11-22.
 """
 from __future__ import annotations
 import argparse
@@ -13,10 +13,11 @@ import os
 from pathlib import Path
 
 UTC = dt.timezone.utc
-# GitHub Actions scan(payabl) observed HTTP 429 on 2026-11-21 18:52:40 UTC
-# with an explicit 64472-second delay. See run 44937777439.
-RATE_LIMIT_OBSERVED = dt.datetime(2026, 11, 21, 18, 52, 40, tzinfo=UTC)
-RETRY_AFTER_SECONDS = 64_472
+# GitHub Actions scan(payabl) received HTTP 429 on 2026-11-22 13:13:35 UTC,
+# with a new 63364-second delay. See run 45026232531.
+# Never probe just to test whether cooldown has expired.
+RATE_LIMIT_OBSERVED = dt.datetime(2026, 11, 22, 13, 13, 35, tzinfo=UTC)
+RETRY_AFTER_SECONDS = 63_364
 SAFETY_BUFFER_SECONDS = 20 * 60
 ALLOW_AT = RATE_LIMIT_OBSERVED + dt.timedelta(
     seconds=RETRY_AFTER_SECONDS + SAFETY_BUFFER_SECONDS
@@ -39,14 +40,14 @@ def check(now: dt.datetime):
 
 def tests():
     release=RATE_LIMIT_OBSERVED+dt.timedelta(seconds=RETRY_AFTER_SECONDS)
-    assert release==dt.datetime(2026,11,22,12,47,12,tzinfo=UTC),release
-    assert ALLOW_AT==dt.datetime(2026,11,22,13,7,12,tzinfo=UTC),ALLOW_AT
+    assert release==dt.datetime(2026,11,23,6,49,39,tzinfo=UTC),release
+    assert ALLOW_AT==dt.datetime(2026,11,23,7,9,39,tzinfo=UTC),ALLOW_AT
     assert not check(RATE_LIMIT_OBSERVED)["allowed"]
     assert not check(ALLOW_AT-dt.timedelta(microseconds=1))["allowed"]
     assert check(ALLOW_AT)["allowed"]
     assert check(ALLOW_AT+dt.timedelta(minutes=1))["seconds_remaining"]==0
     try:
-        check(dt.datetime(2026,11,22,13,0))
+        check(dt.datetime(2026,11,23,7,0))
     except ValueError:
         pass
     else:
