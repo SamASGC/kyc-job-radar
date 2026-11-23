@@ -58,11 +58,16 @@ def render_card(item, first_seen, new_keys):
               if item["lane"] == "confirmed_recent"
               else "Fecha original no acreditada. NO significa que sea una vacante nueva.")
     duties = ", ".join(item.get("confirmed_job_duties") or [])
+    swiss_note = (
+        "<p><strong>Suiza:</strong> elegibilidad para trabajar, permiso y "
+        "aceptación de la candidatura sin confirmar.</p>"
+        if item.get("geography") == "swiss_future" else ""
+    )
     return (
         f"<article class='job'><h3><a rel='noopener noreferrer' target='_blank' href='{esc(item['url'])}'>"
         f"{esc(item['title'])}</a>{flag}</h3>"
         f"<p>{esc(item['employer_id'])} · {esc(item['location'])}</p>"
-        f"<p>Funciones expresas: {esc(duties)}</p><p>{posted}</p>"
+        f"<p>Funciones expresas: {esc(duties)}</p><p>{posted}</p>{swiss_note}"
         f"<small>Detectada en el historial: {esc(first_seen or 'desconocido')}. "
         "Revisar personalmente requisitos y disponibilidad antes de solicitar.</small></article>"
     )
@@ -156,8 +161,12 @@ def render_rss(items, history, lane, checked, source_count=18):
         note = ("Publicación original no acreditada. NO etiquetar como nueva. "
                 if lane == "promising_date_unconfirmed"
                 else "Fecha original verificada dentro de 72 horas en el escaneo. ")
+        swiss_note = (
+            "Suiza: elegibilidad laboral, permiso y aceptación de candidatura por comprobar. "
+            if entry.get("geography") == "swiss_future" else ""
+        )
         ET.SubElement(item, "description").text = (
-            f"{entry['employer_id']} · {entry['location']} · {note}"
+            f"{entry['employer_id']} · {entry['location']} · {note}{swiss_note}"
             f"Funciones expresas: {duty}. Detección en radar: {seen}."
         )
     return ET.tostring(channel_root, encoding="unicode", xml_declaration=True)
@@ -208,6 +217,7 @@ def build(evidence_paths, state, report, output, manifest=None):
             "No automatic email/push delivery",
             "Date-unconfirmed roles are not claimed newly published",
             "18 fixed core sources and up to 8 additional audited sources; never all 339",
+            "Swiss roles require independent verification of work eligibility and permits",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("AML339_PUBLIC_SITE_BUILT", json.dumps({
