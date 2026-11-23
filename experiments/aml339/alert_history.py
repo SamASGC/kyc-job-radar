@@ -13,7 +13,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from two_lane_alert_preview import triage, read_evidence, role_template, key as stable_role_key
+from two_lane_alert_preview import triage, read_evidence, role_template, listing_identity
 
 STATE_VERSION=1
 LANES=("confirmed_recent","promising_date_unconfirmed")
@@ -173,7 +173,7 @@ def select_and_merge(records,history,run_id=None,configured_sources=None,
             reasons["not_downgraded_after_confirmed"]+=1
         elif lane in lanes:
             reasons["already_reported_in_lane"]+=1
-        elif strict_novelty and rid in old_listed:
+        elif strict_novelty and listing_identity(item["employer_id"],item) in old_listed:
             # The same job was on an earlier official careers listing, even if
             # an improved parser only recognizes its AML duties today.
             reasons["previously_listed_not_a_new_vacancy"]+=1
@@ -192,8 +192,8 @@ def select_and_merge(records,history,run_id=None,configured_sources=None,
         # Persist ALL listing hashes, including jobs currently outside our AML
         # title filter. A correction to the filter must never manufacture new jobs.
         listed_now.update(old_listed)
-        listed_now.update(stable_role_key(sid,role) for sid,role in records
-                          if stable_role_key(sid,role))
+        listed_now.update(listing_identity(sid,role) for sid,role in records
+                          if listing_identity(sid,role))
         if len(listed_now)>MAX_RECORDS:
             raise ValueError("Excessive seen-listing history; refuse silent truncation")
         state["novelty"]={
