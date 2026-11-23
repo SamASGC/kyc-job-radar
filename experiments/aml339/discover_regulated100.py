@@ -32,6 +32,33 @@ def norm(value):
 def distinctive_tokens(v):
     return {w for w in norm(v).split() if len(w)>=5 and w not in IGNORED_WORDS}
 
+LEGAL_PARTS={"uab","ltd","limited","sa","as","bv","plc","gmbh","ee","lt",
+             "es","de","nl","lu","mt","ie","eu","europe","european","company",
+             "group","holdings"}
+def brand_base(v):
+    return " ".join(w for w in norm(v).split() if w not in LEGAL_PARTS)
+
+def matches_existing(name, existing_list):
+    normalized=norm(name)
+    core=brand_base(name)
+    distinct=distinctive_tokens(name)
+    for e in existing_list:
+        other=norm(e)
+        other_core=brand_base(e)
+        if normalized==other or core and core==other_core:
+            return True
+        # Company with alias appended in parentheses, or short operator legal
+        # form appended after an otherwise identical group name.
+        if len(normalized)>=8 and f" {normalized} " in f" {other} ":
+            return True
+        if len(other)>=8 and f" {other} " in f" {normalized} ":
+            return True
+        shared=distinct & distinctive_tokens(e)
+        if len(shared)>=2 or (len(shared)==1 and len(distinct)==1
+                             and len(distinctive_tokens(e))==1):
+            return True
+    return False
+
 def snapshot():
     req=urllib.request.Request(CSV_URL,headers={
         "User-Agent":"AML339-official-register-discovery/1.0","Accept":"text/csv"})
@@ -54,8 +81,11 @@ def snapshot():
     if len(previous.get("candidates",[]))!=50:
         raise ValueError("Previous 50 regulated company records are missing")
     existing=[x.get("name","") for x in original]
+    existing+= [x.get("id","") for x in original]
     existing+= [x.get("legal_name","") for x in previous["candidates"]]
     existing+= [x.get("trading_name","") for x in previous["candidates"]]
+    existing+= ["ZEN.COM","Trumia","Andaria","FinXP","PayDo","NomuPay","MiFinity"]
+    existing=[x for x in existing if x]
     existing_norm={norm(x) for x in existing if x}
     existing_distinctive=[distinctive_tokens(x) for x in existing]
     selected=[]
@@ -71,7 +101,7 @@ def snapshot():
             continue
         name=norm(x["legal_name"])
         trading=norm(x.get("trading_name"))
-        if name in existing_norm or trading and trading in existing_norm:
+        if matches_existing(x["legal_name"],existing) or (trading and matches_existing(trading,existing)):
             continue
         tokens=distinctive_tokens(x["legal_name"])
         if tokens and any(tokens==other and len(tokens)>=1 for other in existing_distinctive):
@@ -101,8 +131,13 @@ def snapshot():
             if len(selected)>=100:break
             pool=by_country.get(country,[])
             already=sum(x["country"]==country for x in selected)
-            if pool and already<30:
-                selected.append(pool.pop(0));changed=True
+            while pool and already<30:
+                next_record=pool.pop(0)
+                if any(matches_existing(next_record["legal_name"],[
+                       s["legal_name"]]) for s in selected):
+                    continue
+                selected.append(next_record);changed=True
+                break
         if not changed:break
     if len(selected)!=100:raise ValueError("Fewer than 100 distinct eligible European EMI leads")
     output={
