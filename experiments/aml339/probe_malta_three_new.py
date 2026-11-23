@@ -8,7 +8,6 @@ FinXP and PayDo: owned domain careers listing with actual role detail pages.
 import argparse,datetime as dt,json
 from pathlib import Path
 
-from live_e2e18_full import audit_one
 
 REGULATED_CANDIDATES={
  "emi-andaria-mt":{
@@ -31,6 +30,7 @@ REGULATED_CANDIDATES={
  },
 }
 def main():
+  from live_e2e18_full import audit_one
   parser=argparse.ArgumentParser()
   parser.add_argument("--source",required=True,choices=tuple(REGULATED_CANDIDATES))
   parser.add_argument("--minutes",type=int,default=3)
