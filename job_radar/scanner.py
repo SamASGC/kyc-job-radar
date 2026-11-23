@@ -594,9 +594,9 @@ async def run_scan() -> dict:
             audit["prefiltered_candidates"] = len(prefiltered)
             # An active ATS listing alone is not enough. Check the exact
             # application page before it can enter state/dashboard.
-            verified = await asyncio.gather(
-                *(verify_application_page(http, j, max_hours=max_hours) for j in prefiltered),
-                return_exceptions=True,
+            from job_radar.application_batch import verify_application_pages
+            verified = await verify_application_pages(
+                http, prefiltered, max_hours=max_hours,
             )
             accepted = []
             for j, is_open in zip(prefiltered, verified):
