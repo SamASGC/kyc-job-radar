@@ -12,6 +12,7 @@ on:
       - "tests/test_aml339_expansion_manifest.py"
       - "tests/test_aml339_26_end_to_end.py"
       - "scripts/aml339_source_manifest.py"
+      - "scripts/aml339_pages_ready.py"
   schedule:
     # One daily full audit: low request frequency, including the formerly
     # rate-limited Payabl Workable source. Github cron timing may vary.
@@ -315,6 +316,10 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: public
+      - name: Wait until the uploaded Pages artifact is visible through the API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/aml339_pages_ready.py
       - name: Deploy both dashboards without replacing existing radar
         id: deployment
         uses: actions/deploy-pages@v5
