@@ -13,7 +13,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from two_lane_alert_preview import triage, read_evidence, role_template
+from two_lane_alert_preview import triage, read_evidence, role_template, key as stable_role_key
 
 STATE_VERSION=1
 LANES=("confirmed_recent","promising_date_unconfirmed")
@@ -44,6 +44,20 @@ def check_history(state):
             raise ValueError("Unexpected historical lane")
         if len(value["delivered_lanes"])!=len(set(value["delivered_lanes"])):
             raise ValueError("Duplicate lane in history")
+    novelty=state.get("novelty")
+    if novelty is not None:
+        if not isinstance(novelty,dict):
+            raise ValueError("Invalid novelty tracker")
+        sources=novelty.get("baselined_sources")
+        hashes=novelty.get("observed_listing_keys")
+        if not isinstance(sources,list) or not isinstance(hashes,list):
+            raise ValueError("Missing novelty baseline data")
+        if (len(sources)>339 or len(sources)!=len(set(sources))
+                or any(not isinstance(x,str) or not x for x in sources)):
+            raise ValueError("Invalid source baseline")
+        if (len(hashes)>MAX_RECORDS or len(hashes)!=len(set(hashes))
+                or any(not isinstance(k,str) or not HEX_KEY.fullmatch(k) for k in hashes)):
+            raise ValueError("Invalid observed listing keys")
     return state
 
 def load_history(path):
@@ -81,12 +95,59 @@ def verify_input_coverage(paths,expected_sources,require_complete=True):
         raise ValueError("Expected source mismatch: "+repr((set(all_sources),set(expected_sources))))
     return all_sources
 
-def select_and_merge(records,history,run_id=None,configured_sources=None):
+def load_official_listing_keys(paths,expected_sources):
+    """Read complete source listing fingerprints; never infer freshness from a title-only lead."""
+    by_source={}
+    for path in paths:
+        payload=json.loads(Path(path).read_text(encoding="utf-8"))
+        if payload.get("total_configured_sources")!=339:
+            raise ValueError("Unexpected source catalog in official novelty evidence")
+        for source in payload.get("sources",[]):
+            sid=source.get("source_id")
+            if sid in by_source:
+                raise ValueError("Duplicate source novelty evidence")
+            if source.get("state")!="listing_extracted" or source.get("list_complete") is not True:
+                raise ValueError("No complete official listing for "+str(sid))
+            hashes=source.get("listing_role_keys")
+            n=source.get("total_listed")
+            skipped=source.get("listing_untrackable_count")
+            if (not isinstance(hashes,list) or not isinstance(n,int) or n<0
+                    or not isinstance(skipped,int) or skipped<0
+                    or len(hashes)+skipped>n):
+                raise ValueError("Missing/malformed complete listing fingerprints: "+str(sid))
+            if len(hashes)!=len(set(hashes)) or any(
+                    not isinstance(k,str) or not HEX_KEY.fullmatch(k) for k in hashes):
+                raise ValueError("Invalid official listing hashes for "+str(sid))
+            by_source[sid]=hashes
+    if set(by_source)!=set(expected_sources):
+        raise ValueError("Incomplete official listing novelty evidence")
+    return by_source
+
+
+def select_and_merge(records,history,run_id=None,configured_sources=None,
+                     strict_novelty=False, listing_keys=None):
     state=check_history(json.loads(json.dumps(history)))
     now=iso_utc()
     new_items={lane:[] for lane in LANES}
     observations={}
     reasons=Counter()
+    previous_sources=set()
+    old_listed=set()
+    source_id_set=set(configured_sources or [])
+    listed_now=set()
+    if strict_novelty:
+        if not source_id_set or not isinstance(listing_keys,dict) or set(listing_keys)!=source_id_set:
+            raise ValueError("Strict novelty requires complete per-source official listing keys")
+        for source,keys in listing_keys.items():
+            if not isinstance(keys,list) or len(keys)!=len(set(keys)) or any(
+                    not isinstance(k,str) or not HEX_KEY.fullmatch(k) for k in keys):
+                raise ValueError("Invalid official listing fingerprints for "+source)
+            listed_now.update(keys)
+        tracker=state.get("novelty",{})
+        if not isinstance(tracker,dict):
+            raise ValueError("Malformed persisted novelty tracker")
+        previous_sources=set(tracker.get("baselined_sources",[]))
+        old_listed=set(tracker.get("observed_listing_keys",[]))
     for source_id,role in records:
         item,error=triage(source_id,role)
         if item is None:
@@ -112,6 +173,14 @@ def select_and_merge(records,history,run_id=None,configured_sources=None):
             reasons["not_downgraded_after_confirmed"]+=1
         elif lane in lanes:
             reasons["already_reported_in_lane"]+=1
+        elif strict_novelty and fingerprint in old_listed:
+            # The same job was on an earlier official careers listing, even if
+            # an improved parser only recognizes its AML duties today.
+            reasons["previously_listed_not_a_new_vacancy"]+=1
+        elif strict_novelty and lane=="promising_date_unconfirmed" and item["employer_id"] not in previous_sources:
+            # First audit of a new portal is baseline, NOT a burst of allegedly
+            # new undated vacancies. The next scan can detect truly new rows.
+            reasons["new_source_first_scan_baseline_only"]+=1
         else:
             new_items[lane].append(item)
             lanes.append(lane)
@@ -119,6 +188,19 @@ def select_and_merge(records,history,run_id=None,configured_sources=None):
         prev["title"]=item["title"]
         prev["last_url"]=item["url"]
         prev["current_lane"]=lane
+    if strict_novelty:
+        # Persist ALL listing hashes, including jobs currently outside our AML
+        # title filter. A correction to the filter must never manufacture new jobs.
+        listed_now.update(old_listed)
+        listed_now.update(stable_role_key(sid,role) for sid,role in records
+                          if stable_role_key(sid,role))
+        if len(listed_now)>MAX_RECORDS:
+            raise ValueError("Excessive seen-listing history; refuse silent truncation")
+        state["novelty"]={
+            "baselined_sources":sorted(previous_sources|source_id_set),
+            "observed_listing_keys":sorted(listed_now),
+            "last_verified_at":now,
+        }
     state["updated_at"]=now
     state["prior_run_id"]=str(run_id) if run_id else state.get("prior_run_id")
     check_history(state)
@@ -134,6 +216,9 @@ def select_and_merge(records,history,run_id=None,configured_sources=None):
         "sources_with_role_matches":len(set(source_id for source_id,_ in records)),
         "roles_evaluated":len(records),
         "qualifying_distinct_roles":len(observations),
+        "strict_novelty":strict_novelty,
+        "newly_observed_listing_keys":len(listed_now-old_listed) if strict_novelty else None,
+        "sources_previously_baselined":len(previous_sources) if strict_novelty else None,
         "history_before":prior_count,
         "history_after":len(state["records"]),
         "new_counts":{lane:len(new_items[lane]) for lane in LANES},
@@ -210,6 +295,8 @@ def main():
     a.add_argument("--md-out",default="isolated_alert_previews.md")
     a.add_argument("--expect-sources",default="verifo-lithuania,demivolt-lithuania,vinted")
     a.add_argument("--run-id")
+    a.add_argument("--strict-novelty",action="store_true",
+                   help="Only alert truly new official job listings; first undated scan per portal seeds baseline.")
     a.add_argument("evidence",nargs="*")
     args=a.parse_args()
     tests()
@@ -218,7 +305,9 @@ def main():
     verify_input_coverage(args.evidence,sources,True)
     rows=read_evidence(args.evidence)
     before=load_history(args.state_in)
-    state,report=select_and_merge(rows,before,args.run_id,configured_sources=sources)
+    listing_keys=load_official_listing_keys(args.evidence,sources) if args.strict_novelty else None
+    state,report=select_and_merge(rows,before,args.run_id,configured_sources=sources,
+                                  strict_novelty=args.strict_novelty,listing_keys=listing_keys)
     Path(args.state_out).parent.mkdir(parents=True,exist_ok=True)
     Path(args.json_out).parent.mkdir(parents=True,exist_ok=True)
     Path(args.state_out).write_text(json.dumps(state,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
