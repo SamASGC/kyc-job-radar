@@ -1,0 +1,21 @@
+name: AML339 V1 source dataset inspector
+on:
+  push:
+    branches: [feat/aml339-v1-100-regulated-candidates-20261123]
+    paths:
+      - ".github/workflows/aml339_v1_emi_source_inspector.yml"
+      - "experiments/aml339/v1_emi_csv_inspector.py"
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 experiments/aml339/v1_emi_csv_inspector.py
