@@ -118,7 +118,7 @@ class Bulk50EvidenceTests(unittest.TestCase):
         self.assertEqual(len(paths),43)
         self.assertEqual(manifest["bulk50_verified"],0)
         self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(BATCH50))
-        self.assertEqual(manifest["regulated_external_verified"],2)
+        self.assertEqual(manifest["regulated_external_verified"],5)
 
     def test_truncated_aggregate_archive_never_impersonates_50_complete_sources(self):
         path=self.optional/f"candidate_{BATCH50[0]}.json"
@@ -126,7 +126,7 @@ class Bulk50EvidenceTests(unittest.TestCase):
         data["sources"][0]["relevant_leads"]=2
         self.write(path,data)
         paths,ids,manifest=collect(self.core,self.optional)
-        self.assertEqual(len(paths),89)
+        self.assertEqual(len(paths),92)
         self.assertNotIn(BATCH50[0],ids)
         self.assertEqual(manifest["missing_or_failed_expansion"][BATCH50[0]],
                          "incomplete_role_detail_audit")
