@@ -12,6 +12,19 @@ class HourlyWorkflowSafetyTests(unittest.TestCase):
         self.assertIn("cancel-in-progress: false", workflow)
         self.assertIn("timeout-minutes: 12", workflow)
 
+    def test_engine_changes_trigger_guarded_scan_without_bot_commit_loop(self):
+        p = Path(__file__).resolve().parents[1] / ".github/workflows/hourly.yml"
+        workflow = p.read_text(encoding="utf-8")
+        for path in ('"job_radar/**"', '"radar.py"', '"config/**"',
+                     '"requirements.txt"'):
+            self.assertIn(path, workflow)
+        # The scan itself only commits these dataset/artifact files. None
+        # should match a push trigger or spin another scanning workflow.
+        for path in ('"data/state.json"', '"public/**"', '"data/**"'):
+            self.assertNotIn(f'      - {path}', workflow)
+        self.assertIn("Run regression tests", workflow)
+        self.assertIn("Verify source coverage and preserve all historical job fingerprints", workflow)
+
     def test_never_commit_transient_health_telemetry(self):
         p = Path(__file__).resolve().parents[1] / ".github/workflows/hourly.yml"
         workflow = p.read_text(encoding="utf-8")

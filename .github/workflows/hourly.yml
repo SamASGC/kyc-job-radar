@@ -6,6 +6,13 @@ on:
     branches: ["main"]
     paths:
       - ".github/workflows/hourly.yml"
+      # Run the guarded regression suite + live scan immediately whenever
+      # approved engine/policy code changes land on main. Dataset-only bot
+      # refresh commits intentionally do not match these paths.
+      - "job_radar/**"
+      - "radar.py"
+      - "config/**"
+      - "requirements.txt"
   schedule:
     # Test-only Prospective fixture fix validated 2026-11-23; trigger a guarded recovery scan.
     # v3.28: N26 first-party Greenhouse added (194 direct ATS); distinguish a reachable ATS from a 403/404 corporate fallback, expose partial warnings; keep 96h + fail-closed predeploy history.
