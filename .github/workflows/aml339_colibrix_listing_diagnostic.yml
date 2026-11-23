@@ -1,0 +1,63 @@
+name: AML339 Colibrix official Workable listing false-negative diagnostic
+on:
+  push:
+    branches: [feat/aml339-priority5-official-screening-20261123]
+    paths: [".github/workflows/aml339_colibrix_listing_diagnostic.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: kyc-job-radar-hourly
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Read actual Colibrix Workable listing and classify every title
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 - <<'PY'
+          import json,time
+          from pathlib import Path
+          from amlradar.net import Client
+          from amlradar.sources import Board, relevant
+          from quality_audit import candidate
+          sources=json.loads(Path("fuentes.json").read_text())["sources"]
+          original=next(x for x in sources if x["id"]=="colibrix-one")
+          print("COLIBRIX_CONFIG",json.dumps(original,ensure_ascii=False),flush=True)
+          board=Board(original,Client(timeout=12,deadline=time.monotonic()+120),max_minutes=2)
+          rows=board.listing()
+          print("COLIBRIX_LISTING",json.dumps({"count":len(rows),"complete":board.complete,
+              "warnings":board.warnings},ensure_ascii=False),flush=True)
+          for row in rows:
+              print("COLIBRIX_JOB",json.dumps({
+                  "title":row.get("title"),"url":row.get("url"),
+                  "location":row.get("location"),
+                  "candidate":bool(candidate(row)),"relevant":bool(relevant(row)),
+                  "id":row.get("id"),
+                  "keys":sorted(row)
+              },ensure_ascii=False),flush=True)
+          if not board.complete:raise RuntimeError("Listing incomplete")
+          PY

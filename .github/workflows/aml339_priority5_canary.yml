@@ -1,0 +1,121 @@
+name: AML339 five high-value official fintech sources canary
+on:
+  push:
+    branches: [feat/aml339-priority5-official-screening-20261123]
+    paths: [".github/workflows/aml339_priority5_canary.yml", "experiments/aml339/live_priority5_probe.py", "experiments/aml339/quality_audit.py", "tests/test_aml339_bridge_duties.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kyc-job-radar-hourly
+  cancel-in-progress: false
+jobs:
+  audit:
+    name: Verify high-priority ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [colibrix-one, genome, wallester, bybit, zilch]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unpack pinned original read-only source catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not f.filename.startswith("/") and ".." not in Path(f.filename).parts for f in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_priority5_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Full live official listing and individual application verification
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_priority5_probe.py --source "$SOURCE" --minutes 4 --out "priority_${SOURCE}.json"
+      - name: Preserve source-level evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-priority5-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/priority_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  summarize:
+    needs: [audit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-priority5-*
+          path: evidence
+      - name: Report exact verification status of all five sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          targets={"colibrix-one","genome","wallester","bybit","zilch"}
+          files=sorted(Path("evidence").rglob("priority_*.json"))
+          found={}
+          for p in files:
+              d=json.loads(p.read_text(encoding="utf-8"))
+              assert d["mode"]=="READ_ONLY_ISOLATED_NO_PRODUCTION_DATA"
+              assert d["total_configured_sources"]==339
+              assert len(d["sources"])==1
+              r=d["sources"][0]
+              sid=r["source_id"]
+              assert sid in targets and sid not in found
+              found[sid]={
+                  "state":r.get("state"),
+                  "list_complete":r.get("list_complete"),
+                  "total_listed":r.get("total_listed"),
+                  "title_matches":r.get("relevant_leads"),
+                  "audited":len(r.get("audited") or []),
+                  "unverified_in_scope":r.get("unverified_in_scope"),
+                  "errors":r.get("errors") or [],
+                  "warnings":r.get("warnings") or []
+              }
+          Path("priority5_summary.json").write_text(json.dumps({"sources":found},ensure_ascii=False,indent=2)+"\n")
+          print("AML339_PRIORITY5_LIVE",json.dumps(found,ensure_ascii=False),flush=True)
+          if set(found)!=targets:raise RuntimeError("Missing source reports")
+          for sid,r in found.items():
+              if r["state"]!="listing_extracted" or r["list_complete"] is not True or r["audited"]!=r["title_matches"]:
+                  raise RuntimeError("Incomplete source: "+sid)
+          PY
+      - name: Keep findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-priority5-summary
+          path: priority5_summary.json
+          retention-days: 14
+          if-no-files-found: warn

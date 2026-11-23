@@ -1,0 +1,43 @@
+{
+  "checked_at_utc": "2026-11-23T17:20:00Z",
+  "status": "RESEARCH_ONLY_NOT_IN_ACTIVE_MONITOR",
+  "original_catalog_sources": 339,
+  "methodology": "Employer official careers page or employer-managed ATS verified by public web research; source IDs compared against pinned 339-source archive in GitHub run 45224807049. No source in this file may generate notifications until independently added and fully audited.",
+  "outside_original_catalog": [
+    {
+      "id": "trumia",
+      "name": "Trumia",
+      "platform": "Employer-managed EU Greenhouse",
+      "official_board": "https://job-boards.eu.greenhouse.io/trumia",
+      "official_job_evidence": "https://job-boards.eu.greenhouse.io/trumia/jobs/4970387101",
+      "target_geography": "Malta office mentioned alongside Cyprus",
+      "present_limitations": "Current evidenced role is Senior Financial Crime Compliance Officer with MLRO-deputy and regulator fit-and-proper requirements: not an entry-level skill bridge",
+      "integration": "NOT_MONITORED_ADAPTER_PENDING"
+    },
+    {
+      "id": "paymont",
+      "name": "Paymont UAB",
+      "platform": "Direct employer careers website",
+      "official_board": "https://www.paymont.eu/career/",
+      "official_job_evidence": "https://www.paymont.eu/career/",
+      "target_geography": "Vilnius, Lithuania",
+      "present_limitations": "Current employer page lists CEO, Head of FCP and Board compliance positions only; insufficient match for an analyst skill-bridge role",
+      "integration": "NOT_MONITORED_ADAPTER_PENDING"
+    }
+  ],
+  "preconfigured_but_temporarily_deferred": [
+    {
+      "id": "colibrix-one",
+      "name": "Colibrix One",
+      "platform": "Workable",
+      "official_board": "https://apply.workable.com/colibrix-one/",
+      "official_job_evidence": "https://apply.workable.com/colibrix-one/j/9BD8900999/",
+      "last_successful_listing_utc": "2026-11-23T17:16:56Z",
+      "last_successful_listing_count": 12,
+      "important_finding": "Junior AML Analyst was NOT among the 12 jobs returned by the live Workable listing despite search-engine indexing of its standalone URL. The title rule missed Transaction Monitoring Specialist until fixed.",
+      "rate_limit": "Provider returned HTTP 429 on 2026-11-23 17:18 UTC with a mandated wait of 33404 seconds",
+      "do_not_probe_before_utc": "2026-11-24T04:00:00Z",
+      "integration": "DEFERRED_NOT_ACTIVE_NEVER_BYPASS_COOLDOWN"
+    }
+  ]
+}

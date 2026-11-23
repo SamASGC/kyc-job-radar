@@ -189,7 +189,7 @@ def evaluate(job, application_verified:bool):
 def candidate(job):
     title=clean(job.get("title"))
     return relevant(job) or bool(re.search(
-        r"\b(?:merchant (?:risk|review)|account (?:review|verification)|financial (?:investigator|integrity)|payment investigations?)\b",title,re.I))
+        r"\b(?:merchant (?:risk|review)|account (?:review|verification)|financial (?:investigator|integrity)|payment investigations?|transaction(?:al)? monitoring|sanctions? screening|(?:PEP|adverse media) screening|(?:junior |senior )?AML analyst)\b",title,re.I))
 
 def prioritize(job):
     title=clean(job.get("title"))
@@ -367,6 +367,12 @@ def test():
         "Knowledge of PEP sanctions screening and adverse media required."]))
     assert not ({"PEP","Sanctions screening","Adverse media"} &
                 set(evaluate(qualifications_only,True)["explicit_duties"]))
+    # This original Workable listing previously yielded ZERO title matches even
+    # though two live Malta jobs were explicitly named Transaction Monitoring Specialist.
+    for title in ("Transaction Monitoring Specialist", "Senior Transaction Monitoring Specialist",
+                  "Junior AML Analyst", "Sanctions Screening Officer"):
+        assert candidate({"title":title,"description":"","location":"Ta' Xbiex, Malta"}),title
+    assert not candidate({"title":"Account Executive","description":"","location":"Malta"})
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():

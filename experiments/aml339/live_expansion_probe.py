@@ -31,6 +31,10 @@ CANDIDATES = (
     "ecommpay",
     "crossmint",
     "moonpay",
+    "genome",
+    "wallester",
+    "bybit",
+    "zilch",
 )
 
 

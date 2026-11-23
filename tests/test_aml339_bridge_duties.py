@@ -53,6 +53,14 @@ class BridgeDutiesTests(unittest.TestCase):
         )
         self.assertNotIn("Idioma adicional obligatorio no acreditado", assessment["barriers"])
 
+    def test_specialist_screening_and_transaction_monitoring_titles_never_missed(self):
+        for title in ("Transaction Monitoring Specialist", "Senior Transaction Monitoring Specialist",
+                      "Junior AML Analyst", "Sanctions Screening Officer"):
+            self.assertTrue(self.qa.candidate({"title": title, "description": "",
+                                                "location": "Ta' Xbiex, Malta"}), title)
+        self.assertFalse(self.qa.candidate({"title": "Account Executive", "description": "",
+                                             "location": "Malta"}))
+
     def test_requirements_only_not_counted_as_duties(self):
         role = {
             "title": "KYC Compliance Officer",
