@@ -11,8 +11,10 @@ RAI={"name":"Raiffeisen Switzerland","sector":"Banca"}
 BEKB={"name":"Berner Kantonalbank","sector":"Banca"}
 
 
+# An intentionally far-future expiry keeps this deterministic test valid as time passes.
+# The separate expired-job test still checks that old offers are rejected.
 def job(id="101", url="https://raiffeisen.wd3.myworkdayjobs.com/jobs-raiffeisen/job/Zurich/AML_Specialist_R000123/apply",
-        start="2026-10-12T08:00:00Z", end="2026-11-01T00:00:00Z", lang="Deutsch"):
+        start="2026-10-12T08:00:00Z", end="2099-12-31T00:00:00Z", lang="Deutsch"):
     return {"id":id,"title":"AML/KYC Specialist","start_date":start,
       "end_date":end,"last_modification_timestamp":"2026-10-13T18:00:00Z",
       "szas":{"sza_apply_link":url,"sza_location.country":"Schweiz",
