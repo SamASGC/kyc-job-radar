@@ -42,7 +42,7 @@ TECH_TITLE=re.compile(r"\b(?:IT compliance|IT risk|engineer|engineering|develope
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
-DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will) do|key duties|day.to.day|what you will be doing|main tasks|functions)\b",re.I)
+DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will)(?: be doing| do)|key duties|day.to.day|main tasks|functions)\b",re.I)
 REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills|criteria|competenc(?:y|ies)\s*(?:&|and)\s*experience|your qualifications)\b",re.I)
 OPTIONAL=re.compile(r"\b(?:nice to have|preferred|desirable|would be a plus|advantageous|not required|or equivalent experience)\b",re.I)
 
