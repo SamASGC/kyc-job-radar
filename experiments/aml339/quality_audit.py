@@ -347,6 +347,26 @@ def test():
     assert "TM" not in evaluate(optional_role,True)["explicit_duties"]
     assert evaluate(dict(core,title="Engineering Lead - Fincrime"),True)["class"]=="not_recommended"
     assert evaluate(dict(core,title="Senior KYC Analyst (Night shifts)"),True)["class"]=="not_recommended"
+    bridge=dict(core,title="AML & Fraud Risk Analyst",description="\n".join([
+        "What you'll be doing:",
+        "Conducting PEP, Sanctions, and Adverse Media screening alert investigations and escalations;",
+        "Conducting Enhanced Due Diligence checks;",
+        "What you'll bring:",
+        "Previous compliance experience.",
+        "Knowledge of AML regulations is desirable."]))
+    bridge_evidence=evaluate(bridge,True)
+    assert {"PEP","Sanctions screening","Adverse media"}.issubset(
+        set(bridge_evidence["explicit_duties"])),bridge_evidence
+    assert any(mode=="requirements" and "Previous compliance" in line for mode,line in
+               sections(bridge["description"])),sections(bridge["description"])
+    # Merely listing screening as a requirement is NOT proof of doing it.
+    qualifications_only=dict(core,title="Compliance Specialist",description="\n".join([
+        "What you'll be doing:",
+        "Support operational onboarding and payment reconciliations.",
+        "What you'll bring:",
+        "Knowledge of PEP sanctions screening and adverse media required."]))
+    assert not ({"PEP","Sanctions screening","Adverse media"} &
+                set(evaluate(qualifications_only,True)["explicit_duties"]))
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
