@@ -1,0 +1,68 @@
+name: AML339 Pages recover verified published data only
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/aml339_pages_recovery.yml"
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  # Same serialized deployment group as the real 500-company and AML339 radars.
+  group: kyc-job-radar-hourly
+  cancel-in-progress: false
+jobs:
+  publish-only:
+    name: Restore Pages from latest verified Git content without any HTTP job scans
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify current published snapshot and historical state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,datetime as dt,xml.etree.ElementTree as ET
+          from pathlib import Path
+          summary=json.loads(Path("public/aml339/summary.json").read_text(encoding="utf-8"))
+          state=json.loads(Path("data/aml339_main18_state.json").read_text(encoding="utf-8"))
+          if summary.get("core_sources_complete")!=18 or not 18<=summary.get("sources_complete",0)<=26:
+              raise RuntimeError("Main AML339 verified core missing or invalid")
+          if state.get("schema")!=1 or not isinstance(state.get("records"),dict) or len(state["records"])<3:
+              raise RuntimeError("Persistent AML339 history missing or invalid")
+          checked=dt.datetime.fromisoformat(summary["checked_at_utc"].replace("Z","+00:00"))
+          age=dt.datetime.now(dt.timezone.utc)-checked
+          if age.total_seconds()<0 or age>dt.timedelta(hours=36):
+              raise RuntimeError("Refusing recovery deployment of stale AML339 dataset")
+          for name in ("public/index.html","public/aml339/index.html",
+                       "public/aml339/summary.json"):
+              if not Path(name).is_file() or Path(name).stat().st_size==0:
+                  raise RuntimeError("Missing published dashboard: "+name)
+          for name in ("public/feed.xml","public/aml339/confirmed.xml","public/aml339/review.xml"):
+              root=ET.parse(name).getroot()
+              if root.tag!="rss":raise RuntimeError("Invalid existing RSS: "+name)
+          print("AML339_PAGES_RECOVERY_PREFLIGHT_PASSED",json.dumps({
+            "core":18, "sources":summary["sources_complete"],"records":len(state["records"]),
+            "age_minutes":round(age.total_seconds()/60,1),"network_job_checks":0}),flush=True)
+          PY
+      - name: Upload existing verified full public site (no scan, no state modification)
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - name: Wait for GitHub Actions artifact metadata to become visible
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/aml339_pages_ready.py
+      - name: Deploy recovered main site, AML339 and both RSS lanes
+        id: deployment
+        uses: actions/deploy-pages@v5
