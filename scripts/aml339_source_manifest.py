@@ -35,7 +35,8 @@ REGULATED = (
     "emi-trumia-mt", "emi-zen-lt",
     "emi-andaria-mt", "emi-finxp-mt", "emi-paydo-mt",
 )
-OPTIONAL = EXPANSION + BATCH50 + REGULATED
+REGULATOR50 = ("reg50-nomupay-europe", "reg50-mifinity-malta")
+OPTIONAL = EXPANSION + BATCH50 + REGULATED + REGULATOR50
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -66,7 +67,10 @@ def collect(core_dir: Path, optional_dir: Path):
             if sid in REGULATED and (data.get("source_registry") != "regulated_emi_sidecar_v1"
                                      or data.get("original_catalog_sources") != 339):
                 raise ValueError("Missing verifiable external EMI registry declaration")
-            if sid in EXPANSION and data.get("source_registry") not in (None,"original_339"):
+            if sid in REGULATOR50 and (data.get("source_registry") != "regulated_employer_sidecar_v2"
+                                       or data.get("original_catalog_sources") != 339):
+                raise ValueError("Missing verifiable newly discovered regulated employer registry")
+            if sid in EXPANSION+BATCH50 and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
                 raise ValueError("Duplicate source evidence")
@@ -116,6 +120,10 @@ def collect(core_dir: Path, optional_dir: Path):
         "regulated_external_expected": len(REGULATED),
         "regulated_external_verified": sum(sid not in skipped for sid in REGULATED),
         "regulated_external_ids": list(REGULATED),
+        "regulator50_discovered": 50,
+        "regulator50_live_expected": len(REGULATOR50),
+        "regulator50_live_verified": sum(sid not in skipped for sid in REGULATOR50),
+        "regulator50_live_verified_ids": [sid for sid in REGULATOR50 if sid not in skipped],
         "total_verified": len(paths),
         "verified_source_ids": list(ids),
         "missing_or_failed_expansion": skipped,

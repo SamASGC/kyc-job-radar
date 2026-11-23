@@ -1,0 +1,17 @@
+name: AML339 inspect 10 outside-catalog employer ATS links
+on:
+  push:
+    branches: [feat/aml339-regulator50-new-legal-entities-20261123]
+    paths: [".github/workflows/aml339_regulator50_careers_probe.yml","experiments/aml339/inspect_regulator50_careers.py"]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 experiments/aml339/inspect_regulator50_careers.py

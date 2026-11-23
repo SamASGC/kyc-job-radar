@@ -1,0 +1,100 @@
+name: AML339 new-regulated 50 pilot full ATS verification (2 sources)
+on:
+  push:
+    branches: [feat/aml339-regulator50-new-legal-entities-20261123]
+    paths: [".github/workflows/aml339_regulator50_live_canary.yml","experiments/aml339/live_regulator50_canary.py"]
+permissions: {contents: read}
+jobs:
+  audit:
+    name: Verify real new employer ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [reg50-nomupay-europe, reg50-mifinity-malta]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unpack original job parser with pinned archive hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_regulator50_canary.py} "$RUNNER_TEMP/aml339/"
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          cp experiments/aml339/regulator50_external_candidates.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Read all official listing jobs and in-scope role details
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_regulator50_canary.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+      - name: Preserve evidence and failures per employer
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-regulator50-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  summary:
+    if: always()
+    needs: [audit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-regulator50-source-*
+          path: incoming
+      - name: Validate each genuinely new outside-catalog source independently
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected={"reg50-nomupay-europe","reg50-mifinity-malta"}
+          found={}
+          for p in Path("incoming").rglob("candidate_*.json"):
+              d=json.loads(p.read_text(encoding="utf-8"))
+              s=d["sources"][0];sid=s["source_id"]
+              if (sid not in expected or sid in found or
+                  d.get("source_registry")!="regulated_employer_sidecar_v2"):
+                  raise RuntimeError("Unexpected legal entity or source-registry mismatch")
+              found[sid]={"state":s.get("state"),"complete":s.get("list_complete"),
+                          "listed":s.get("total_listed"),"matched":s.get("relevant_leads"),
+                          "audited":len(s.get("audited",[])),
+                          "unverified":s.get("unverified_in_scope"),
+                          "errors":s.get("errors")}
+          print("REG50_GENUINELY_NEW_LIVE_CANARY",json.dumps(found,ensure_ascii=False),flush=True)
+          if (set(found)!=expected or
+              any(x["state"]!="listing_extracted" or not x["complete"] or
+                  x["matched"]!=x["audited"] or x["unverified"] for x in found.values())):
+              raise RuntimeError("Official sources not yet ready for daily monitoring")
+          PY
