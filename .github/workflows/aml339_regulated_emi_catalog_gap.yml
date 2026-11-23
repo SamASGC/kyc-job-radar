@@ -1,0 +1,77 @@
+name: AML339 regulatory-first EMI catalogue gap audit
+on:
+  push:
+    branches: [research/aml339-regulated-emi-white-space-20261123]
+    paths: [".github/workflows/aml339_regulated_emi_catalog_gap.yml"]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Match regulator-discovered companies with immutable original 339 catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import json,re
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              sources=json.loads(z.read("fuentes.json"))["sources"]
+          assert len(sources)==len({row["id"] for row in sources})==339
+          candidates=[
+            ("Lightspark Payments Europe AS",("lightspark","striga")),
+            ("Monemon AS",("monemon",)),
+            ("inHouse Pay AS",("inhouse pay","inhousepay","in-house pay")),
+            ("IPF Digital AS",("ipf digital","ipfdigital")),
+            ("UAB BLUE EMI LT",("blue emi",)),
+            ("UAB Glocash Payment",("glocash",)),
+            ("Paymont UAB",("paymont",)),
+            ("Trumia",("trumia",)),
+            ("FinCause UAB",("fincause",)),
+            ("Finci UAB",("finci",)),
+            ("Stanhope Financial UAB",("stanhope",)),
+            ("Payhawk Financial Services UAB",("payhawk",)),
+            ("ZEN.COM UAB",("zen.com","zencom")),
+            ("Decta Limited",("decta",)),
+            ("Monese",("monese",)),
+            ("UAB Pyrros Lithuania",("pyrros",)),
+            ("Finxp Limited",("finxp",)),
+            ("Vialet",("vialet",)),
+            ("Satchel",("satchel",)),
+            ("Pervesk",("pervesk",)),
+            ("Noda",("noda",)),
+            ("Railsr",("railsr",)),
+            ("NexPay",("nexpay",)),
+          ]
+          found=[]
+          for label,terms in candidates:
+              matches=[]
+              for row in sources:
+                  field=(" "+str(row.get("id",""))+" "+str(row.get("name",""))+
+                         " "+str(row.get("careers_url",""))).casefold()
+                  if any(term in field for term in terms):
+                      matches.append({"id":row["id"],"name":row["name"],
+                                      "careers_url":row.get("careers_url"),
+                                      "route":row.get("route")})
+              item={"company":label,"already_in_339":bool(matches),
+                    "matching_original_sources":matches}
+              found.append(item)
+              print("EMI_REGULATORY_GAP",json.dumps(item,ensure_ascii=False),flush=True)
+          from pathlib import Path
+          Path("emi_catalog_gap.json").write_text(json.dumps({
+             "catalog_size":339,"source":"REGULATORY_RESEARCH_CANDIDATES",
+             "limitations":"Matching names against old catalog only; licence is not verified by this workflow. Current licences must be checked against regulator. No applications, alerts, scraping or automatic production changes.",
+             "companies":found
+          },indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+          PY
+      - name: Save research results
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-regulatory-emi-gap-audit
+          path: emi_catalog_gap.json
+          retention-days: 14
