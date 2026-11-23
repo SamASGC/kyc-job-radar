@@ -2,7 +2,7 @@ name: AML339 five high-value official fintech sources canary
 on:
   push:
     branches: [feat/aml339-priority5-official-screening-20261123]
-    paths: [".github/workflows/aml339_priority5_canary.yml", "experiments/aml339/live_priority5_probe.py"]
+    paths: [".github/workflows/aml339_priority5_canary.yml", "experiments/aml339/live_priority5_probe.py", "experiments/aml339/quality_audit.py", "tests/test_aml339_bridge_duties.py"]
   workflow_dispatch:
 permissions:
   contents: read
