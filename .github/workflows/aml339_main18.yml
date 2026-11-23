@@ -1,0 +1,256 @@
+name: AML339 independent 18-source live radar
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/aml339_main18.yml"
+      - "experiments/aml339/**"
+      - "scripts/aml339_site.py"
+      - "tests/test_aml339_publication.py"
+  schedule:
+    # One daily full audit: low request frequency, including the formerly
+    # rate-limited Payabl Workable source. Github cron timing may vary.
+    - cron: "23 7 * * *"
+
+permissions:
+  contents: write
+  actions: read
+  pages: write
+  id-token: write
+
+# This matches the EXISTING production radar concurrency group. Prevents
+# simultaneous writes or competing deployments of the same GitHub Pages site.
+concurrency:
+  group: kyc-job-radar-hourly
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    name: Verify ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [vinted, verifo-lithuania, demivolt-lithuania, lt-neo-finance, swedbank, luminor, n26, wise, corpay, openpayd, transfergo, bvnk, bnf-bank-malta, medirect-bank-malta, payabl, airwallex, mollie, truelayer]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify pinned 339-source archive and extract to temporary workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith('/') and '..' not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Fetch current official vacancies and verify relevant job details
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_e2e18_full.py --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
+      - name: Always retain source-level evidence for diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-main18-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/source_*.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  publish:
+    name: Audit complete scan, preserve history and publish independent page
+    needs: [scan]
+    if: ${{ needs.scan.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test the two-lane rules, previous state policy and site
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_aml339_publication.py' -v
+          python3 experiments/aml339/alert_history.py --self-test
+      - name: Retrieve ALL 18 live official source reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-main18-source-*
+          path: sources
+      - name: Fail closed on a missing, duplicated, partial or unaudited source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,sys
+          sys.path.insert(0,"experiments/aml339")
+          from alert_history import verify_input_coverage
+          expected="vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer".split(",")
+          paths=sorted(Path("sources").rglob("source_*.json"))
+          if len(paths)!=18:raise RuntimeError("Expected 18 complete evidence files, found "+str(len(paths)))
+          got=verify_input_coverage(paths,expected,True)
+          if len(got)!=18:raise RuntimeError("Source coverage partial")
+          Path("source_paths.txt").write_text("\n".join(str(x) for x in paths)+"\n")
+          print("AML339_ALL_18_LIVE_SOURCES_VERIFIED",len(paths),flush=True)
+          PY
+      - name: Reject a silent history reset when main state is unexpectedly absent
+        if: ${{ hashFiles('data/aml339_main18_state.json') == '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Missing state is allowed ONLY for the first deployment. If any
+          # earlier main18 workflow completed, do not fall back to the seed.
+          python3 - <<'PY'
+          import json,os,urllib.request
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/workflows/aml339_main18.yml/runs?status=success&per_page=5"
+          req=urllib.request.Request(url,headers={
+             "Authorization":"Bearer "+os.environ["GH_TOKEN"],
+             "Accept":"application/vnd.github+json",
+             "User-Agent":"AML339-safe-bootstrap"})
+          with urllib.request.urlopen(req,timeout=20) as resp:
+             data=json.load(resp)
+          if not isinstance(data.get("total_count"),int):
+             raise RuntimeError("Cannot inspect prior successful main runs")
+          if data["total_count"]:
+             raise RuntimeError("Missing existing AML339 state after prior successful execution: NO RESET")
+          print("AML339_INITIAL_BOOTSTRAP_ALLOWED",flush=True)
+          PY
+      - name: First run only - fetch exact previously audited 3-record state
+        if: ${{ hashFiles('data/aml339_main18_state.json') == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45200484405
+          github-token: ${{ github.token }}
+          name: aml339-live18-full-state
+          path: restored
+      - name: Validate existing state or exact historical seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p restored
+          if test -s data/aml339_main18_state.json; then
+            cp data/aml339_main18_state.json restored/history.json
+            echo "AML339_RESTORED_FROM_MAIN"
+          else
+            test -s restored/isolated_alert_history.json
+            cp restored/isolated_alert_history.json restored/history.json
+            echo "AML339_RESTORED_FROM_VERIFIED_EXPERIMENT"
+          fi
+          python3 - <<'PY'
+          import sys,json
+          sys.path.insert(0,"experiments/aml339")
+          from alert_history import check_history
+          s=check_history(json.load(open("restored/history.json",encoding="utf-8")))
+          if len(s["records"])<3:raise RuntimeError("Historic pilot records lost; refusing reset")
+          print("AML339_HISTORY_VALIDATED",len(s["records"]),flush=True)
+          PY
+      - name: Evaluate both lanes, verify no duplicates or history loss
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports state
+          mapfile -t files < source_paths.txt
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in restored/history.json --run-id "$GITHUB_RUN_ID" \
+            --state-out state/isolated_alert_history.json \
+            --json-out reports/alerts.json --md-out reports/alerts.md "${files[@]}"
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --state-in state/isolated_alert_history.json \
+            --state-out state/replay.json \
+            --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md "${files[@]}"
+          python3 - <<'PY'
+          import json
+          prior=json.load(open("restored/history.json"))
+          now=json.load(open("state/isolated_alert_history.json"))
+          current=json.load(open("reports/alerts.json"))
+          replay=json.load(open("reports/replay_alerts.json"))
+          if not set(prior["records"]).issubset(now["records"]):
+             raise RuntimeError("Historical alert keys lost")
+          if current["source_count"]!=18 or replay["new_counts"]!={"confirmed_recent":0,"promising_date_unconfirmed":0}:
+             raise RuntimeError("Incomplete source audit or duplicate alerts on replay")
+          print("AML339_CONTINUITY_AND_NO_REPEAT_PASSED",json.dumps({
+            "previous_records":len(prior["records"]),"final_records":len(now["records"]),
+            "new":current["new_counts"],"replay":replay["new_counts"]}),flush=True)
+          PY
+      - name: Build SEPARATE AML339 web view and RSS, preserving 500-employer radar
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp state/isolated_alert_history.json data/aml339_main18_state.json
+          python3 scripts/aml339_site.py \
+            --sources-file source_paths.txt \
+            --state-file data/aml339_main18_state.json \
+            --report-file reports/alerts.json \
+            --dest public/aml339
+          test -s public/index.html
+          test -s public/feed.xml
+          test -s public/aml339/index.html
+          test -s public/aml339/confirmed.xml
+          test -s public/aml339/review.xml
+      - name: Commit atomic AML339 history + view only after every check passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "kyc-radar-bot"
+          git config user.email "kyc-radar-bot@users.noreply.github.com"
+          git add data/aml339_main18_state.json public/aml339/
+          if git diff --cached --quiet; then
+            echo "AML339_NO_CHANGES"
+          else
+            git commit -m "aml339: publish audited 18-source snapshot [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Preserve complete alert audit for troubleshooting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-main18-audit
+          path: |
+            reports/
+            source_paths.txt
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload full GitHub Pages site including original radar
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - name: Deploy both dashboards without replacing existing radar
+        id: deployment
+        uses: actions/deploy-pages@v5
