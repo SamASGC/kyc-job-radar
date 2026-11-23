@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, collect
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, collect
 from scripts.aml339_site import build
 from alert_history import blank_history, select_and_merge, read_evidence
 from two_lane_alert_preview import role_template
@@ -84,6 +84,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         self.assertEqual(summary["core_sources_complete"], 18)
         self.assertEqual(summary["missing_or_failed_expansion"], {
             "nexpay": "partial_or_failed_listing",
+            **{sid:"no_live_source_evidence" for sid in REGULATED},
         })
         self.assertEqual(report["new_counts"], {
             "confirmed_recent": 0, "promising_date_unconfirmed": 0,
@@ -101,7 +102,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         history, replay, manifest, summary, out = self._run(prior=first)
         self.assertEqual(summary["sources_complete"], 26)
         self.assertEqual(summary["expanded_sources_complete"], 8)
-        self.assertEqual(set(summary["missing_or_failed_expansion"]), set(EXPANSION[8:]))
+        self.assertEqual(set(summary["missing_or_failed_expansion"]), set(EXPANSION[8:]) | set(REGULATED))
         self.assertEqual(replay["new_counts"], {
             "confirmed_recent": 0, "promising_date_unconfirmed": 0,
         })
