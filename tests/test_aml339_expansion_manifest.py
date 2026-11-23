@@ -37,14 +37,14 @@ class ExpansionManifestTests(unittest.TestCase):
     def put(self, path, obj):
         path.write_text(json.dumps(obj), encoding="utf-8")
 
-    def test_all_eight_expand_to_26(self):
+    def test_all_sixteen_expand_to_34(self):
         for sid in EXPANSION:
             self.put(self.optional / f"candidate_{sid}.json", snapshot(sid))
         paths, ids, manifest = collect(self.core, self.optional)
-        self.assertEqual(len(paths), 26)
-        self.assertEqual(len(ids), 26)
+        self.assertEqual(len(paths), 34)
+        self.assertEqual(len(ids), 34)
         self.assertEqual(manifest["core_verified"], 18)
-        self.assertEqual(manifest["expansion_verified"], 8)
+        self.assertEqual(manifest["expansion_verified"], 16)
         self.assertFalse(manifest["missing_or_failed_expansion"])
 
     def test_optional_http_failure_keeps_all_18_core(self):
@@ -52,7 +52,7 @@ class ExpansionManifestTests(unittest.TestCase):
             self.put(self.optional / f"candidate_{sid}.json",
                      snapshot(sid, failed=(sid == "nium")))
         paths, ids, manifest = collect(self.core, self.optional)
-        self.assertEqual(len(paths), 25)
+        self.assertEqual(len(paths), 33)
         self.assertEqual(ids[:18], CORE)
         self.assertEqual(manifest["missing_or_failed_expansion"],
                          {"nium": "partial_or_failed_listing"})
