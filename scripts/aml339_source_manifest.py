@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine an immutable 18-source core with up to 8 newly audited employers.
+"""Combine an immutable 18-source core with up to 16 newly audited employers.
 
 The original 18 must ALL pass exactly as before. Newly added source failures
 are recorded honestly but cannot stop refreshing the original 18. No failed
@@ -25,6 +25,8 @@ CORE = (
 EXPANSION = (
     "iq-eq", "aztec-group", "ebury", "nexpay",
     "nium", "keyrock", "mirabaud", "convera",
+    "complyadvantage", "hawk", "clearbank", "modulr",
+    "lemonway", "ecommpay", "crossmint", "moonpay",
 )
 
 
