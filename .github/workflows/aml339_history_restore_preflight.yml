@@ -36,6 +36,18 @@ jobs:
             --branch "$GITHUB_REF_NAME" \
             --run-id "$GITHUB_RUN_ID" \
             --github-output "$GITHUB_OUTPUT"
+      - name: Require continuation from the latest completed FULL LIVE 18-source run
+        shell: bash
+        env:
+          PRIOR_RUN_ID: ${{ steps.recover.outputs.prior_run_id }}
+          PRIOR_ARTIFACT: ${{ steps.recover.outputs.prior_artifact_name }}
+        run: |
+          set -euo pipefail
+          # Once a complete 18-source run has succeeded, never revert silently
+          # to the older pilot seed. The exact stored history is mandatory.
+          test "$PRIOR_ARTIFACT" = "aml339-live18-full-state"
+          test -n "$PRIOR_RUN_ID"
+          echo "FULL18_HISTORY_CONTINUITY_VALIDATED from run $PRIOR_RUN_ID"
       - name: Assert no reset, download previously recorded three simulated alerts
         env:
           GH_TOKEN: ${{ github.token }}
