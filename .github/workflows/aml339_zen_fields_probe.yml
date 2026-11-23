@@ -1,0 +1,19 @@
+name: AML339 Traffit job-fields read-only diagnostic
+on:
+  push:
+    branches: [research/aml339-regulated-emi-white-space-20261123]
+    paths: [".github/workflows/aml339_zen_fields_probe.yml","experiments/aml339/probe_zen_fields.py"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 experiments/aml339/probe_zen_fields.py
