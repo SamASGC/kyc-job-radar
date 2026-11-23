@@ -7,7 +7,7 @@ from pathlib import Path
 from alert_history import (
     blank_history, check_history, load_official_listing_keys, select_and_merge,
 )
-from two_lane_alert_preview import key, role_template
+from two_lane_alert_preview import listing_identity, role_template
 
 SOURCES=("already-tracked","new-fintech")
 
@@ -20,7 +20,7 @@ class TrueNoveltyTests(unittest.TestCase):
     def test_first_seen_undated_vacancies_on_new_sources_are_baseline_not_alerts(self):
         old=under_review("AML Screening Specialist","https://jobs.example.com/job/123")
         records=[("already-tracked",old)]
-        hashes={"already-tracked":[key("already-tracked",old)],"new-fintech":[]}
+        hashes={"already-tracked":[listing_identity("already-tracked",old)],"new-fintech":[]}
         state,report=select_and_merge(
             records,blank_history(),"initial",configured_sources=SOURCES,
             strict_novelty=True,listing_keys=hashes)
@@ -35,13 +35,13 @@ class TrueNoveltyTests(unittest.TestCase):
 
     def test_new_stable_job_on_warmed_source_alerts_only_once(self):
         first=under_review("KYC AML Analyst","https://jobs.example.com/job/20")
-        first_keys={"already-tracked":[key("already-tracked",first)],"new-fintech":[]}
+        first_keys={"already-tracked":[listing_identity("already-tracked",first)],"new-fintech":[]}
         state,_=select_and_merge([("already-tracked",first)],blank_history(),
                                  configured_sources=SOURCES,strict_novelty=True,
                                  listing_keys=first_keys)
         new=under_review("Financial Crime Screening Analyst","https://jobs.example.com/job/21")
-        new_keys={"already-tracked":[key("already-tracked",first),
-                                      key("already-tracked",new)],
+        new_keys={"already-tracked":[listing_identity("already-tracked",first),
+                                      listing_identity("already-tracked",new)],
                   "new-fintech":[]}
         history,report=select_and_merge([("already-tracked",first),("already-tracked",new)],
                                         state,configured_sources=SOURCES,
@@ -57,7 +57,7 @@ class TrueNoveltyTests(unittest.TestCase):
     def test_parser_fix_cannot_relabel_an_old_listed_job_as_new(self):
         old=under_review("Transaction Monitoring Specialist",
                          "https://apply.workable.com/example/j/OLD123/")
-        no_selected={"already-tracked":[key("already-tracked",old)],"new-fintech":[]}
+        no_selected={"already-tracked":[listing_identity("already-tracked",old)],"new-fintech":[]}
         state,_=select_and_merge([],blank_history(),configured_sources=SOURCES,
                                  strict_novelty=True,listing_keys=no_selected)
         history,report=select_and_merge([("already-tracked",old)],state,
@@ -72,12 +72,12 @@ class TrueNoveltyTests(unittest.TestCase):
         # Adding a new FinCrime portal with undated older positions never floods alerts.
         old=under_review("KYC Investigator","https://example.org/jobs/old")
         newcomer=under_review("AML Screening Specialist","https://example.org/jobs/old2")
-        keys1={"already-tracked":[key("already-tracked",old)]}
+        keys1={"already-tracked":[listing_identity("already-tracked",old)]}
         state,_=select_and_merge([("already-tracked",old)],blank_history(),
                                  configured_sources=["already-tracked"],
                                  strict_novelty=True,listing_keys=keys1)
-        keys2={"already-tracked":[key("already-tracked",old)],
-               "new-fintech":[key("new-fintech",newcomer)]}
+        keys2={"already-tracked":[listing_identity("already-tracked",old)],
+               "new-fintech":[listing_identity("new-fintech",newcomer)]}
         _,report=select_and_merge([("already-tracked",old),("new-fintech",newcomer)],
                                   state,configured_sources=SOURCES,
                                   strict_novelty=True,listing_keys=keys2)
@@ -91,7 +91,7 @@ class TrueNoveltyTests(unittest.TestCase):
                           "original_posting_date":"2026-11-23T15:00:00+00:00",
                           "date_field":"Greenhouse.first_published",
                           "uncertainties":[]})
-        hashes={"already-tracked":[key("already-tracked",recent)]}
+        hashes={"already-tracked":[listing_identity("already-tracked",recent)]}
         history,report=select_and_merge([("already-tracked",recent)],blank_history(),
                                         configured_sources=["already-tracked"],
                                         strict_novelty=True,listing_keys=hashes)
@@ -100,6 +100,37 @@ class TrueNoveltyTests(unittest.TestCase):
                                   configured_sources=["already-tracked"],
                                   strict_novelty=True,listing_keys=hashes)
         self.assertEqual(second["new_counts"],{"confirmed_recent":0,"promising_date_unconfirmed":0})
+
+    def test_same_ats_job_url_new_title_is_never_a_new_vacancy(self):
+        original=under_review("AML Analyst","https://boards.example.org/jobs/1234567")
+        retitled=under_review("AML Screening Analyst","https://boards.example.org/jobs/1234567")
+        self.assertEqual(listing_identity("already-tracked",original),
+                         listing_identity("already-tracked",retitled))
+        keys={"already-tracked":[listing_identity("already-tracked",original)]}
+        state,_=select_and_merge([("already-tracked",original)],blank_history(),
+                                 configured_sources=["already-tracked"],
+                                 strict_novelty=True,listing_keys=keys)
+        history,report=select_and_merge([("already-tracked",retitled)],state,
+                                        configured_sources=["already-tracked"],
+                                        strict_novelty=True,listing_keys=keys)
+        self.assertEqual(report["new_counts"]["promising_date_unconfirmed"],0)
+        self.assertEqual(report["suppressed_reasons"]["previously_listed_not_a_new_vacancy"],1)
+
+    def test_shared_careers_page_different_role_title_stays_distinct(self):
+        original=under_review("AML Screening Analyst","https://fintech.example.org/careers")
+        newcomer=under_review("Financial Crime Investigator","https://fintech.example.org/careers")
+        self.assertNotEqual(listing_identity("already-tracked",original),
+                            listing_identity("already-tracked",newcomer))
+        first={"already-tracked":[listing_identity("already-tracked",original)]}
+        state,_=select_and_merge([("already-tracked",original)],blank_history(),
+                                 configured_sources=["already-tracked"],
+                                 strict_novelty=True,listing_keys=first)
+        next_keys={"already-tracked":[listing_identity("already-tracked",original),
+                                       listing_identity("already-tracked",newcomer)]}
+        _,report=select_and_merge([("already-tracked",original),("already-tracked",newcomer)],
+                                  state,configured_sources=["already-tracked"],
+                                  strict_novelty=True,listing_keys=next_keys)
+        self.assertEqual(report["new_counts"]["promising_date_unconfirmed"],1)
 
     def test_incomplete_or_invalid_official_listing_evidence_is_rejected(self):
         with self.assertRaisesRegex(ValueError,"complete per-source"):
