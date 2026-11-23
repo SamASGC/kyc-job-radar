@@ -248,7 +248,7 @@ jobs:
             --state-out state/isolated_alert_history.json \
             --json-out reports/alerts.json --md-out reports/alerts.md "${files[@]}"
           python3 experiments/aml339/alert_history.py \
-            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --expect-sources "$(cat source_ids.txt)" \
             --state-in state/isolated_alert_history.json \
             --state-out state/replay.json \
             --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md "${files[@]}"
