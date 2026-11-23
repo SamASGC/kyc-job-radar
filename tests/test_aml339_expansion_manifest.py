@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, collect
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, collect
 
 
 def snapshot(sid, *, failed=False, verified=True):
@@ -45,7 +45,7 @@ class ExpansionManifestTests(unittest.TestCase):
         self.assertEqual(len(ids), 38)
         self.assertEqual(manifest["core_verified"], 18)
         self.assertEqual(manifest["expansion_verified"], 20)
-        self.assertFalse(manifest["missing_or_failed_expansion"])
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATED))
 
     def test_optional_http_failure_keeps_all_18_core(self):
         for sid in EXPANSION:
@@ -55,7 +55,7 @@ class ExpansionManifestTests(unittest.TestCase):
         self.assertEqual(len(paths), 37)
         self.assertEqual(ids[:18], CORE)
         self.assertEqual(manifest["missing_or_failed_expansion"],
-                         {"nium": "partial_or_failed_listing"})
+                         {"nium": "partial_or_failed_listing", **{sid:"no_live_source_evidence" for sid in REGULATED}})
 
     def test_optional_unverified_job_is_suppressed(self):
         self.put(self.optional / "candidate_nexpay.json",

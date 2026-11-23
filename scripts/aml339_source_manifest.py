@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine an immutable 18-source core with up to 20 newly audited employers.
+"""Combine 18 mandatory sources with 20 optional catalog and 2 new regulated EMIs.
 
 The original 18 must ALL pass exactly as before. Newly added source failures
 are recorded honestly but cannot stop refreshing the original 18. No failed
@@ -29,6 +29,9 @@ EXPANSION = (
     "lemonway", "ecommpay", "crossmint", "moonpay",
     "genome", "wallester", "bybit", "zilch",
 )
+# Separately audited employers NOT in the immutable original 339-source ZIP.
+REGULATED = ("emi-trumia-mt", "emi-zen-lt")
+OPTIONAL = EXPANSION + REGULATED
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -37,7 +40,7 @@ def collect(core_dir: Path, optional_dir: Path):
         raise ValueError("Missing or duplicate core evidence: 18 complete sources required")
     verify_input_coverage(core_paths, CORE, require_complete=True)
     extras = sorted(optional_dir.rglob("candidate_*.json")) if optional_dir.exists() else []
-    if len(extras) > len(EXPANSION):
+    if len(extras) > len(OPTIONAL):
         raise ValueError("Duplicate/unexpected extra source artifact")
     by_id = {}
     for path in extras:
@@ -52,7 +55,14 @@ def collect(core_dir: Path, optional_dir: Path):
                 raise ValueError("Not a single-source evidence file")
             obj = arr[0]
             sid = obj.get("source_id")
-            if sid not in EXPANSION or path.name != f"candidate_{sid}.json":
+            if sid not in OPTIONAL or path.name != f"candidate_{sid}.json":
+                raise ValueError("Unexpected or mismatched source identifier")
+            # External sources cannot claim they were part of the original 339.
+            # Reject unverified source-registry injection in either direction.
+            if sid in REGULATED and (data.get("source_registry") != "regulated_emi_sidecar_v1"
+                                     or data.get("original_catalog_sources") != 339):
+                raise ValueError("Missing verifiable external EMI registry declaration")
+            if sid in EXPANSION and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
                 raise ValueError("Duplicate source evidence")
@@ -62,7 +72,7 @@ def collect(core_dir: Path, optional_dir: Path):
 
     accepted = []
     skipped = {}
-    for sid in EXPANSION:
+    for sid in OPTIONAL:
         data = by_id.get(sid)
         if data is None:
             skipped[sid] = "no_live_source_evidence"
@@ -86,15 +96,19 @@ def collect(core_dir: Path, optional_dir: Path):
         accepted.append(path)
 
     paths = core_paths + accepted
-    ids = CORE + tuple(sid for sid in EXPANSION if sid not in skipped)
+    ids = CORE + tuple(sid for sid in OPTIONAL if sid not in skipped)
     verify_input_coverage(paths, ids, require_complete=True)
     manifest = {
         "checked_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "configured_original": 339,
         "core_expected": len(CORE),
         "core_verified": len(CORE),
-        "expansion_expected": len(EXPANSION),
+        "expansion_expected": len(OPTIONAL),
         "expansion_verified": len(accepted),
+        "original_optional_expected": len(EXPANSION),
+        "regulated_external_expected": len(REGULATED),
+        "regulated_external_verified": sum(sid not in skipped for sid in REGULATED),
+        "regulated_external_ids": list(REGULATED),
         "total_verified": len(paths),
         "verified_source_ids": list(ids),
         "missing_or_failed_expansion": skipped,

@@ -97,6 +97,11 @@ jobs:
         with:
           path: public
 
+      - name: Wait until uploaded Pages artifact is indexed by GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/aml339_pages_ready.py
+
       - name: Deploy dashboard
         id: deployment
         uses: actions/deploy-pages@v5
