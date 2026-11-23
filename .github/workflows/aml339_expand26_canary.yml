@@ -1,0 +1,136 @@
+name: AML339 canary verify eight new sources with full official details
+on:
+  push:
+    branches: [feat/aml339-expand26-canary-20261123]
+    paths:
+      - .github/workflows/aml339_expand26_canary.yml
+      - experiments/aml339/live_expansion_probe.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: aml339-eight-new-source-canary
+  cancel-in-progress: false
+jobs:
+  probe:
+    name: Verify ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [iq-eq, aztec-group, ebury, nexpay, nium, keyrock, mirabaud, convera]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unpack original 339-source parser; verify immutable archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(f.file_size for f in z.infolist())<800_000
+              assert all(not f.filename.startswith("/") and ".." not in Path(f.filename).parts for f in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,live_expansion_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Inspect each current job and its actual application page
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_expansion_probe.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+      - name: Keep per-source successful and failed evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-canary-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  summary:
+    needs: [probe]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-canary-*
+          path: incoming
+      - name: Refuse partial audits; show real coverage and verification issues
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0, "experiments/aml339")
+          from alert_history import verify_input_coverage
+          from two_lane_alert_preview import triage
+          ids=("iq-eq","aztec-group","ebury","nexpay","nium","keyrock","mirabaud","convera")
+          paths=sorted(Path("incoming").rglob("candidate_*.json"))
+          result={"expected":len(ids),"received":len(paths),"sources":[],
+                  "eligible_confirmed":0,"eligible_review":0,"unverified_total":0}
+          seen=set()
+          complete=True
+          for path in paths:
+              data=json.loads(path.read_text(encoding="utf-8"))
+              for source in data["sources"]:
+                  sid=source["source_id"]
+                  if sid in seen: raise RuntimeError("Duplicate evidence from "+sid)
+                  seen.add(sid)
+                  state=source["state"]
+                  ok=state=="listing_extracted" and source.get("list_complete") is True
+                  ok=ok and len(source.get("audited",[]))==source.get("relevant_leads")
+                  complete = complete and ok
+                  eligible={"confirmed_recent":0,"promising_date_unconfirmed":0}
+                  for row in source.get("audited",[]):
+                      item,_=triage(sid,row)
+                      if item: eligible[item["lane"]]+=1
+                  result["eligible_confirmed"]+=eligible["confirmed_recent"]
+                  result["eligible_review"]+=eligible["promising_date_unconfirmed"]
+                  result["unverified_total"]+=source.get("unverified_in_scope",0)
+                  result["sources"].append({"id":sid,"listing_ok":ok,
+                       "listed":source.get("total_listed"),
+                       "title_matched":source.get("relevant_leads"),
+                       "in_scope_detail_attempts":source.get("attempted_in_scope_details"),
+                       "unverified":source.get("unverified_in_scope"),
+                       "eligible":eligible,"errors":source.get("errors",[])})
+          Path("canary_summary.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
+          print("AML339_8_SOURCE_CANARY_SUMMARY",json.dumps(result,ensure_ascii=False),flush=True)
+          if set(ids)!=seen or len(paths)!=8 or not complete:
+              raise RuntimeError("Cannot promote without complete eight-source live detail evidence")
+          PY
+      - name: Retain detailed summary even on partial failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-expand26-canary-summary
+          path: canary_summary.json
+          retention-days: 14
+          if-no-files-found: warn

@@ -2,7 +2,7 @@
 """Publish verified AML339 pilot opportunities into a SEPARATE static dashboard.
 
 This is not the 500-employer production feed and does not send emails.
-All roles come from the 18-source audited HTTP evidence. No cached/unverified
+All roles come from individually audited official HTTP evidence. No cached/unverified
 record, date guess or simulation-only alert may masquerade as an open role.
 """
 from __future__ import annotations
@@ -91,11 +91,11 @@ def render_html(roles, history, report):
             + "</section>"
         )
     checked = report["checked_at_utc"]
-    # Use only the 18-source report, never infer that all 339 employers were scanned.
+    # The audited count is derived from complete evidence, never from the 339-source archive.
     return (
         "<!doctype html><html lang='es'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-        "<title>AML339 · Radar de 18 fuentes verificadas</title>"
+        f"<title>AML339 · Radar de {report['source_count']} fuentes verificadas</title>"
         "<style>body{font-family:system-ui,-apple-system,sans-serif;max-width:850px;"
         "margin:3rem auto;padding:0 1rem;line-height:1.55;color:#18212f;background:#f8fafc}"
         "h1{font-size:1.8rem}h2{margin-top:2rem}a{color:#1859a0}"
@@ -107,9 +107,9 @@ def render_html(roles, history, report):
         "</style>"
         "<link rel='alternate' type='application/rss+xml' title='AML339 confirmadas' href='confirmed.xml'>"
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
-        "</head><body><h1>Radar AML339 · 18 fuentes en directo</h1>"
+        f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/18 fuentes · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/26 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
         "no demuestra que una vacante se haya publicado recientemente. "
@@ -119,18 +119,18 @@ def render_html(roles, history, report):
         "<a href='review.xml'>Revisión por fecha desconocida</a>. "
         "Los elementos conservan un identificador estable para no duplicarse.</p>"
         + "".join(sections)
-        + "<footer><p>Solo ofertas obtenidas y evaluadas de las 18 fuentes del piloto; "
+        + "<footer><p>Solo ofertas obtenidas de 18 fuentes de base y hasta 8 adicionales verificadas en cada ejecución; "
         "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
     )
 
 
-def render_rss(items, history, lane, checked):
+def render_rss(items, history, lane, checked, source_count=18):
     channel_root = ET.Element("rss", version="2.0")
     channel = ET.SubElement(channel_root, "channel")
     title = "AML339 — " + LANE_NAMES[lane]
     for name, text in [
         ("title", title), ("link", ROOT),
-        ("description", "Ofertas actualmente verificadas de 18 fuentes; "
+        ("description", f"Ofertas actualmente verificadas de {source_count} fuentes; "
                         "fecha de aparición en el radar no es fecha de publicación del empleo."),
         ("language", "es"),
         ("lastBuildDate", format_datetime(dt.datetime.now(dt.timezone.utc), usegmt=True)),
@@ -163,9 +163,19 @@ def render_rss(items, history, lane, checked):
     return ET.tostring(channel_root, encoding="unicode", xml_declaration=True)
 
 
-def build(evidence_paths, state, report, output):
-    if report.get("source_count") != 18:
-        raise ValueError("Refuse to publish a partial pilot scan")
+def build(evidence_paths, state, report, output, manifest=None):
+    count = report.get("source_count")
+    if not isinstance(count, int) or not 18 <= count <= 26:
+        raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
+    if count > 18 and manifest is None:
+        raise ValueError("Expanded source publication requires a verified manifest")
+    if manifest is not None and (
+        manifest.get("core_verified") != 18
+        or manifest.get("total_verified") != count
+        or manifest.get("expansion_verified") != count - 18
+        or manifest.get("expansion_expected") != 8
+    ):
+        raise ValueError("Invalid live expansion manifest; refusing to publish")
     if set(report.get("new_counts", {})) != set(LANES):
         raise ValueError("Missing both alert lanes")
     history = check_history(state)
@@ -179,12 +189,17 @@ def build(evidence_paths, state, report, output):
     for lane, filename in FEED_FILES.items():
         lane_roles = [x for x in roles if x["lane"] == lane]
         (output / filename).write_text(
-            render_rss(lane_roles, history, lane, report["checked_at_utc"]),
+            render_rss(lane_roles, history, lane, report["checked_at_utc"], count),
             encoding="utf-8",
         )
     (output / "summary.json").write_text(json.dumps({
         "checked_at_utc": report["checked_at_utc"],
-        "sources_complete": 18,
+        "sources_complete": count,
+        "source_count": count,
+        "sources_expected": 26,
+        "core_sources_complete": 18,
+        "expanded_sources_complete": count - 18,
+        "missing_or_failed_expansion": (manifest or {}).get("missing_or_failed_expansion", {}),
         "roles_evaluated": report["roles_evaluated"],
         "current_qualifying": len(roles),
         "current_lanes": {lane: sum(x["lane"] == lane for x in roles) for lane in LANES},
@@ -192,7 +207,7 @@ def build(evidence_paths, state, report, output):
         "limitations": [
             "No automatic email/push delivery",
             "Date-unconfirmed roles are not claimed newly published",
-            "Exactly 18 of 339 catalogue sources audited",
+            "18 fixed core sources and up to 8 additional audited sources; never all 339",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("AML339_PUBLIC_SITE_BUILT", json.dumps({
@@ -206,13 +221,15 @@ def main():
     p.add_argument("--state-file", required=True)
     p.add_argument("--report-file", required=True)
     p.add_argument("--dest", required=True)
+    p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if len(paths) != 18:
-        raise ValueError("Exactly 18 source snapshots required")
+    if not 18 <= len(paths) <= 26:
+        raise ValueError("Expected 18 complete core snapshots plus up to 8 audited additions")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
-    build(paths, state, report, Path(a.dest))
+    manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
+    build(paths, state, report, Path(a.dest), manifest)
 
 
 if __name__ == "__main__":
