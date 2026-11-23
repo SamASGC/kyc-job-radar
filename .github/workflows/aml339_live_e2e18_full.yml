@@ -142,11 +142,27 @@ jobs:
             --branch "$GITHUB_REF_NAME" \
             --run-id "$GITHUB_RUN_ID" \
             --github-output "$GITHUB_OUTPUT"
-          mkdir -p restored
-          gh run download "${{ steps.prior.outputs.prior_run_id }}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --name "${{ steps.prior.outputs.prior_artifact_name }}" --dir restored
+      - name: Fetch the exact verified history artifact from the prior run
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.prior.outputs.prior_run_id }}
+          github-token: ${{ github.token }}
+          name: ${{ steps.prior.outputs.prior_artifact_name }}
+          path: restored
+      - name: Reject missing/corrupt previous state before inspecting vacancies
+        shell: bash
+        run: |
+          set -euo pipefail
           test -s restored/isolated_alert_history.json
+          python3 - <<'PY'
+          import sys,json
+          sys.path.insert(0,'experiments/aml339')
+          from alert_history import check_history
+          p='restored/isolated_alert_history.json'
+          d=check_history(json.load(open(p,encoding='utf-8')))
+          print('LIVE_E2E18_PREVIOUS_STATE_VERIFIED',len(d['records']),flush=True)
+          PY
       - name: Evaluate current full 18-source evidence and save two simulated lanes
         shell: bash
         run: |
