@@ -77,7 +77,7 @@ class StrictFullPipeline(unittest.TestCase):
         })
         self.assertEqual(len(first["novelty"]["baselined_sources"]),38)
         html=(out/"index.html").read_text(encoding="utf-8")
-        self.assertIn("Nuevas oportunidades verificadas: 0",html)
+        self.assertIn("Nuevas en este seguimiento: 0",html)
         self.assertIn("<details>",html)
         self.write_core(CORE[0],[self.old,self.new])
         second,report2,summary2,out=self.run_once(first)
@@ -85,7 +85,7 @@ class StrictFullPipeline(unittest.TestCase):
             "confirmed_recent":0,"promising_date_unconfirmed":1,
         })
         self.assertIn("Sanctions Monitoring Officer",report2["new_alert_previews"]["promising_date_unconfirmed"][0]["title"])
-        self.assertIn("Nuevas oportunidades verificadas: 1",
+        self.assertIn("Nuevas en este seguimiento: 1",
                       (out/"index.html").read_text(encoding="utf-8"))
         feed=ET.fromstring((out/"review.xml").read_text(encoding="utf-8"))
         self.assertEqual(len(feed.findall("./channel/item")),2)
