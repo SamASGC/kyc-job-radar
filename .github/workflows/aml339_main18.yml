@@ -1,4 +1,4 @@
-name: AML339 independent 18-source live radar
+name: AML339 independent audited source radar (18 core + up to 8 verified)
 
 on:
   workflow_dispatch:
@@ -9,6 +9,9 @@ on:
       - "experiments/aml339/**"
       - "scripts/aml339_site.py"
       - "tests/test_aml339_publication.py"
+      - "tests/test_aml339_expansion_manifest.py"
+      - "tests/test_aml339_26_end_to_end.py"
+      - "scripts/aml339_source_manifest.py"
   schedule:
     # One daily full audit: low request frequency, including the formerly
     # rate-limited Payabl Workable source. Github cron timing may vary.
@@ -83,10 +86,67 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  expansion:
+    name: Verify added ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [iq-eq, aztec-group, ebury, nexpay, nium, keyrock, mirabaud, convera]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify pinned 339-source archive and extract to temporary workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile('experiments/aml339/full_original_339_sources.zip') as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith('/') and '..' not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,live_expansion_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Fetch current official vacancies and verify relevant job details
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_expansion_probe.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+      - name: Always retain source-level evidence for diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-expansion-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+
   publish:
     name: Audit complete scan, preserve history and publish independent page
-    needs: [scan]
-    if: ${{ needs.scan.result == 'success' }}
+    needs: [scan, expansion]
+    # Optional sources may fail; never let them suppress the complete 18-source core.
+    if: ${{ always() && needs.scan.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment:
@@ -100,30 +160,28 @@ jobs:
       - name: Test the two-lane rules, previous state policy and site
         run: |
           set -euo pipefail
-          python -m unittest discover -s tests -p 'test_aml339_publication.py' -v
+          python -m unittest discover -s tests -p 'test_aml339_*.py' -v
           python3 experiments/aml339/alert_history.py --self-test
       - name: Retrieve ALL 18 live official source reports
         uses: actions/download-artifact@v4
         with:
           pattern: aml339-main18-source-*
           path: sources
-      - name: Fail closed on a missing, duplicated, partial or unaudited source
+      - name: Retrieve OPTIONAL new source reports without risking the core
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-expansion-source-*
+          path: extras
+      - name: Verify core 18 and accept only fully audited optional sources
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import json,sys
-          sys.path.insert(0,"experiments/aml339")
-          from alert_history import verify_input_coverage
-          expected="vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer".split(",")
-          paths=sorted(Path("sources").rglob("source_*.json"))
-          if len(paths)!=18:raise RuntimeError("Expected 18 complete evidence files, found "+str(len(paths)))
-          got=verify_input_coverage(paths,expected,True)
-          if len(got)!=18:raise RuntimeError("Source coverage partial")
-          Path("source_paths.txt").write_text("\n".join(str(x) for x in paths)+"\n")
-          print("AML339_ALL_18_LIVE_SOURCES_VERIFIED",len(paths),flush=True)
-          PY
+          mkdir -p extras
+          python3 scripts/aml339_source_manifest.py \
+            --core-dir sources --expansion-dir extras \
+            --paths-out source_paths.txt --ids-out source_ids.txt \
+            --manifest-out coverage_manifest.json
       - name: Reject a silent history reset when main state is unexpectedly absent
         if: ${{ hashFiles('data/aml339_main18_state.json') == '' }}
         shell: bash
@@ -185,7 +243,7 @@ jobs:
           mkdir -p reports state
           mapfile -t files < source_paths.txt
           python3 experiments/aml339/alert_history.py \
-            --expect-sources vinted,verifo-lithuania,demivolt-lithuania,lt-neo-finance,swedbank,luminor,n26,wise,corpay,openpayd,transfergo,bvnk,bnf-bank-malta,medirect-bank-malta,payabl,airwallex,mollie,truelayer \
+            --expect-sources "$(cat source_ids.txt)" \
             --state-in restored/history.json --run-id "$GITHUB_RUN_ID" \
             --state-out state/isolated_alert_history.json \
             --json-out reports/alerts.json --md-out reports/alerts.md "${files[@]}"
@@ -202,8 +260,11 @@ jobs:
           replay=json.load(open("reports/replay_alerts.json"))
           if not set(prior["records"]).issubset(now["records"]):
              raise RuntimeError("Historical alert keys lost")
-          if current["source_count"]!=18 or replay["new_counts"]!={"confirmed_recent":0,"promising_date_unconfirmed":0}:
-             raise RuntimeError("Incomplete source audit or duplicate alerts on replay")
+          coverage=json.load(open("coverage_manifest.json"))
+          if (current["source_count"]!=coverage["total_verified"]
+              or coverage["core_verified"]!=18
+              or replay["new_counts"]!={"confirmed_recent":0,"promising_date_unconfirmed":0}):
+             raise RuntimeError("Incomplete core source audit or duplicate alerts on replay")
           print("AML339_CONTINUITY_AND_NO_REPEAT_PASSED",json.dumps({
             "previous_records":len(prior["records"]),"final_records":len(now["records"]),
             "new":current["new_counts"],"replay":replay["new_counts"]}),flush=True)
@@ -217,6 +278,7 @@ jobs:
             --sources-file source_paths.txt \
             --state-file data/aml339_main18_state.json \
             --report-file reports/alerts.json \
+            --manifest-file coverage_manifest.json \
             --dest public/aml339
           test -s public/index.html
           test -s public/feed.xml
@@ -233,7 +295,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "AML339_NO_CHANGES"
           else
-            git commit -m "aml339: publish audited 18-source snapshot [skip ci]"
+            git commit -m "aml339: publish guarded 18-plus verified expansion [skip ci]"
             git pull --rebase origin main
             git push origin HEAD:main
           fi
@@ -245,6 +307,8 @@ jobs:
           path: |
             reports/
             source_paths.txt
+            source_ids.txt
+            coverage_manifest.json
           retention-days: 30
           if-no-files-found: warn
       - name: Upload full GitHub Pages site including original radar
