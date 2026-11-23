@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine 18 mandatory with 20+50 optional catalog and 2 outside-catalog EMIs.
+"""Combine 18 mandatory with 20+50 optional catalog and 5 outside-catalog EMIs.
 
 The original 18 must ALL pass exactly as before. Newly added source failures
 are recorded honestly but cannot stop refreshing the original 18. No failed
@@ -31,7 +31,10 @@ EXPANSION = (
     "genome", "wallester", "bybit", "zilch",
 )
 # Separately audited employers NOT in the immutable original 339-source ZIP.
-REGULATED = ("emi-trumia-mt", "emi-zen-lt")
+REGULATED = (
+    "emi-trumia-mt", "emi-zen-lt",
+    "emi-andaria-mt", "emi-finxp-mt", "emi-paydo-mt",
+)
 OPTIONAL = EXPANSION + BATCH50 + REGULATED
 
 

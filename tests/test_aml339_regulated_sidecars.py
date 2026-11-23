@@ -45,13 +45,13 @@ class RegulatedEMISidecarTests(unittest.TestCase):
     def write(path,data):
         path.write_text(json.dumps(data),encoding="utf-8")
 
-    def test_two_truly_external_sources_expand_to_40_with_history_preserved(self):
+    def test_five_truly_external_sources_expand_to_43_with_history_preserved(self):
         paths,ids,manifest=collect(self.core,self.extra)
-        self.assertEqual(len(paths),40)
+        self.assertEqual(len(paths),43)
         self.assertEqual(manifest["core_verified"],18)
-        self.assertEqual(manifest["expansion_expected"],72)
-        self.assertEqual(manifest["regulated_external_expected"],2)
-        self.assertEqual(manifest["regulated_external_verified"],2)
+        self.assertEqual(manifest["expansion_expected"],75)
+        self.assertEqual(manifest["regulated_external_expected"],5)
+        self.assertEqual(manifest["regulated_external_verified"],5)
         self.assertEqual(set(manifest["regulated_external_ids"]),set(REGULATED))
         self.assertEqual(manifest["configured_original"],339)
         self.assertEqual(set(ids),set(CORE+EXPANSION+REGULATED))
@@ -59,17 +59,17 @@ class RegulatedEMISidecarTests(unittest.TestCase):
                                         configured_sources=ids)
         build(paths,history,report,self.root/"site",manifest)
         summary=json.loads((self.root/"site"/"summary.json").read_text())
-        self.assertEqual(summary["sources_complete"],40)
+        self.assertEqual(summary["sources_complete"],43)
         self.assertEqual(summary["original_catalog_sources"],339)
-        self.assertEqual(summary["external_regulated_sources_verified"],2)
+        self.assertEqual(summary["external_regulated_sources_verified"],5)
 
     def test_external_provider_failure_keeps_original_38_operational(self):
         sid="emi-zen-lt"
         self.write(self.extra/f"candidate_{sid}.json",
                    snapshot(sid,external=True,failed=True))
         paths,ids,manifest=collect(self.core,self.extra)
-        self.assertEqual(len(paths),39)
-        self.assertEqual(manifest["regulated_external_verified"],1)
+        self.assertEqual(len(paths),42)
+        self.assertEqual(manifest["regulated_external_verified"],4)
         self.assertEqual(manifest["missing_or_failed_expansion"],{
             sid:"partial_or_failed_listing",
             **{item:"no_live_source_evidence" for item in BATCH50}})
