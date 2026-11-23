@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""Publish verified AML339 pilot opportunities into a SEPARATE static dashboard.
+
+This is not the 500-employer production feed and does not send emails.
+All roles come from the 18-source audited HTTP evidence. No cached/unverified
+record, date guess or simulation-only alert may masquerade as an open role.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import html
+import json
+import sys
+from email.utils import format_datetime
+from pathlib import Path
+from xml.etree import ElementTree as ET
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
+from two_lane_alert_preview import triage, read_evidence
+from alert_history import check_history
+
+ROOT = "https://samasgc.github.io/kyc-job-radar/aml339/"
+LANES = ("confirmed_recent", "promising_date_unconfirmed")
+LANE_NAMES = {
+    "confirmed_recent": "Publicación original reciente y comprobada (72 h)",
+    "promising_date_unconfirmed": "En revisión: fecha original no acreditada",
+}
+FEED_FILES = {
+    "confirmed_recent": "confirmed.xml",
+    "promising_date_unconfirmed": "review.xml",
+}
+
+
+def live_roles(records):
+    """Only still-qualifying live roles; prefer fully confirmed evidence."""
+    current = {}
+    for employer_id, role in records:
+        item, reason = triage(employer_id, role)
+        if item is None:
+            continue
+        key = item["role_key"]
+        prev = current.get(key)
+        if prev is None or (
+            item["lane"] == "confirmed_recent"
+            and prev["lane"] != "confirmed_recent"
+        ):
+            current[key] = item
+    return sorted(current.values(), key=lambda x: (x["lane"], x["employer_id"], x["title"] or ""))
+
+
+def render_card(item, first_seen, new_keys):
+    esc = lambda v: html.escape(str(v or ""), quote=True)
+    key = item["role_key"]
+    is_new = key in new_keys.get(item["lane"], set())
+    flag = " <strong class='new'>Nueva en este seguimiento</strong>" if is_new else ""
+    posted = (f"Fecha original acreditada: {esc(item['original_date'])}"
+              if item["lane"] == "confirmed_recent"
+              else "Fecha original no acreditada. NO significa que sea una vacante nueva.")
+    duties = ", ".join(item.get("confirmed_job_duties") or [])
+    return (
+        f"<article class='job'><h3><a rel='noopener noreferrer' target='_blank' href='{esc(item['url'])}'>"
+        f"{esc(item['title'])}</a>{flag}</h3>"
+        f"<p>{esc(item['employer_id'])} · {esc(item['location'])}</p>"
+        f"<p>Funciones expresas: {esc(duties)}</p><p>{posted}</p>"
+        f"<small>Detectada en el historial: {esc(first_seen or 'desconocido')}. "
+        "Revisar personalmente requisitos y disponibilidad antes de solicitar.</small></article>"
+    )
+
+
+def render_html(roles, history, report):
+    esc = lambda v: html.escape(str(v or ""), quote=True)
+    recent = {lane: [] for lane in LANES}
+    for item in roles:
+        recent[item["lane"]].append(item)
+    new_keys = {
+        lane: {x["role_key"] for x in report["new_alert_previews"][lane]}
+        for lane in LANES
+    }
+    sections = []
+    for lane in LANES:
+        chunks = []
+        for item in recent[lane]:
+            seen = history["records"].get(item["role_key"], {}).get("first_seen")
+            chunks.append(render_card(item, seen, new_keys))
+        sections.append(
+            f"<section id='{lane}'><h2>{esc(LANE_NAMES[lane])}</h2>"
+            f"<p>{len(recent[lane])} oportunidades verificadas en esta categoría; "
+            f"{len(new_keys[lane])} incorporadas al historial en este escaneo.</p>"
+            + ("".join(chunks) if chunks else "<p>No hay ofertas verificadas en esta categoría.</p>")
+            + "</section>"
+        )
+    checked = report["checked_at_utc"]
+    # Use only the 18-source report, never infer that all 339 employers were scanned.
+    return (
+        "<!doctype html><html lang='es'><head><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+        "<title>AML339 · Radar de 18 fuentes verificadas</title>"
+        "<style>body{font-family:system-ui,-apple-system,sans-serif;max-width:850px;"
+        "margin:3rem auto;padding:0 1rem;line-height:1.55;color:#18212f;background:#f8fafc}"
+        "h1{font-size:1.8rem}h2{margin-top:2rem}a{color:#1859a0}"
+        "section{margin-bottom:2.5rem}.job{background:white;padding:1.2rem;"
+        "border:1px solid #dce2ea;border-radius:10px;margin:1rem 0}"
+        ".job h3{margin:.1rem 0}.job p{margin:.4rem 0}.job small{color:#546272}"
+        ".new{color:#176332;font-size:.8rem;margin-left:.5rem}"
+        ".notice{border-left:4px solid #576d89;padding:.8rem 1rem;background:#eaf0f7}"
+        "</style>"
+        "<link rel='alternate' type='application/rss+xml' title='AML339 confirmadas' href='confirmed.xml'>"
+        "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
+        "</head><body><h1>Radar AML339 · 18 fuentes en directo</h1>"
+        f"<p>Última auditoría completa: {esc(checked)} UTC · "
+        f"{report['source_count']}/18 fuentes · {report['roles_evaluated']} fichas evaluadas.</p>"
+        "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
+        "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
+        "no demuestra que una vacante se haya publicado recientemente. "
+        "Las candidaturas se comprueban automáticamente, pero su aceptación "
+        "y los requisitos deben verificarse manualmente. Sin envíos de correo automáticos.</div>"
+        "<p>RSS: <a href='confirmed.xml'>Novedades confirmadas</a> · "
+        "<a href='review.xml'>Revisión por fecha desconocida</a>. "
+        "Los elementos conservan un identificador estable para no duplicarse.</p>"
+        + "".join(sections)
+        + "<footer><p>Solo ofertas obtenidas y evaluadas de las 18 fuentes del piloto; "
+        "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
+    )
+
+
+def render_rss(items, history, lane, checked):
+    channel_root = ET.Element("rss", version="2.0")
+    channel = ET.SubElement(channel_root, "channel")
+    title = "AML339 — " + LANE_NAMES[lane]
+    for name, text in [
+        ("title", title), ("link", ROOT),
+        ("description", "Ofertas actualmente verificadas de 18 fuentes; "
+                        "fecha de aparición en el radar no es fecha de publicación del empleo."),
+        ("language", "es"),
+        ("lastBuildDate", format_datetime(dt.datetime.now(dt.timezone.utc), usegmt=True)),
+    ]:
+        ET.SubElement(channel, name).text = text
+    for entry in items:
+        item = ET.SubElement(channel, "item")
+        ET.SubElement(item, "title").text = str(entry["title"] or "")
+        ET.SubElement(item, "link").text = entry["url"]
+        ET.SubElement(item, "guid", isPermaLink="false").text = (
+            "aml339:" + entry["role_key"] + ":" + lane
+        )
+        seen = history["records"].get(entry["role_key"], {}).get("first_seen") or checked
+        try:
+            ts = dt.datetime.fromisoformat(seen.replace("Z", "+00:00"))
+            if ts.tzinfo is None:
+                raise ValueError("Missing timezone")
+            posted = format_datetime(ts.astimezone(dt.timezone.utc), usegmt=True)
+        except (ValueError, TypeError):
+            posted = format_datetime(dt.datetime.fromisoformat(checked).astimezone(dt.timezone.utc), usegmt=True)
+        ET.SubElement(item, "pubDate").text = posted
+        duty = ", ".join(entry.get("confirmed_job_duties") or [])
+        note = ("Publicación original no acreditada. NO etiquetar como nueva. "
+                if lane == "promising_date_unconfirmed"
+                else "Fecha original verificada dentro de 72 horas en el escaneo. ")
+        ET.SubElement(item, "description").text = (
+            f"{entry['employer_id']} · {entry['location']} · {note}"
+            f"Funciones expresas: {duty}. Detección en radar: {seen}."
+        )
+    return ET.tostring(channel_root, encoding="unicode", xml_declaration=True)
+
+
+def build(evidence_paths, state, report, output):
+    if report.get("source_count") != 18:
+        raise ValueError("Refuse to publish a partial pilot scan")
+    if set(report.get("new_counts", {})) != set(LANES):
+        raise ValueError("Missing both alert lanes")
+    history = check_history(state)
+    roles = live_roles(read_evidence(evidence_paths))
+    if len(roles) != report.get("qualifying_distinct_roles"):
+        raise ValueError("Mismatch between published live jobs and audited history")
+    if any(item["role_key"] not in history["records"] for item in roles):
+        raise ValueError("Missing role from persistent history")
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "index.html").write_text(render_html(roles, history, report), encoding="utf-8")
+    for lane, filename in FEED_FILES.items():
+        lane_roles = [x for x in roles if x["lane"] == lane]
+        (output / filename).write_text(
+            render_rss(lane_roles, history, lane, report["checked_at_utc"]),
+            encoding="utf-8",
+        )
+    (output / "summary.json").write_text(json.dumps({
+        "checked_at_utc": report["checked_at_utc"],
+        "sources_complete": 18,
+        "roles_evaluated": report["roles_evaluated"],
+        "current_qualifying": len(roles),
+        "current_lanes": {lane: sum(x["lane"] == lane for x in roles) for lane in LANES},
+        "new_counts": report["new_counts"],
+        "limitations": [
+            "No automatic email/push delivery",
+            "Date-unconfirmed roles are not claimed newly published",
+            "Exactly 18 of 339 catalogue sources audited",
+        ],
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print("AML339_PUBLIC_SITE_BUILT", json.dumps({
+        "current": len(roles), "new": report["new_counts"]
+    }, ensure_ascii=False), flush=True)
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--sources-file", required=True)
+    p.add_argument("--state-file", required=True)
+    p.add_argument("--report-file", required=True)
+    p.add_argument("--dest", required=True)
+    a = p.parse_args()
+    paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
+    if len(paths) != 18:
+        raise ValueError("Exactly 18 source snapshots required")
+    state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
+    report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
+    build(paths, state, report, Path(a.dest))
+
+
+if __name__ == "__main__":
+    main()
