@@ -23,6 +23,14 @@ CANDIDATES = (
     "keyrock",
     "mirabaud",
     "convera",
+    "complyadvantage",
+    "hawk",
+    "clearbank",
+    "modulr",
+    "lemonway",
+    "ecommpay",
+    "crossmint",
+    "moonpay",
 )
 
 
