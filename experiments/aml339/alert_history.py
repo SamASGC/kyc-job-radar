@@ -173,7 +173,7 @@ def select_and_merge(records,history,run_id=None,configured_sources=None,
             reasons["not_downgraded_after_confirmed"]+=1
         elif lane in lanes:
             reasons["already_reported_in_lane"]+=1
-        elif strict_novelty and fingerprint in old_listed:
+        elif strict_novelty and rid in old_listed:
             # The same job was on an earlier official careers listing, even if
             # an improved parser only recognizes its AML duties today.
             reasons["previously_listed_not_a_new_vacancy"]+=1
