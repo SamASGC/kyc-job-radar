@@ -1,4 +1,4 @@
-"""Full 34-source synthetic E2E: separate official source evidence and dedup state."""
+"""Full 38-source synthetic E2E: separate official source evidence and dedup state."""
 import json
 import tempfile
 import unittest
@@ -55,10 +55,10 @@ class ExpandedFeedE2E(unittest.TestCase):
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
         return new_history, report, manifest, summary, out
 
-    def test_all_34_publish_only_verified_roles_and_no_replay_duplicates(self):
+    def test_all_38_publish_only_verified_roles_and_no_replay_duplicates(self):
         history, report, manifest, summary, out = self._run()
-        self.assertEqual(summary["sources_complete"], 34)
-        self.assertEqual(summary["expanded_sources_complete"], 16)
+        self.assertEqual(summary["sources_complete"], 38)
+        self.assertEqual(summary["expanded_sources_complete"], 20)
         self.assertEqual(summary["core_sources_complete"], 18)
         self.assertEqual(report["new_counts"]["promising_date_unconfirmed"], 1)
         root = ET.fromstring((out / "review.xml").read_text(encoding="utf-8"))
@@ -68,7 +68,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         self.assertEqual(replay["new_counts"], {
             "confirmed_recent": 0, "promising_date_unconfirmed": 0,
         })
-        self.assertEqual(summary2["sources_complete"], 34)
+        self.assertEqual(summary2["sources_complete"], 38)
         self.assertEqual(ET.fromstring((out2 / "review.xml").read_text()).findtext(
             "./channel/item/guid"
         ), guid)
@@ -80,7 +80,7 @@ class ExpandedFeedE2E(unittest.TestCase):
             json.dumps(evidence("nexpay", failed=True)), encoding="utf-8"
         )
         history, report, manifest, summary, out = self._run(prior=first)
-        self.assertEqual(summary["sources_complete"], 33)
+        self.assertEqual(summary["sources_complete"], 37)
         self.assertEqual(summary["core_sources_complete"], 18)
         self.assertEqual(summary["missing_or_failed_expansion"], {
             "nexpay": "partial_or_failed_listing",
