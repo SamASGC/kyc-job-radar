@@ -1,10 +1,12 @@
 """Temporary read-only official Traffit JSON shape diagnostics; only safe metadata."""
 import json,urllib.request
-url="https://zen.traffit.com/public/job_posts/published"
+url="https://zen.traffit.com/public/an/list/?limit=100&offset=0"
 req=urllib.request.Request(url,headers={"User-Agent":"AML339-research/1.0","Accept":"application/json"})
 with urllib.request.urlopen(req,timeout=15) as res:
     rows=json.loads(res.read(400000))
-assert isinstance(rows,list)
+assert isinstance(rows,dict) and isinstance(rows.get('items'),list)
+print('ZEN_LIST_META',json.dumps({'count':rows.get('count'),'length':len(rows['items']),'keys':list(rows)},ensure_ascii=False),flush=True)
+rows=rows['items']
 for row in rows:
     advert=row.get("advert") or {}
     vals=advert.get("values") or []
