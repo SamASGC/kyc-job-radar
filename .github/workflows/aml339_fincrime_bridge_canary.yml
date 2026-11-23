@@ -1,0 +1,127 @@
+name: AML339 FinCrime bridge candidates live canary (eight plus TransferGo audit)
+on:
+  push:
+    branches: [feat/aml339-fincrime-bridge-next8-20261123]
+    paths:
+      - ".github/workflows/aml339_fincrime_bridge_canary.yml"
+      - "experiments/aml339/live_bridge_probe.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: aml339-fincrime-bridge-live-canary
+  cancel-in-progress: false
+jobs:
+  scan:
+    name: Full detail check ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [complyadvantage, hawk, clearbank, modulr, lemonway, ecommpay, crossmint, moonpay, transfergo]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Extract original audited source catalog into temporary isolated location
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_bridge_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Check ALL AML title-matching roles including official application detail
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_bridge_probe.py --source "$SOURCE" --minutes 4 --out "bridge_${SOURCE}.json"
+      - name: Keep live per-role evidence and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-bridge-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/bridge_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  summarize:
+    needs: [scan]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-bridge-*
+          path: evidence
+      - name: Verify no source was assumed successful from title-only evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          ids={"complyadvantage","hawk","clearbank","modulr","lemonway","ecommpay","crossmint","moonpay","transfergo"}
+          files=list(Path("evidence").rglob("bridge_*.json"))
+          seen={}
+          for path in files:
+              data=json.loads(path.read_text(encoding="utf-8"))
+              assert data["mode"]=="READ_ONLY_ISOLATED_NO_PRODUCTION_DATA"
+              assert data["total_configured_sources"]==339
+              assert len(data["sources"])==1
+              source=data["sources"][0]
+              sid=source["source_id"]
+              assert sid in ids and sid not in seen
+              assert path.name==f"bridge_{sid}.json"
+              seen[sid]={
+                  "list_complete":source.get("list_complete") is True,
+                  "state":source.get("state"),
+                  "matching_titles":source.get("relevant_leads"),
+                  "audited":len(source.get("audited") or []),
+                  "unverified_in_scope":source.get("unverified_in_scope"),
+                  "warnings":source.get("warnings") or [],
+                  "errors":source.get("errors") or [],
+              }
+          result={"expected":len(ids),"received":len(seen),"source_health":seen}
+          Path("bridge_canary_summary.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
+          print("AML339_BRIDGE_CANARY",json.dumps(result,ensure_ascii=False),flush=True)
+          if set(seen)!=ids:
+              raise RuntimeError("Not all nine source reports were returned")
+          for sid,x in seen.items():
+              if x["state"]!="listing_extracted" or not x["list_complete"] or x["matching_titles"]!=x["audited"]:
+                  raise RuntimeError("Incomplete source detail coverage: "+sid)
+          PY
+      - name: Preserve evidence summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-bridge-canary-summary
+          path: bridge_canary_summary.json
+          retention-days: 14
+          if-no-files-found: warn

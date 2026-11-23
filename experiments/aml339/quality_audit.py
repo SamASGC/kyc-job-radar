@@ -42,7 +42,7 @@ TECH_TITLE=re.compile(r"\b(?:IT compliance|IT risk|engineer|engineering|develope
 PRACTICAL=re.compile(r"\b(?:hands[- ]on|proven|previous|prior|demonstrated|practical|track record|experience (?:in|with|handling|conducting|performing|investigating))\b",re.I)
 PRIORITY_SKILLS=re.compile(r"\b(?:screening|sanctions?|PEP|adverse media|source of (?:funds|wealth)|SoF|SoW|transaction monitoring|SAR|STR)\b",re.I)
 YEAR_REQUIREMENT=re.compile(r"\b(?:minimum(?: of)?|at least|over|more than|requires?|must have)?\s*(\d+)\s*\+?\s*(?:years?|yrs?)\b",re.I)
-DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will) do|key duties|day.to.day|what you will be doing|main tasks|functions)\b",re.I)
+DUTY=re.compile(r"\b(?:responsibilit\w*|key responsibilities|your role|what you(?:'ll| will)(?: be doing| do)|key duties|day.to.day|main tasks|functions)\b",re.I)
 REQ=re.compile(r"\b(?:requirements?|qualifications?|what (?:you'll|you will) bring|what we look for|must have|your profile|experience & skills|about you|essential skills|criteria|competenc(?:y|ies)\s*(?:&|and)\s*experience|your qualifications)\b",re.I)
 OPTIONAL=re.compile(r"\b(?:nice to have|preferred|desirable|would be a plus|advantageous|not required|or equivalent experience)\b",re.I)
 
@@ -347,6 +347,26 @@ def test():
     assert "TM" not in evaluate(optional_role,True)["explicit_duties"]
     assert evaluate(dict(core,title="Engineering Lead - Fincrime"),True)["class"]=="not_recommended"
     assert evaluate(dict(core,title="Senior KYC Analyst (Night shifts)"),True)["class"]=="not_recommended"
+    bridge=dict(core,title="AML & Fraud Risk Analyst",description="\n".join([
+        "What you'll be doing:",
+        "Conducting PEP, Sanctions, and Adverse Media screening alert investigations and escalations;",
+        "Conducting Enhanced Due Diligence checks;",
+        "What you'll bring:",
+        "Previous compliance experience.",
+        "Knowledge of AML regulations is desirable."]))
+    bridge_evidence=evaluate(bridge,True)
+    assert {"PEP","Sanctions screening","Adverse media"}.issubset(
+        set(bridge_evidence["explicit_duties"])),bridge_evidence
+    assert any(mode=="requirements" and "Previous compliance" in line for mode,line in
+               sections(bridge["description"])),sections(bridge["description"])
+    # Merely listing screening as a requirement is NOT proof of doing it.
+    qualifications_only=dict(core,title="Compliance Specialist",description="\n".join([
+        "What you'll be doing:",
+        "Support operational onboarding and payment reconciliations.",
+        "What you'll bring:",
+        "Knowledge of PEP sanctions screening and adverse media required."]))
+    assert not ({"PEP","Sanctions screening","Adverse media"} &
+                set(evaluate(qualifications_only,True)["explicit_duties"]))
     print("QUALITY_SELFTEST_PASSED",flush=True)
 
 def main():
