@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/hourly.yml"
   schedule:
+    # Test-only Prospective fixture fix validated 2026-11-23; trigger a guarded recovery scan.
     # v3.28: N26 first-party Greenhouse added (194 direct ATS); distinguish a reachable ATS from a 403/404 corporate fallback, expose partial warnings; keep 96h + fail-closed predeploy history.
     # Two half-hour sweeps cover every registry firm with a usable website
     # once per hour, while core employer ATS feeds are checked twice/hour.
