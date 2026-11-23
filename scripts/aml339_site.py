@@ -96,6 +96,22 @@ def render_html(roles, history, report):
             + "</section>"
         )
     checked = report["checked_at_utc"]
+    truly_new = []
+    for lane in LANES:
+        for item in report["new_alert_previews"][lane]:
+            seen = history["records"].get(item["role_key"], {}).get("first_seen")
+            truly_new.append(render_card(item, seen, new_keys))
+    newest_html = "".join(truly_new) if truly_new else (
+        "<p>No se han detectado nuevas oportunidades que superen los filtros "
+        "y la comparación con los anuncios oficiales previamente observados.</p>"
+    )
+    novelty_text = (
+        "La primera revisión completa de una empresa nueva establece un historial "
+        "de referencia: las ofertas sin fecha acreditada ya existentes NO generan avisos. "
+        "Un cambio en el parser tampoco hace nueva una oferta antigua."
+        if report.get("strict_novelty") else
+        "Modo de verificación sin comparación estricta de novedades."
+    )
     # The audited count is derived from complete evidence, never from the 339-source archive.
     return (
         "<!doctype html><html lang='es'><head><meta charset='utf-8'>"
@@ -115,6 +131,8 @@ def render_html(roles, history, report):
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
         f"{report['source_count']}/38 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
+        f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
         "no demuestra que una vacante se haya publicado recientemente. "
@@ -123,7 +141,9 @@ def render_html(roles, history, report):
         "<p>RSS: <a href='confirmed.xml'>Novedades confirmadas</a> · "
         "<a href='review.xml'>Revisión por fecha desconocida</a>. "
         "Los elementos conservan un identificador estable para no duplicarse.</p>"
-        + "".join(sections)
+        + "<details><summary>Ver inventario histórico y vacantes con fecha desconocida "
+          "(no son nuevos descubrimientos)</summary>"
+        + "".join(sections) + "</details>"
         + "<footer><p>Solo ofertas obtenidas de 18 fuentes de base y hasta 20 adicionales verificadas en cada ejecución; "
         "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
     )
@@ -213,9 +233,14 @@ def build(evidence_paths, state, report, output, manifest=None):
         "current_qualifying": len(roles),
         "current_lanes": {lane: sum(x["lane"] == lane for x in roles) for lane in LANES},
         "new_counts": report["new_counts"],
+        "novelty_guard_enabled": bool(report.get("strict_novelty")),
+        "listing_ids_added_to_tracking_index_not_new_publications": report.get("newly_observed_listing_keys"),
+        "sources_previously_baselined": report.get("sources_previously_baselined"),
         "limitations": [
             "No automatic email/push delivery",
             "Date-unconfirmed roles are not claimed newly published",
+            "New optional employer baseline and parser changes never generate false novelty alerts",
+            "First-seen listing hashes indicate tracking coverage, NOT verified publication dates",
             "18 fixed core sources and up to 20 additional audited sources; never all 339",
             "Swiss roles require independent verification of work eligibility and permits",
         ],

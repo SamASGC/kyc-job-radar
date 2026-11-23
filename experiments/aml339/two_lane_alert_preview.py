@@ -32,6 +32,26 @@ def key(employer_id,role):
     if not u:return ""
     return hashlib.sha256((employer_id+"|"+u+"|"+(role.get("title") or "").strip().casefold()).encode("utf-8")).hexdigest()[:24]
 
+def listing_identity(employer_id,role):
+    """Stable *listing* identity, ignoring harmless title edits for distinct job URLs.
+
+    Preserve titles on shared/general company careers URLs, where the same URL
+    can genuinely represent multiple independent job vacancies.
+    This is intentionally independent of historical alert role_key, so existing
+    feed GUIDs and three prior records are never migrated or reset.
+    """
+    url=canonical_url(role.get("url") or role.get("apply_url"))
+    if not url:return ""
+    path=urllib.parse.urlsplit(url).path.lower()
+    unique=bool(re.search(
+        r"/(?:jobs?|j|careers?|positions?|vacancies|openings)/[a-z0-9_-]{2,}(?:/|$)|"
+        r"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:/|$)",
+        path,re.I))
+    title=(role.get("title") or "").strip().casefold()
+    raw=employer_id+"|"+url+("" if unique else "|"+title)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+
+
 def triage(employer_id,role):
     evidence=role.get("evaluation") or {}
     if not REQUIRED_FIELDS.issubset(evidence):return None,"incomplete_evidence"

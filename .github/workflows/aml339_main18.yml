@@ -12,6 +12,7 @@ on:
       - "tests/test_aml339_expansion_manifest.py"
       - "tests/test_aml339_26_end_to_end.py"
       - "tests/test_aml339_bridge_duties.py"
+      - "tests/test_aml339_true_novelty.py"
       - "scripts/aml339_source_manifest.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
@@ -67,7 +68,7 @@ jobs:
               assert all(not x.filename.startswith('/') and '..' not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py} "$RUNNER_TEMP/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
           python3 quality_audit.py --self-test
@@ -123,7 +124,7 @@ jobs:
               assert all(not x.filename.startswith('/') and '..' not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,live_expansion_probe.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_expansion_probe.py} "$RUNNER_TEMP/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
           python3 quality_audit.py --self-test
@@ -246,12 +247,12 @@ jobs:
           mapfile -t files < source_paths.txt
           python3 experiments/aml339/alert_history.py \
             --expect-sources "$(cat source_ids.txt)" \
-            --state-in restored/history.json --run-id "$GITHUB_RUN_ID" \
+            --state-in restored/history.json --run-id "$GITHUB_RUN_ID" --strict-novelty \
             --state-out state/isolated_alert_history.json \
             --json-out reports/alerts.json --md-out reports/alerts.md "${files[@]}"
           python3 experiments/aml339/alert_history.py \
             --expect-sources "$(cat source_ids.txt)" \
-            --state-in state/isolated_alert_history.json \
+            --state-in state/isolated_alert_history.json --strict-novelty \
             --state-out state/replay.json \
             --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md "${files[@]}"
           python3 - <<'PY'
