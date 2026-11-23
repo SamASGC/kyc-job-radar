@@ -1,0 +1,29 @@
+name: AML339 new EMI ATS official source diagnostic
+on:
+  push:
+    branches: [research/aml339-regulated-emi-white-space-20261123]
+    paths: [".github/workflows/aml339_new_regulated_probe.yml","experiments/aml339/probe_new_regulated.py"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Request only employer-owned public ATS APIs, no application actions
+        run: python3 experiments/aml339/probe_new_regulated.py
+      - name: Preserve evidence including non-2xx responses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-new-emi-official-ats-diagnostics
+          path: regulated_new_source_probe.json
+          retention-days: 14
+          if-no-files-found: warn
