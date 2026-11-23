@@ -1,7 +1,7 @@
 """Public Swiss-bank recruiting source must be scoped to employer and original posts."""
 import json
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from job_radar.sources.prospective import _parse, fetch_prospective
 
@@ -100,7 +100,8 @@ class ProspectivePaginationV316Tests(unittest.IsolatedAsyncioTestCase):
             def __init__(self, url):
                 off=int(url.split("offset=")[1].split("&")[0])
                 self.data={"medium_id":"1950","total":53,
-                    "jobs":[job(id=str(i)) for i in range(off, min(off+50,53))]}
+                    "jobs":[job(id=str(i), end=(datetime.now(timezone.utc) + timedelta(days=30)).isoformat())
+                            for i in range(off, min(off+50,53))]}
             def raise_for_status(self):pass
             def json(self):return self.data
         class Http:
