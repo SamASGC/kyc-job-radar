@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from zipfile import ZipFile
 
-from batch50_sources import BATCH50
 from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, OPTIONAL, collect
+from batch50_sources import BATCH50
 from scripts.aml339_site import build
 from alert_history import blank_history, select_and_merge, read_evidence
 
