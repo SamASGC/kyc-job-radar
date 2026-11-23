@@ -1,0 +1,23 @@
+name: AML339 regulated EMI 100-candidate new discovery audit
+on:
+  push:
+    branches: [feat/aml339-v1-100-regulated-candidates-20261123]
+    paths:
+      - ".github/workflows/aml339_regulated100_discovery_canary.yml"
+      - "experiments/aml339/discover_regulated100.py"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify immutable original source archive
+        run: echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+      - name: Obtain and compare 100 extra regulated-entity leads
+        run: python3 experiments/aml339/discover_regulated100.py
