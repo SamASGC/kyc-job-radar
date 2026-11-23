@@ -1,0 +1,32 @@
+name: AML339 regulator-first discovery of 50 outside-catalog companies
+on:
+  push:
+    branches: [feat/aml339-regulator50-new-legal-entities-20261123]
+    paths:
+      - ".github/workflows/aml339_regulator50_preflight.yml"
+      - "experiments/aml339/validate_regulator50.py"
+      - "experiments/aml339/regulator50_external_candidates.json"
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require original 339-company archive SHA
+        run: echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+      - name: Validate all 50 legal-entity identities, aliases and official careers
+        run: python3 experiments/aml339/validate_regulator50.py
+      - name: Preserve verified gap analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-regulator50-identity-career-preflight
+          path: reg50_preflight_report.json
+          retention-days: 30
+          if-no-files-found: warn
