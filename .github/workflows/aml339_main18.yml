@@ -1,4 +1,4 @@
-name: AML339 50-source wave + regulated EMI radar (18 core + up to 72 verified)
+name: AML339 50-source wave + regulated EMI radar (18 core + up to 75 verified)
 
 on:
   workflow_dispatch:
@@ -17,6 +17,8 @@ on:
       - "experiments/aml339/live_regulated_sidecar.py"
       - "tests/test_aml339_regulated_sidecars.py"
       - "tests/test_aml339_bulk50.py"
+      - "experiments/aml339/probe_malta_three_new.py"
+      - "tests/test_aml339_extra_malta.py"
       - "experiments/aml339/batch50_sources.py"
       - "experiments/aml339/live_batch50_probe.py"
       - "scripts/aml339_pages_ready.py"
@@ -158,7 +160,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [emi-trumia-mt, emi-zen-lt]
+        source: [emi-trumia-mt, emi-zen-lt, emi-andaria-mt, emi-finxp-mt, emi-paydo-mt]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -184,7 +186,7 @@ jobs:
               assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_regulated_sidecar.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_regulated_sidecar.py,probe_malta_three_new.py} "$RUNNER_TEMP/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
           python3 quality_audit.py --self-test
@@ -195,7 +197,11 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_regulated_sidecar.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          if [[ "$SOURCE" == "emi-trumia-mt" || "$SOURCE" == "emi-zen-lt" ]]; then
+            python3 live_regulated_sidecar.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          else
+            python3 probe_malta_three_new.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+          fi
       - name: Retain source-level evidence
         if: always()
         uses: actions/upload-artifact@v4
