@@ -1,4 +1,4 @@
-name: AML339 independent audited source radar (18 core + up to 8 verified)
+name: AML339 independent audited source radar (18 core + up to 16 verified)
 
 on:
   workflow_dispatch:
@@ -11,6 +11,7 @@ on:
       - "tests/test_aml339_publication.py"
       - "tests/test_aml339_expansion_manifest.py"
       - "tests/test_aml339_26_end_to_end.py"
+      - "tests/test_aml339_bridge_duties.py"
       - "scripts/aml339_source_manifest.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
@@ -95,7 +96,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [iq-eq, aztec-group, ebury, nexpay, nium, keyrock, mirabaud, convera]
+        source: [iq-eq, aztec-group, ebury, nexpay, nium, keyrock, mirabaud, convera, complyadvantage, hawk, clearbank, modulr, lemonway, ecommpay, crossmint, moonpay]
     steps:
       - uses: actions/checkout@v4
         with:
