@@ -1,0 +1,37 @@
+name: AML339 official new fintech source membership diagnostic
+on:
+  push:
+    branches: [feat/aml339-fincrime-bridge-next8-20261123]
+    paths: [".github/workflows/aml339_new_official_membership.yml"]
+permissions:
+  contents: read
+jobs:
+  catalog-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Compare newly discovered official careers with pinned catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import json
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              rows=json.loads(z.read("fuentes.json"))["sources"]
+          assert len(rows)==len({r["id"] for r in rows})==339
+          targets=("colibrix","genome","trumia","wallester","paymont","bybit","mintos","zilch")
+          for target in targets:
+              matches=[r for r in rows if target in
+                  (" "+r.get("id","")+" "+r.get("name","")+" "+json.dumps(r,ensure_ascii=False)).casefold()]
+              print("NEW_OFFICIAL_MEMBERSHIP",json.dumps({
+                  "employer":target,"already_in_original_339":bool(matches),
+                  "existing_source_ids":[r["id"] for r in matches],
+                  "existing_sources":matches[:2]
+              },ensure_ascii=False),flush=True)
+          workable=[r for r in rows if "workable" in json.dumps(r).lower()]
+          print("WORKABLE_ADAPTER_EXAMPLE",json.dumps(workable[:3],ensure_ascii=False),flush=True)
+          PY
