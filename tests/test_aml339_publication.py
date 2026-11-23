@@ -60,5 +60,61 @@ class AML339PublicationTests(unittest.TestCase):
         self.assertFalse((self.root / "out").exists())
 
 
+    def test_promotion_changes_rss_lane_without_losing_identity_or_realerting(self):
+        old_role = self.roles[0][1]
+        old_key = next(iter(self.history["records"]))
+        first_seen = self.history["records"][old_key]["first_seen"]
+        promoted_role = role_template(
+            title=old_role["title"],
+            url=old_role["url"],
+            evaluation={
+                "class": "possible_match_confirmed_recent",
+                "publication_status": "fresh",
+                "original_posting_date": "2026-11-23T12:00:00+00:00",
+                "date_field": "Greenhouse.first_published",
+                "uncertainties": [],
+            },
+        )
+        history, report = select_and_merge(
+            [("first-source", promoted_role)], self.history, "promotion-run",
+            configured_sources=[f"source-{i}" for i in range(18)],
+        )
+        self.assertEqual(report["new_counts"],
+                         {"confirmed_recent": 1, "promising_date_unconfirmed": 0})
+        self.assertEqual(list(history["records"]), [old_key])
+        self.assertEqual(history["records"][old_key]["first_seen"], first_seen)
+        self.assertEqual(set(history["records"][old_key]["delivered_lanes"]),
+                         {"confirmed_recent", "promising_date_unconfirmed"})
+        self.evidence.write_text(json.dumps({
+            "total_configured_sources": 339,
+            "sources": [{"source_id": "first-source", "audited": [promoted_role]}]
+        }), encoding="utf-8")
+        out = self.root / "site"
+        aml339_site.build([self.evidence], history, report, out)
+        confirmed = ET.fromstring((out / "confirmed.xml").read_text())
+        review = ET.fromstring((out / "review.xml").read_text())
+        self.assertEqual(len(confirmed.findall("./channel/item")), 1)
+        self.assertEqual(len(review.findall("./channel/item")), 0)
+        guid = confirmed.findtext("./channel/item/guid")
+        self.assertEqual(guid, "aml339:" + old_key + ":confirmed_recent")
+
+        second_history, repeat = select_and_merge(
+            [("first-source", promoted_role)], history, "replay",
+            configured_sources=[f"source-{i}" for i in range(18)],
+        )
+        self.assertEqual(repeat["new_counts"],
+                         {"confirmed_recent": 0, "promising_date_unconfirmed": 0})
+        aml339_site.build([self.evidence], second_history, repeat, out)
+        confirmed_again = ET.fromstring((out / "confirmed.xml").read_text())
+        self.assertEqual(confirmed_again.findtext("./channel/item/guid"), guid)
+        self.assertEqual(len(second_history["records"]), 1)
+
+    def test_history_missing_live_role_never_publishes(self):
+        with self.assertRaisesRegex(ValueError, "Missing role"):
+            aml339_site.build([self.evidence], blank_history(), self.report,
+                              self.root / "out")
+        self.assertFalse((self.root / "out").exists())
+
+
 if __name__ == "__main__":
     unittest.main()
