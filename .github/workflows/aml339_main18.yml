@@ -1,4 +1,4 @@
-name: AML339 regulated EMI radar (18 core + 20 catalogue + 2 new)
+name: AML339 50-source wave + regulated EMI radar (18 core + up to 72 verified)
 
 on:
   workflow_dispatch:
@@ -16,6 +16,9 @@ on:
       - "scripts/aml339_source_manifest.py"
       - "experiments/aml339/live_regulated_sidecar.py"
       - "tests/test_aml339_regulated_sidecars.py"
+      - "tests/test_aml339_bulk50.py"
+      - "experiments/aml339/batch50_sources.py"
+      - "experiments/aml339/live_batch50_probe.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
     # One daily full audit: low request frequency, including the formerly
@@ -201,9 +204,64 @@ jobs:
           path: ${{ runner.temp }}/aml339/candidate_*.json
           retention-days: 14
           if-no-files-found: warn
+  wave50:
+    name: Verify wave50 ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        source: [bondora, brite, enfuce, eupago, finom, fipto, gocardless, inbank, juni, lightyear, lunar, mangopay, monei, montonio, mypos, northmill, paymentology, payset, pleo, pliant, ppro, sardine, satispay, scalapay, spendesk, sumsub, swan, teya, thunes, trustly, unlimit, unzer, verto, vitesse, wamo, zero-hash, esto, ipf-digital, mintos, delfingroup, bigbank, lightspark, lhv-ee, walletto, mano-bank, bankera, payswix, salv-technologies, ibanfirst, finteqhub]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original official source archive in read-only temporary directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,batch50_sources.py,live_batch50_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Check current official employer listings, complete relevant details and apply links
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_batch50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+      - name: Keep official per-source evidence even on HTTP or verification failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-wave50-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+
   publish:
     name: Audit complete scan, preserve history and publish independent page
-    needs: [scan, expansion, regulated]
+    needs: [scan, expansion, regulated, wave50]
     # Optional sources may fail; never let them suppress the complete 18-source core.
     if: ${{ always() && needs.scan.result == 'success' }}
     runs-on: ubuntu-latest
@@ -237,6 +295,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: aml339-regulated-source-*
+          path: extras
+      - name: Retrieve BULK 50 additional employer audits without risking original core
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-wave50-source-*
           path: extras
       - name: Verify core 18 and accept only fully audited optional sources
         shell: bash
