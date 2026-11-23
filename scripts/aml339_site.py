@@ -131,7 +131,7 @@ def render_html(roles, history, report):
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
         f"{report['source_count']}/38 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
-        f"<section id='novedades'><h2>Nuevas oportunidades verificadas: {len(truly_new)}</h2>"
+        f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
@@ -234,12 +234,13 @@ def build(evidence_paths, state, report, output, manifest=None):
         "current_lanes": {lane: sum(x["lane"] == lane for x in roles) for lane in LANES},
         "new_counts": report["new_counts"],
         "novelty_guard_enabled": bool(report.get("strict_novelty")),
-        "newly_observed_official_listing_keys": report.get("newly_observed_listing_keys"),
+        "listing_ids_added_to_tracking_index_not_new_publications": report.get("newly_observed_listing_keys"),
         "sources_previously_baselined": report.get("sources_previously_baselined"),
         "limitations": [
             "No automatic email/push delivery",
             "Date-unconfirmed roles are not claimed newly published",
             "New optional employer baseline and parser changes never generate false novelty alerts",
+            "First-seen listing hashes indicate tracking coverage, NOT verified publication dates",
             "18 fixed core sources and up to 20 additional audited sources; never all 339",
             "Swiss roles require independent verification of work eligibility and permits",
         ],
