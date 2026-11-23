@@ -1,0 +1,60 @@
+name: AML339 additional Malta EMI career sources live preflight
+on:
+  push:
+    branches: [feat/aml339-three-new-regulated-maltese-providers-20261123]
+    paths:
+      - .github/workflows/aml339_three_new_malta_canary.yml
+      - experiments/aml339/probe_malta_three_new.py
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  scan:
+    name: Test newly discovered EMI ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      max-parallel: 3
+      fail-fast: false
+      matrix:
+        source: [emi-andaria-mt, emi-finxp-mt, emi-paydo-mt]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Extract immutable parser into temporary read-only lab
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          import os
+          from zipfile import ZipFile
+          from pathlib import Path
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(f.file_size for f in z.infolist())<800_000
+              assert all(not f.filename.startswith("/") and ".." not in Path(f.filename).parts for f in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,probe_malta_three_new.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Audit employer-owned listing, explicit duties and applicant form
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 probe_malta_three_new.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+      - name: Retain source audit evidence (including errors)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-malta-new-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
