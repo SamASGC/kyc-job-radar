@@ -114,7 +114,7 @@ def render_html(roles, history, report):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/34 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/38 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
         "no demuestra que una vacante se haya publicado recientemente. "
@@ -124,7 +124,7 @@ def render_html(roles, history, report):
         "<a href='review.xml'>Revisión por fecha desconocida</a>. "
         "Los elementos conservan un identificador estable para no duplicarse.</p>"
         + "".join(sections)
-        + "<footer><p>Solo ofertas obtenidas de 18 fuentes de base y hasta 16 adicionales verificadas en cada ejecución; "
+        + "<footer><p>Solo ofertas obtenidas de 18 fuentes de base y hasta 20 adicionales verificadas en cada ejecución; "
         "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
     )
 
@@ -174,7 +174,7 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 18 <= count <= 34:
+    if not isinstance(count, int) or not 18 <= count <= 38:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count > 18 and manifest is None:
         raise ValueError("Expanded source publication requires a verified manifest")
@@ -182,7 +182,7 @@ def build(evidence_paths, state, report, output, manifest=None):
         manifest.get("core_verified") != 18
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - 18
-        or manifest.get("expansion_expected") != 16
+        or manifest.get("expansion_expected") != 20
     ):
         raise ValueError("Invalid live expansion manifest; refusing to publish")
     if set(report.get("new_counts", {})) != set(LANES):
@@ -205,7 +205,7 @@ def build(evidence_paths, state, report, output, manifest=None):
         "checked_at_utc": report["checked_at_utc"],
         "sources_complete": count,
         "source_count": count,
-        "sources_expected": 34,
+        "sources_expected": 38,
         "core_sources_complete": 18,
         "expanded_sources_complete": count - 18,
         "missing_or_failed_expansion": (manifest or {}).get("missing_or_failed_expansion", {}),
@@ -216,7 +216,7 @@ def build(evidence_paths, state, report, output, manifest=None):
         "limitations": [
             "No automatic email/push delivery",
             "Date-unconfirmed roles are not claimed newly published",
-            "18 fixed core sources and up to 16 additional audited sources; never all 339",
+            "18 fixed core sources and up to 20 additional audited sources; never all 339",
             "Swiss roles require independent verification of work eligibility and permits",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -234,8 +234,8 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 18 <= len(paths) <= 34:
-        raise ValueError("Expected 18 complete core snapshots plus up to 16 audited additions")
+    if not 18 <= len(paths) <= 38:
+        raise ValueError("Expected 18 complete core snapshots plus up to 20 audited additions")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
