@@ -13,7 +13,7 @@ from amlradar.net import Client
 from amlradar.sources import Board
 from amlradar.model import clean,plain
 from quality_audit import candidate,prioritize,role_geography,evaluate
-from two_lane_alert_preview import key as stable_role_key
+from two_lane_alert_preview import listing_identity
 
 OUTSIDE={"outside_scope","excluded_barcelona"}
 SOURCES={
@@ -35,7 +35,7 @@ def audit_one(source,minutes=4):
         # Observe ALL official listing identifiers, not just the jobs our current
         # title/skill parser selects. This stops a later parser improvement from
         # presenting an old vacancy as a genuinely new discovery.
-        all_keys=[stable_role_key(source["id"],job) for job in full]
+        all_keys=[listing_identity(source["id"],job) for job in full]
         result["listing_role_keys"]=sorted({k for k in all_keys if k})
         result["listing_untrackable_count"]=sum(not bool(k) for k in all_keys)
         selected=[j for j in full if candidate(j)]
