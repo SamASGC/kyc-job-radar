@@ -14,7 +14,7 @@ with urllib.request.urlopen(req,timeout=25) as response:
        "url":response.url,"type":response.headers.get("Content-Type"),"bytes":len(data)}),flush=True)
 text=data.decode("utf-8-sig")
 print("EMI_EXPORT_HEAD",json.dumps(text.splitlines()[:8],ensure_ascii=False),flush=True)
-rows=list(csv.DictReader(io.StringIO("\\n".join(line for line in text.splitlines() if not line.startswith("#")))))
+rows=list(csv.DictReader(line for line in text.splitlines() if not line.startswith("#")))
 print("EMI_EXPORT_SCHEMA",json.dumps({"fields":list(rows[0]) if rows else [],
   "count":len(rows)}),flush=True)
 from collections import Counter
