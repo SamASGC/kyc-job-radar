@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine 18 mandatory sources with 20 optional catalog and 2 new regulated EMIs.
+"""Combine 18 mandatory with 20+50 optional catalog and 2 outside-catalog EMIs.
 
 The original 18 must ALL pass exactly as before. Newly added source failures
 are recorded honestly but cannot stop refreshing the original 18. No failed
@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
 from alert_history import verify_input_coverage
+from batch50_sources import BATCH50
 
 CORE = (
     "vinted", "verifo-lithuania", "demivolt-lithuania", "lt-neo-finance",
@@ -31,7 +32,7 @@ EXPANSION = (
 )
 # Separately audited employers NOT in the immutable original 339-source ZIP.
 REGULATED = ("emi-trumia-mt", "emi-zen-lt")
-OPTIONAL = EXPANSION + REGULATED
+OPTIONAL = EXPANSION + BATCH50 + REGULATED
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -106,6 +107,9 @@ def collect(core_dir: Path, optional_dir: Path):
         "expansion_expected": len(OPTIONAL),
         "expansion_verified": len(accepted),
         "original_optional_expected": len(EXPANSION),
+        "bulk50_expected": len(BATCH50),
+        "bulk50_verified": sum(sid not in skipped for sid in BATCH50),
+        "bulk50_verified_ids": [sid for sid in BATCH50 if sid not in skipped],
         "regulated_external_expected": len(REGULATED),
         "regulated_external_verified": sum(sid not in skipped for sid in REGULATED),
         "regulated_external_ids": list(REGULATED),

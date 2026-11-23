@@ -130,7 +130,7 @@ def render_html(roles, history, report):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/40 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/90 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
         f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
@@ -144,7 +144,7 @@ def render_html(roles, history, report):
         + "<details><summary>Ver inventario histórico y vacantes con fecha desconocida "
           "(no son nuevos descubrimientos)</summary>"
         + "".join(sections) + "</details>"
-        + "<footer><p>Solo ofertas obtenidas de 18 fuentes obligatorias y hasta 22 adicionales verificadas (2 externas al catálogo original) en cada ejecución; "
+        + "<footer><p>Solo ofertas obtenidas de 18 fuentes obligatorias, 70 fuentes opcionales del catálogo original y 2 EMIs externas verificadas en cada ejecución; "
         "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
     )
 
@@ -194,7 +194,7 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 18 <= count <= 40:
+    if not isinstance(count, int) or not 18 <= count <= 90:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count > 18 and manifest is None:
         raise ValueError("Expanded source publication requires a verified manifest")
@@ -202,7 +202,12 @@ def build(evidence_paths, state, report, output, manifest=None):
         manifest.get("core_verified") != 18
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - 18
-        or manifest.get("expansion_expected") != 22
+        or manifest.get("expansion_expected") != 72
+        or manifest.get("bulk50_expected") != 50
+        or manifest.get("bulk50_verified") != sum(
+            sid in set(manifest.get("verified_source_ids", []))
+            for sid in manifest.get("bulk50_verified_ids", []))
+        or len(manifest.get("bulk50_verified_ids", [])) != manifest.get("bulk50_verified")
         or manifest.get("regulated_external_expected") != 2
         or manifest.get("regulated_external_verified") != sum(
             sid in set(manifest.get("verified_source_ids",[]))
@@ -229,7 +234,9 @@ def build(evidence_paths, state, report, output, manifest=None):
         "checked_at_utc": report["checked_at_utc"],
         "sources_complete": count,
         "source_count": count,
-        "sources_expected": 40,
+        "sources_expected": 90,
+        "bulk50_expected": (manifest or {}).get("bulk50_expected",0),
+        "bulk50_verified": (manifest or {}).get("bulk50_verified",0),
         "original_catalog_sources":339,
         "external_regulated_source_ids": (manifest or {}).get("regulated_external_ids",[]),
         "external_regulated_sources_verified": (manifest or {}).get("regulated_external_verified",0),
@@ -248,7 +255,7 @@ def build(evidence_paths, state, report, output, manifest=None):
             "Date-unconfirmed roles are not claimed newly published",
             "New optional employer baseline and parser changes never generate false novelty alerts",
             "First-seen listing hashes indicate tracking coverage, NOT verified publication dates",
-            "18 mandatory sources, 20 optional original-catalog providers, and 2 new regulated EMI sidecar providers; the original 339-source ZIP remains immutable",
+            "18 mandatory sources, 20 previously audited optional catalog providers, 50 newly selected original-catalog fintech boards, and 2 newly sourced regulated EMI sidecar providers; the original 339-source ZIP remains immutable",
             "Swiss roles require independent verification of work eligibility and permits",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -266,8 +273,8 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 18 <= len(paths) <= 40:
-        raise ValueError("Expected 18 complete core snapshots plus up to 22 audited additions")
+    if not 18 <= len(paths) <= 90:
+        raise ValueError("Expected 18 complete core snapshots plus up to 72 independently audited additions")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
