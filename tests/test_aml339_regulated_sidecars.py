@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, collect
+from batch50_sources import BATCH50
 from scripts.aml339_site import build
 from alert_history import blank_history, select_and_merge, read_evidence
 
@@ -48,7 +49,7 @@ class RegulatedEMISidecarTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.extra)
         self.assertEqual(len(paths),40)
         self.assertEqual(manifest["core_verified"],18)
-        self.assertEqual(manifest["expansion_expected"],22)
+        self.assertEqual(manifest["expansion_expected"],72)
         self.assertEqual(manifest["regulated_external_expected"],2)
         self.assertEqual(manifest["regulated_external_verified"],2)
         self.assertEqual(set(manifest["regulated_external_ids"]),set(REGULATED))
@@ -70,7 +71,8 @@ class RegulatedEMISidecarTests(unittest.TestCase):
         self.assertEqual(len(paths),39)
         self.assertEqual(manifest["regulated_external_verified"],1)
         self.assertEqual(manifest["missing_or_failed_expansion"],{
-            sid:"partial_or_failed_listing"})
+            sid:"partial_or_failed_listing",
+            **{item:"no_live_source_evidence" for item in BATCH50}})
 
     def test_no_sidecar_files_keeps_original_38_operational(self):
         for sid in REGULATED:
@@ -78,7 +80,7 @@ class RegulatedEMISidecarTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.extra)
         self.assertEqual(len(paths),38)
         self.assertEqual(manifest["regulated_external_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATED))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATED)|set(BATCH50))
 
     def test_fake_sidecar_claiming_original_catalog_is_rejected(self):
         sid="emi-zen-lt"
