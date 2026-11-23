@@ -1,0 +1,20 @@
+name: AML339 batch50 official regulated sources preflight
+on:
+  push:
+    branches: [feat/aml339-batch50-regulated-fintech-20261123]
+    paths: [".github/workflows/aml339_batch50_preflight.yml","experiments/aml339/batch50_regulator_preflight.py"]
+permissions: {contents: read}
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify pinned original source archive
+        run: echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+      - name: List available employer ATS routes and inspect primary Lithuanian licence export
+        run: python3 experiments/aml339/batch50_regulator_preflight.py
