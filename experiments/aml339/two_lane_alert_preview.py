@@ -37,7 +37,11 @@ def triage(employer_id,role):
     if not REQUIRED_FIELDS.issubset(evidence):return None,"incomplete_evidence"
     if not key(employer_id,role):return None,"invalid_job_url"
     if evidence.get("barriers"):return None,"explicit_barrier"
-    if evidence.get("geography")!="target":return None,"unconfirmed_or_outside_geography"
+    geo = evidence.get("geography")
+    # Swiss employers are an explicit career target, but legal work eligibility
+    # is unconfirmed. Admit only the same validated duties, form and dates;
+    # preserve Swiss limitations on every published card and RSS entry.
+    if geo not in ("target","swiss_future"):return None,"unconfirmed_or_outside_geography"
     if not evidence.get("application_verified"):return None,"application_unverified"
     if not set(evidence.get("functions") or []) & PURPOSE:return None,"no_incremental_aml_content"
     duties=set(evidence.get("explicit_duties") or []) & PURPOSE
@@ -45,8 +49,8 @@ def triage(employer_id,role):
     publication=evidence["publication_status"]
     date_field=evidence.get("date_field") or ""
     cls=evidence.get("class")
-    if (cls=="possible_match_confirmed_recent" and publication=="fresh"
-            and date_field in KNOWN_FIRST_POSTING and evidence.get("original_posting_date")):
+    if (cls=="possible_match_confirmed_recent" or (geo=="swiss_future" and cls=="manual_review")) and publication=="fresh" \
+            and date_field in KNOWN_FIRST_POSTING and evidence.get("original_posting_date"):
         lane="confirmed_recent"
     elif (cls=="manual_review" and publication in ("undated","boundary")
           or cls=="manual_review" and publication=="fresh" and date_field not in KNOWN_FIRST_POSTING):
@@ -57,12 +61,14 @@ def triage(employer_id,role):
     return {
         "lane":lane,"employer_id":employer_id,"role_key":key(employer_id,role),
         "title":role.get("title"),"url":canonical_url(role.get("url")),
-        "location":role.get("location"),"publication_status":publication,
+        "location":role.get("location"),"geography":geo,"publication_status":publication,
         "date_field":date_field,"original_date":evidence.get("original_posting_date"),
         "confirmed_job_duties":sorted(duties),"skills_mentioned":evidence.get("functions"),
         "application_route_checked":True,
         "limitations":evidence.get("uncertainties") or [],
-        "note":"El anuncio se ha analizado automáticamente; no confirma formación ni elegibilidad profesional."
+        "note":("Suiza: no se ha verificado elegibilidad laboral, permiso ni aceptación de la candidatura. "
+                if geo=="swiss_future" else "") +
+               "El anuncio se ha analizado automáticamente; no confirma formación ni elegibilidad profesional."
     },None
 
 def preview(records,limit_recent=12,limit_unknown=12):
@@ -85,7 +91,7 @@ def preview(records,limit_recent=12,limit_unknown=12):
     return {
        "mode":"DRY_RUN_ONLY_NO_NOTIFICATIONS",
        "policy":{
-          "confirmed_recent":"72-hour original publication, verified application route, target geography, duties and no explicit barriers",
+          "confirmed_recent":"72-hour original publication, verified application route, target geography (including Swiss with eligibility warning), duties and no explicit barriers",
           "promising_date_unconfirmed":"Employer application route exists; original posting date missing, boundary or not trustworthy; NOT labelled new",
           "digest_recommendation":"Separate low-frequency manual-review digest; no duplicate alerts or sending enabled",
           "limitations":"Review requirements and legal employing entity manually; alerts are not proof of training or eligibility"},
