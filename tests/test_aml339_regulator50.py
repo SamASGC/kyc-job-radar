@@ -3,7 +3,7 @@ import json,tempfile,unittest
 from pathlib import Path
 from zipfile import ZipFile
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL, collect
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL, collect, EXTERNAL50_LIVE
 from scripts.aml339_site import build
 from batch50_sources import BATCH50
 from growth_wave50_sources import WAVE50_B
@@ -64,7 +64,7 @@ class Regulator50SourceTests(unittest.TestCase):
         self.assertFalse(ids & self.pinned_ids)
         self.assertFalse(ids & set(CORE+EXPANSION+BATCH50+REGULATED))
         self.assertTrue(set(REGULATOR50).issubset(ids))
-        self.assertEqual(len(CORE+OPTIONAL),147)
+        self.assertEqual(len(CORE+OPTIONAL),150)
         for c in d["candidates"]:
             self.assertEqual(c["live_alerts_enabled"],False)
             self.assertTrue(c["regulatory_discovery_url"].startswith("https://"))
@@ -75,7 +75,7 @@ class Regulator50SourceTests(unittest.TestCase):
         self.assertEqual(len(paths),95)
         self.assertEqual(len(ids),95)
         self.assertEqual(manifest["core_verified"],18)
-        self.assertEqual(manifest["expansion_expected"],129)
+        self.assertEqual(manifest["expansion_expected"],132)
         self.assertEqual(manifest["regulator50_discovered"],50)
         self.assertEqual(manifest["regulator50_live_expected"],2)
         self.assertEqual(manifest["regulator50_live_verified"],2)
@@ -103,7 +103,7 @@ class Regulator50SourceTests(unittest.TestCase):
         self.assertEqual(manifest["regulator50_live_verified"],1)
         self.assertEqual(manifest["missing_or_failed_expansion"],{
             sid:"partial_or_failed_listing",
-            **{k:"no_live_source_evidence" for k in REG100_LIVE+WAVE50_B},
+            **{k:"no_live_source_evidence" for k in REG100_LIVE+WAVE50_B+EXTERNAL50_LIVE},
         })
         self.assertNotIn(sid,ids)
 
@@ -113,7 +113,7 @@ class Regulator50SourceTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.extra)
         self.assertEqual(len(paths),93)
         self.assertEqual(manifest["regulator50_live_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATOR50)|set(REG100_LIVE)|set(WAVE50_B))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATOR50)|set(REG100_LIVE)|set(WAVE50_B)|set(EXTERNAL50_LIVE))
 
     def test_new_entity_cannot_impersonate_old_zip_or_emi_sidecar(self):
         sid=REGULATOR50[0]
