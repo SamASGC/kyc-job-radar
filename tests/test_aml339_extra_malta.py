@@ -24,8 +24,8 @@ class MaltaExtraSourcesTests(unittest.TestCase):
         self.assertEqual(set(REGULATED),{"emi-trumia-mt","emi-zen-lt"}|three)
         self.assertFalse(three&self.original)
         self.assertFalse(three&set(CORE+EXPANSION+BATCH50))
-        self.assertEqual(len(OPTIONAL),129)
-        self.assertEqual(len(CORE+OPTIONAL),147)
+        self.assertEqual(len(OPTIONAL),132)
+        self.assertEqual(len(CORE+OPTIONAL),150)
 
     def test_careers_are_owned_official_host_with_real_licence_reference(self):
         for sid, cfg in REGULATED_CANDIDATES.items():
