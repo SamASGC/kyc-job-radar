@@ -81,14 +81,14 @@ class Growth50Integration(unittest.TestCase):
         build(paths,current,preview,out,manifest)
         summary=json.loads((out/"summary.json").read_text())
         self.assertEqual(summary["sources_complete"],147)
-        self.assertEqual(summary["sources_expected"],150)
+        self.assertEqual(summary["sources_expected"],152)
         self.assertEqual(summary["growth50_verified"],50)
         again,replay=select_and_merge(read_evidence(paths),current,
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
         self.assertEqual(replay["new_counts"],{"confirmed_recent":0,"promising_date_unconfirmed":0})
         self.assertTrue(set(current["records"]).issubset(again["records"]))
 
-    def test_external_three_production_enrollment_preserves_old_147(self):
+    def test_external_five_production_enrollment_preserves_old_147(self):
         registry=json.loads(Path("experiments/aml339/external_regulated50_wave02.json").read_text())
         self.assertEqual(len(registry["candidates"]),50)
         self.assertTrue(set(EXTERNAL50_LIVE).issubset({x["id"] for x in registry["candidates"]}))
@@ -98,23 +98,23 @@ class Growth50Integration(unittest.TestCase):
             d["verified"]=True
             self._write(self.optional/f"candidate_{sid}.json",d)
         paths,ids,m=collect(self.core,self.optional)
-        self.assertEqual(len(paths),150)
-        self.assertEqual(m["external50_live_verified"],3)
+        self.assertEqual(len(paths),152)
+        self.assertEqual(m["external50_live_verified"],5)
         self.assertFalse(m["missing_or_failed_expansion"])
         state,preview=select_and_merge(read_evidence(paths),blank_history(),
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
         self.assertEqual(preview["new_counts"],{"confirmed_recent":0,"promising_date_unconfirmed":0})
         build(paths,state,preview,self.root/"site",m)
         summary=json.loads((self.root/"site"/"summary.json").read_text())
-        self.assertEqual(summary["sources_complete"],150)
-        self.assertEqual(summary["external50_live_verified"],3)
+        self.assertEqual(summary["sources_complete"],152)
+        self.assertEqual(summary["external50_live_verified"],5)
         sid=EXTERNAL50_LIVE[0]
         d=report(sid,"external_regulated50_wave02_live_v1")
         d["verified"]=False
         self._write(self.optional/f"candidate_{sid}.json",d)
         paths,ids,m=collect(self.core,self.optional)
-        self.assertEqual(len(paths),149)
-        self.assertEqual(m["external50_live_verified"],2)
+        self.assertEqual(len(paths),151)
+        self.assertEqual(m["external50_live_verified"],4)
         self.assertNotIn(sid,ids)
 
     def test_external_canary_cannot_impersonate_live_source(self):

@@ -42,7 +42,7 @@ jobs:
                   or not isinstance(excluded,dict)
                   or set(excluded)!=({"payabl"} if core==17 else set())
                   or summary.get("strict_core_sources_complete")!=17
-                  or not 17<=summary.get("sources_complete",0)<=150):
+                  or not 17<=summary.get("sources_complete",0)<=152):
               raise RuntimeError("Main AML339 strict core is incomplete or untruthfully reported")
           if state.get("schema")!=1 or not isinstance(state.get("records"),dict) or len(state["records"])<3:
               raise RuntimeError("Persistent AML339 history missing or invalid")

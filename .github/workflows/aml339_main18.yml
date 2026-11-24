@@ -1,4 +1,4 @@
-name: AML339 V1 regulated source radar (18 original core + up to 132 independently audited)
+name: AML339 V1 regulated source radar (18 original core + up to 134 independently audited)
 
 on:
   workflow_dispatch:
@@ -465,7 +465,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor]
+        source: [external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor, external50b-es-unnax, external50b-es-onyx]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -491,7 +491,7 @@ jobs:
               assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py} "$RUNNER_TEMP/aml339/"
           cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
@@ -503,7 +503,11 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          if [[ "$SOURCE" == "external50b-es-unnax" || "$SOURCE" == "external50b-es-onyx" ]]; then
+            python3 live_external50_next.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          else
+            python3 live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          fi
       - name: Preserve actual per-source report including failures
         if: always()
         uses: actions/upload-artifact@v4
