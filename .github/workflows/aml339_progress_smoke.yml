@@ -1,0 +1,48 @@
+name: AML339 progress dashboard live smoke test
+on:
+  pull_request:
+    paths:
+      - 'public/aml339/progress.html'
+      - '.github/workflows/aml339_progress_smoke.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Verify actual public reports and dashboard rendering
+        run: |
+          node <<'JS'
+          const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+          const html=fs.readFileSync('public/aml339/progress.html','utf8');
+          const script=html.match(/<script>([\s\S]+?)<\/script>/)[1];
+          const elements=new Map();
+          const make=()=>({textContent:'',style:{},children:[],addEventListener(){},setAttribute(){},replaceChildren(){this.children=[]},append(x){this.children.push(x)}});
+          const document={hidden:false,addEventListener(){},createElement:make,getElementById(id){assert(html.includes('id="'+id+'"'));if(!elements.has(id))elements.set(id,make());return elements.get(id)}};
+          let refreshes=0,requests=[];
+          const ctx={document,Date,Number,Error,AbortController,setTimeout,clearTimeout,setInterval(fn,ms){assert.equal(ms,60000);refreshes++},fetch:async(url,opt)=>{requests.push(url);return fetch(url,opt)},console};
+          (async()=>{
+            vm.createContext(ctx);
+            vm.runInContext(script,ctx);
+            for(let n=0;n<150&&vm.runInContext('busy',ctx);n++)await new Promise(r=>setTimeout(r,100));
+            assert.equal(vm.runInContext('busy',ctx),false);
+            assert.equal(refreshes,1);
+            assert.equal(requests.length,2);
+            const p=vm.runInContext('last.production',ctx),g=vm.runInContext('last.growth',ctx);
+            assert(p&&g,'Both real anonymous public reports must load');
+            assert.equal(elements.get('configured').textContent,String(p.sources_expected));
+            assert.equal(elements.get('verified').textContent,String(p.sources_complete));
+            assert.equal(elements.get('researched').textContent,String(g.total_researched_unique_keys));
+            assert.equal(elements.get('results').children.length,Math.max(g.selected,1));
+            assert(elements.get('connection').textContent.includes('correctamente'));
+            ctx.fetch=async()=>{throw new Error('test network outage')};
+            await vm.runInContext('refresh()',ctx);
+            assert.equal(elements.get('configured').textContent,String(p.sources_expected));
+            assert(elements.get('connection').textContent.includes('No se pudo actualizar'));
+            assert.throws(()=>vm.runInContext('validateProduction({sources_expected:3,sources_complete:5})',ctx));
+            console.log('DASHBOARD_LIVE_SMOKE_OK',JSON.stringify({configured:p.sources_expected,verified:p.sources_complete,researched:g.total_researched_unique_keys,latest_batch:g.selected,refresh_seconds:60}));
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
