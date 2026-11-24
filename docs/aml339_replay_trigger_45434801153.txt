@@ -7,3 +7,5 @@ History/novelty: 3 prior records preserved, zero new notifications, two new job 
 This trigger starts ONLY the separate offline replay workflow. It does not request new employer career pages, generate alerts from discovered company names, reset the user's job history, or reclassify historic jobs as newly posted.
 
 Second replay uses paginated official GitHub Actions artifact discovery (148 artifacts, 147 source reports) to avoid the first-100 artifact listing limit, and never rescrapes careers providers. Triggered after PR #89, regression 391/391, at 2026-11-24.
+
+Third offline replay after PR #90: run direct Python script imports from repository root (subprocess regression 392/392) and securely paginates all 148 source-run artifacts, preserving no-rescan invariant.
