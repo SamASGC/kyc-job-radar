@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
 from two_lane_alert_preview import triage, read_evidence
 from alert_history import check_history
-from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE
 
 ROOT = "https://samasgc.github.io/kyc-job-radar/aml339/"
 LANES = ("confirmed_recent", "promising_date_unconfirmed")
@@ -219,6 +219,9 @@ def build(evidence_paths, state, report, output, manifest=None):
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - manifest.get("core_verified")
         or manifest.get("expansion_expected") != len(OPTIONAL)
+        or manifest.get("catalog_live_expected") != len(CATALOG_LIVE)
+        or manifest.get("catalog_live_verified_ids") != [sid for sid in CATALOG_LIVE if sid in set(manifest.get("verified_source_ids",[]))]
+        or manifest.get("catalog_live_verified") != len(manifest.get("catalog_live_verified_ids",[]))
         or manifest.get("external50_research_leads") != 50
         or manifest.get("external50_live_expected") != len(EXTERNAL50_LIVE)
         or manifest.get("external50_live_verified_ids") != [sid for sid in EXTERNAL50_LIVE if sid in set(manifest.get("verified_source_ids",[]))]
@@ -273,6 +276,8 @@ def build(evidence_paths, state, report, output, manifest=None):
         "sources_complete": count,
         "source_count": count,
         "sources_expected": len(CORE+OPTIONAL),
+        "catalog_live_expected": (manifest or {}).get("catalog_live_expected",0),
+        "catalog_live_verified": (manifest or {}).get("catalog_live_verified",0),
         "external50_research_leads": (manifest or {}).get("external50_research_leads",0),
         "external50_live_expected": (manifest or {}).get("external50_live_expected",0),
         "external50_live_verified": (manifest or {}).get("external50_live_verified",0),

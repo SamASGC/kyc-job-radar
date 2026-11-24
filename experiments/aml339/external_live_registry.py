@@ -4,7 +4,7 @@ import json,re
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 REGISTRY=ROOT/"external_live_registry.json"
-DRIVERS={"wave02","next","generic"}
+DRIVERS={"wave02","next","generic","catalog"}
 def load_registry(path=REGISTRY):
     d=json.loads(Path(path).read_text(encoding="utf-8"))
     if d.get("schema")!="aml339_external_live_registry_v1":raise ValueError("Unexpected external registry schema")
@@ -17,7 +17,8 @@ def load_registry(path=REGISTRY):
         if row.get("driver") not in DRIVERS or type(row.get("audit_run")) is not int or row["audit_run"]<=0:raise ValueError("Missing audited driver or run")
         seen.add(sid)
     return rows
-def ids(path=REGISTRY):return tuple(row["id"] for row in load_registry(path))
+def ids(path=REGISTRY,*,catalog=None):
+    return tuple(row['id'] for row in load_registry(path) if catalog is None or (row['driver']=='catalog')==catalog)
 def matrix(path=REGISTRY):
     return {"include":[{"source":row["id"],"driver":row["driver"]} for row in load_registry(path)]}
 if __name__=="__main__":print(json.dumps(matrix(),separators=(",",":")))

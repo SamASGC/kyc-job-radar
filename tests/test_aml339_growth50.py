@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from growth_wave50_sources import WAVE50_B
 from batch50_sources import BATCH50
 from scripts.aml339_source_manifest import (
-    EXTERNAL50_LIVE, OPTIONAL,
+    EXTERNAL50_LIVE, CATALOG_LIVE, DYNAMIC_LIVE, OPTIONAL,
     CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect,
 )
 from scripts.aml339_site import build
@@ -72,7 +72,7 @@ class Growth50Integration(unittest.TestCase):
         self.assertEqual(len(ids),147)
         self.assertEqual(manifest["growth50_expected"],50)
         self.assertEqual(manifest["growth50_verified"],50)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(EXTERNAL50_LIVE))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(DYNAMIC_LIVE))
         initial=blank_history()
         current,preview=select_and_merge(read_evidence(paths),initial,
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
@@ -96,6 +96,11 @@ class Growth50Integration(unittest.TestCase):
         for sid in EXTERNAL50_LIVE:
             d=report(sid,"external_regulated50_wave02_live_v1")
             d["verified"]=True
+            self._write(self.optional/f"candidate_{sid}.json",d)
+        for sid in CATALOG_LIVE:
+            d=report(sid,"original_339")
+            d["verified"]=True
+            d["sources"][0].update(total_listed=1,listing_role_keys=["catalog-test-"+sid])
             self._write(self.optional/f"candidate_{sid}.json",d)
         paths,ids,m=collect(self.core,self.optional)
         self.assertEqual(len(paths),len(CORE+OPTIONAL))
@@ -129,7 +134,7 @@ class Growth50Integration(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.optional)
         self.assertEqual(len(paths),146)
         self.assertEqual(manifest["growth50_verified"],49)
-        self.assertEqual(manifest["missing_or_failed_expansion"],{sid:"partial_or_failed_listing", **{x:"no_live_source_evidence" for x in EXTERNAL50_LIVE}})
+        self.assertEqual(manifest["missing_or_failed_expansion"],{sid:"partial_or_failed_listing", **{x:"no_live_source_evidence" for x in DYNAMIC_LIVE}})
         self.assertTrue(set(CORE).issubset(ids))
         self.assertNotIn(sid,ids)
 
@@ -139,7 +144,7 @@ class Growth50Integration(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.optional)
         self.assertEqual(len(paths),97)
         self.assertEqual(manifest["growth50_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(WAVE50_B)|set(EXTERNAL50_LIVE))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(WAVE50_B)|set(DYNAMIC_LIVE))
         self.assertEqual(manifest["reg100_live_verified"],2)
 
     def test_forged_or_incomplete_role_evidence_is_excluded(self):

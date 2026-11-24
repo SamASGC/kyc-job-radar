@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.error import URLError
 
-from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE
 from scripts.aml339_v1_status import check_pages, evaluate, main
 
 
@@ -35,6 +35,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
            "reg100_research_leads":100,
            "reg100_live_expected":2,
            "external50_live_expected":len(EXTERNAL50_LIVE),
+           "catalog_live_expected":len(CATALOG_LIVE),
            "reg100_live_verified":2,
            "new_counts":{"confirmed_recent":0,"promising_date_unconfirmed":0}
         }

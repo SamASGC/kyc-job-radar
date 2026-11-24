@@ -468,7 +468,7 @@ jobs:
 
   external50_live:
     needs: prepare_external
-    name: Verify newly discovered external employer ${{ matrix.source }}
+    name: Verify dynamically enrolled employer ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
     # Optional provider failure is recorded per-source; publication may proceed.
@@ -502,7 +502,7 @@ jobs:
               assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json,live_catalog_registry.py} "$RUNNER_TEMP/aml339/"
           cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
@@ -521,6 +521,8 @@ jobs:
             python3 live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "generic" ]]; then
             python3 live_external_generic.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          elif [[ "$DRIVER" == "catalog" ]]; then
+            python3 live_catalog_registry.py --source "$SOURCE" --out "candidate_${SOURCE}.json"
           else
             exit 1
           fi
