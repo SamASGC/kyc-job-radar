@@ -1,0 +1,50 @@
+name: Check central bank exports and public labour-market schema
+on:
+  push:
+    branches: [feat/aml339-regulated-watch]
+    paths: [.github/workflows/aml339_registry_probe.yml]
+permissions:
+  contents: read
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Read published regulatory categories and public dataset metadata
+        run: |
+          mkdir -p snapshots
+          python - <<'PY'
+          import csv, io, json, pathlib, time, urllib.request as request, urllib.parse as up
+          from bs4 import BeautifulSoup
+          root='https://get.data.gov.lt/datasets/gov/uzt/ldv/Vieta'
+          def get(url):
+              headers={'User-Agent':'RegulatedJobRadar/1.0 public employment monitor','Accept':'*/*'}
+              with request.urlopen(request.Request(url,headers=headers),timeout=25) as r:
+                  return r.read(6_000_000)
+          for name in ['schema','row','category32','category33','category27','category28','category82','category110','category60','category23','category22','category45','category63']:
+              try:
+                  if name.startswith('category'):
+                      form=name.removeprefix('category')
+                      url='https://www.lb.lt/en/sfi-financial-market-participants?business_form='+form+'&export=csv'
+                      data=get(url)
+                      pathlib.Path('snapshots',name+'.csv').write_bytes(data)
+                      print(name,len(data),repr(data[:230]),flush=True)
+                  elif name=='row':
+                      data=json.loads(get(root+'?limit(1)&format(json)'))
+                      row=data['_data'][0]
+                      print(name,sorted(row),flush=True)
+                      pathlib.Path('snapshots',name+'.json').write_text(json.dumps(sorted(row)))
+                  else:
+                      data=get(root+'/:inspect')
+                      print('schema',len(data),repr(data[:120]))
+                      if len(data)<150000 and b'<html' not in data[:500].lower():
+                          pathlib.Path('snapshots','schema.txt').write_bytes(data)
+              except Exception as exc:
+                  print(name,'FAIL',str(exc)[:170],flush=True)
+              time.sleep(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bank-categories-and-public-schema
+          path: snapshots
+          retention-days: 2
