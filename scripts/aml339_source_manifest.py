@@ -43,7 +43,8 @@ REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
 # remaining 17 complete mandatory providers and up to 129 optional providers.
 QUARANTINABLE_CORE = ("payabl",)
 STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
-OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE
+EXTERNAL50_LIVE = ("external50b-lv-neverless", "external50b-lv-noah", "external50b-es-treezor")
+OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE + EXTERNAL50_LIVE
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -119,6 +120,11 @@ def collect(core_dir: Path, optional_dir: Path):
             if sid in REG100_LIVE and (data.get("source_registry") != "regulated_emi_reg100_live_v1"
                                        or data.get("original_catalog_sources") != 339):
                 raise ValueError("Missing verified regulator100 official ATS source registry")
+            if sid in EXTERNAL50_LIVE and (data.get("source_registry") != "external_regulated50_wave02_live_v1"
+                                          or data.get("original_catalog_sources") != 339):
+                raise ValueError("Missing external50 production source registry")
+            if sid in EXTERNAL50_LIVE and data.get("verified") is not True:
+                obj=dict(obj,state="listing_failed",list_complete=False)
             if sid in EXPANSION+BATCH50+WAVE50_B and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
@@ -183,6 +189,10 @@ def collect(core_dir: Path, optional_dir: Path):
         "reg100_live_expected": len(REG100_LIVE),
         "reg100_live_verified": sum(sid not in skipped for sid in REG100_LIVE),
         "reg100_live_verified_ids": [sid for sid in REG100_LIVE if sid not in skipped],
+        "external50_research_leads":50,
+        "external50_live_expected":len(EXTERNAL50_LIVE),
+        "external50_live_verified":sum(sid not in skipped for sid in EXTERNAL50_LIVE),
+        "external50_live_verified_ids":[sid for sid in EXTERNAL50_LIVE if sid not in skipped],
         "total_verified": len(paths),
         "verified_source_ids": list(ids),
         "missing_or_failed_expansion": skipped,
