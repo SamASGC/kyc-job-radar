@@ -5,6 +5,10 @@ on:
     paths:
       - .github/workflows/aml339_third50_canary.yml
       - experiments/aml339/live_third50_probe.py
+  pull_request:
+    paths:
+      - .github/workflows/aml339_third50_canary.yml
+      - experiments/aml339/live_third50_probe.py
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,7 +22,7 @@ jobs:
     timeout-minutes: 9
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 6
       matrix:
         source: [lt-paystrax-official-external, lt-nayax-global-legal-compliance, flywire, rain, transak, visa-currencycloud, telcoin, strike, aspora, creem, gnosis, squads, bitpanda, bitgo, falconx, verifone, trm-labs, caliza, coinflow, capitalontap, marqeta-inc, allica-bank, griffin, gohenry, seon, whitetech, mergemoney, incard, moniepoint, melio, coinspaid, payrails, finvari, lemfi, taptapsend, capimoney, fourthline, primer, sibill, notabene, xendit, luno, b2c2, taxbit, nexo, bitvavo, merklescience, wetravel, planet, monzo]
     steps:
