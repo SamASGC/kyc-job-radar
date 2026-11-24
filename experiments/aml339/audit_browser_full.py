@@ -62,7 +62,10 @@ def listed(page,url,provider):
             return list(all_jobs.values()),n+1
         if len(nxt)!=1:raise ValueError("Ambiguous pagination")
         if nxt[0]["disabled"]:return list(all_jobs.values()),n+1
-        page.get_by_text("Next",exact=True).click(timeout=5000)
+        next_control=page.locator("button,a,[role=button]").filter(has_text=re.compile(r"^\s*Next\s*$"))
+        if next_control.count()!=1:raise ValueError("Ambiguous Next button")
+        next_control.click(timeout=10000)
+        page.wait_for_function("""prev => !prev.every(id=>Array.from(document.querySelectorAll('a[href]')).some(a=>a.href.includes('/job_posts/'+id+'?')||a.href.endsWith('/job_posts/'+id)))""",arg=list(rows),timeout=12000)
     raise ValueError("Pagination bound exceeded")
 
 def run(sid):
