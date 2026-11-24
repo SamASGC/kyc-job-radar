@@ -1,13 +1,13 @@
 {
-  "checked_at_utc": "2026-11-24T19:05:10+00:00",
-  "sources_complete": 223,
-  "source_count": 223,
-  "sources_expected": 225,
-  "catalog_live_expected": 70,
-  "catalog_live_verified": 70,
+  "checked_at_utc": "2026-11-24T19:24:17+00:00",
+  "sources_complete": 266,
+  "source_count": 266,
+  "sources_expected": 269,
+  "catalog_live_expected": 113,
+  "catalog_live_verified": 113,
   "external50_research_leads": 50,
-  "external50_live_expected": 8,
-  "external50_live_verified": 8,
+  "external50_live_expected": 9,
+  "external50_live_verified": 9,
   "growth50_expected": 50,
   "growth50_verified": 50,
   "reg100_research_leads": 100,
@@ -27,27 +27,29 @@
     "emi-paydo-mt"
   ],
   "external_regulated_sources_verified": 5,
-  "core_sources_complete": 18,
+  "core_sources_complete": 17,
   "core_sources_expected": 18,
   "strict_core_sources_complete": 17,
-  "missing_or_failed_core": {},
-  "expanded_sources_complete": 205,
+  "missing_or_failed_core": {
+    "payabl": "incomplete_or_rate_limited_source"
+  },
+  "expanded_sources_complete": 249,
   "missing_or_failed_expansion": {
     "mangopay": "unverified_in_scope_details",
     "reg100-be-paynovate": "partial_or_failed_listing"
   },
-  "roles_evaluated": 973,
-  "current_qualifying": 5,
+  "roles_evaluated": 1274,
+  "current_qualifying": 6,
   "current_lanes": {
     "confirmed_recent": 0,
-    "promising_date_unconfirmed": 5
+    "promising_date_unconfirmed": 6
   },
   "new_counts": {
     "confirmed_recent": 0,
     "promising_date_unconfirmed": 0
   },
   "novelty_guard_enabled": true,
-  "listing_ids_added_to_tracking_index_not_new_publications": 2,
+  "listing_ids_added_to_tracking_index_not_new_publications": 4134,
   "sources_previously_baselined": 223,
   "limitations": [
     "Source discovery does not imply all 50 regulated companies have viable official job boards",
