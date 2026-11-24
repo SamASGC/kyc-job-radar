@@ -1,25 +1,56 @@
 {
-  "checked_at_utc": "2026-11-23T17:14:53+00:00",
-  "sources_complete": 34,
-  "source_count": 34,
-  "sources_expected": 34,
+  "checked_at_utc": "2026-11-24T16:35:01+00:00",
+  "sources_complete": 145,
+  "source_count": 145,
+  "sources_expected": 147,
+  "growth50_expected": 50,
+  "growth50_verified": 50,
+  "reg100_research_leads": 100,
+  "reg100_live_expected": 2,
+  "reg100_live_verified": 1,
+  "regulator50_discovered": 50,
+  "regulator50_live_expected": 2,
+  "regulator50_live_verified": 2,
+  "bulk50_expected": 50,
+  "bulk50_verified": 49,
+  "original_catalog_sources": 339,
+  "external_regulated_source_ids": [
+    "emi-trumia-mt",
+    "emi-zen-lt",
+    "emi-andaria-mt",
+    "emi-finxp-mt",
+    "emi-paydo-mt"
+  ],
+  "external_regulated_sources_verified": 5,
   "core_sources_complete": 18,
-  "expanded_sources_complete": 16,
-  "missing_or_failed_expansion": {},
-  "roles_evaluated": 248,
-  "current_qualifying": 3,
+  "core_sources_expected": 18,
+  "strict_core_sources_complete": 17,
+  "missing_or_failed_core": {},
+  "expanded_sources_complete": 127,
+  "missing_or_failed_expansion": {
+    "mangopay": "unverified_in_scope_details",
+    "reg100-be-paynovate": "partial_or_failed_listing"
+  },
+  "roles_evaluated": 616,
+  "current_qualifying": 5,
   "current_lanes": {
     "confirmed_recent": 0,
-    "promising_date_unconfirmed": 3
+    "promising_date_unconfirmed": 5
   },
   "new_counts": {
     "confirmed_recent": 0,
     "promising_date_unconfirmed": 0
   },
+  "novelty_guard_enabled": true,
+  "listing_ids_added_to_tracking_index_not_new_publications": 5480,
+  "sources_previously_baselined": 0,
   "limitations": [
+    "Source discovery does not imply all 50 regulated companies have viable official job boards",
     "No automatic email/push delivery",
     "Date-unconfirmed roles are not claimed newly published",
-    "18 fixed core sources and up to 16 additional audited sources; never all 339",
+    "New optional employer baseline and parser changes never generate false novelty alerts",
+    "First-seen listing hashes indicate tracking coverage, NOT verified publication dates",
+    "18 mandatory sources, 20 previously audited optional catalog providers, 50 additional original-catalog fintech boards and 5 newly sourced regulated EMI sidecar providers; original catalog remains 339",
     "Swiss roles require independent verification of work eligibility and permits"
   ]
 }
