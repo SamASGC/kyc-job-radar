@@ -1,0 +1,38 @@
+name: Regulated employer channels live canary
+on:
+  push:
+    branches: [feat/aml339-regulated-watch]
+    paths: [.github/workflows/aml339_bulk_canary.yml, experiments/aml339/catalog_watch_probe.py]
+permissions:
+  contents: read
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check named public employer channels
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir "$RUNNER_TEMP/probe"
+          unzip -q experiments/aml339/full_original_339_sources.zip -d "$RUNNER_TEMP/probe"
+          cp experiments/aml339/{quality_audit,repair_sources_20261121,live_e2e18_full,two_lane_alert_preview,catalog_watch_probe}.py "$RUNNER_TEMP/probe/"
+          cd "$RUNNER_TEMP/probe"
+          python3 repair_sources_20261121.py
+          python3 catalog_watch_probe.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: employer-audits-${{ matrix.shard }}
+          path: ${{ runner.temp }}/probe/evidence/
+          retention-days: 3
