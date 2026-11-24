@@ -1,0 +1,58 @@
+name: AML339 hourly schedule guard verification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/aml339_main18.yml'
+      - 'experiments/aml339/hourly_http_guard.py'
+      - 'tests/test_aml339_hourly_http_guard.py'
+      - '.github/workflows/aml339_hourly_guard_test.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Verify workflow structure and source scheduling
+        run: |
+          python3 - <<'PY'
+          import yaml
+          from pathlib import Path
+          w=yaml.safe_load(Path(".github/workflows/aml339_main18.yml").read_text())
+          jobs=w["jobs"]
+          for n in ("scan","expansion","regulated","wave50","growth50","regulator50","reg100_live","external50_live"):
+              j=jobs[n]
+              assert "prepare_cooldowns" in j["needs"]
+              assert any("aml339-http-cooldown-prior" in str(s) for s in j["steps"])
+              assert any("hourly_http_guard.py" in str(s) for s in j["steps"])
+          assert "persist_cooldowns" in jobs["publish"]["needs"]
+          print("HOURLY_WORKFLOW_STRUCTURE_OK")
+          PY
+      - name: Run AML339 regressions
+        env:
+          PYTHONPATH: experiments/aml339
+        run: python3 -m unittest discover -s tests -p 'test_aml339_*.py' -v
+      - name: Run actual guarded worker against a simulated throttled HTTP server
+        run: |
+          python3 - <<'PY'
+          import subprocess,sys,tempfile,json
+          from pathlib import Path
+          with tempfile.TemporaryDirectory() as tmp:
+              p=Path(tmp);(p/"prior.json").write_text('{"schema":"aml339_http_pause_v1","hosts":{}}')
+              (p/"worker.py").write_text("""import urllib.request as u
+          from urllib.error import HTTPError
+          class Simulated(u.HTTPHandler):
+              def http_open(self,req):
+                  raise HTTPError(req.full_url,429,'rate limited',{'Retry-After':'3600'},None)
+          opener=u.build_opener(Simulated())
+          for i in range(2):
+              try: opener.open('http://test.invalid/jobs')
+              except RuntimeError as e: print(type(e).__name__,str(e))
+              else: raise AssertionError('request was not paused')
+          """)
+              subprocess.run([sys.executable,"experiments/aml339/hourly_http_guard.py","run","--prior",str(p/"prior.json"),"--receipt",str(p/"receipt.json"),str(p/"worker.py")],check=True)
+              assert json.loads((p/"receipt.json").read_text())["hosts"]["test.invalid"]["status"]==429
+              print("GUARDED_WORKER_RETRY_AFTER_OK")
+          PY
