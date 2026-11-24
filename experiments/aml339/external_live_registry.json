@@ -321,6 +321,163 @@
       "driver": "catalog",
       "audit_run": 45459697155,
       "audit_artifact": 14950514515
+    },
+    {
+      "id": "tsys-global-payments",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953990965
+    },
+    {
+      "id": "veriff",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953990965
+    },
+    {
+      "id": "arq",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953990965
+    },
+    {
+      "id": "consensys",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954690841
+    },
+    {
+      "id": "crypto-com",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954690841
+    },
+    {
+      "id": "deutsche-bank",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954690841
+    },
+    {
+      "id": "gate",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14952614473
+    },
+    {
+      "id": "paypal",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953226366
+    },
+    {
+      "id": "pennylane",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953226366
+    },
+    {
+      "id": "rbc",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953226366
+    },
+    {
+      "id": "riskified",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953226366
+    },
+    {
+      "id": "aavelabs",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953451229
+    },
+    {
+      "id": "alantra",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953451229
+    },
+    {
+      "id": "bbva",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954555927
+    },
+    {
+      "id": "blackrock",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954160813
+    },
+    {
+      "id": "blockchain-com",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954160813
+    },
+    {
+      "id": "brown-brothers-harriman",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954160813
+    },
+    {
+      "id": "bunch",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953097553
+    },
+    {
+      "id": "carlyle",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953097553
+    },
+    {
+      "id": "carta",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953097553
+    },
+    {
+      "id": "coinbase",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14953097553
+    },
+    {
+      "id": "infront",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954560658
+    },
+    {
+      "id": "forvis-mazars",
+      "driver": "catalog",
+      "audit_run": 45462680827,
+      "audit_artifact": 14954560658
+    },
+    {
+      "id": "reg100-cy-altery-eu-limited-formerly-named-heado-limited",
+      "name": "Altery EU Limited",
+      "driver": "generic",
+      "audit_run": 45462936034,
+      "audit_artifact": 14953181538,
+      "careers_url": "https://altery.com/careers/open-positions/",
+      "route": [
+        "site_jobs",
+        "altery.com",
+        "^/careers/[0-9a-f-]{36}/?$"
+      ],
+      "job_pattern": "^/careers/[0-9a-f-]{36}/?$",
+      "regulatory_reference": "https://www.lb.lt/en/sfi-financial-market-participants/altery-eu-limited",
+      "aliases": [
+        "altery",
+        "heado limited"
+      ]
     }
   ]
 }
