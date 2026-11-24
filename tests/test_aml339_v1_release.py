@@ -19,7 +19,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
         cls.discovery=json.loads(Path("experiments/aml339/regulator100_discovery_queue.json").read_text(encoding="utf-8"))
 
     @staticmethod
-    def summary(age=2,source_count=97):
+    def summary(age=2,source_count=147):
         return {
            "checked_at_utc":(dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc)
                               -dt.timedelta(hours=age)).isoformat(),
@@ -59,8 +59,8 @@ class V1ReleaseHealthTests(unittest.TestCase):
         health=evaluate(self.summary(),self.discovery,
                         now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertTrue(health["v1_published_verified"])
-        self.assertEqual(health["configured_maximum_live_sources"],97)
-        self.assertEqual(health["actual_verified_live_sources"],97)
+        self.assertEqual(health["configured_maximum_live_sources"],147)
+        self.assertEqual(health["actual_verified_live_sources"],147)
         self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],2)
 
     def test_published_34_old_version_is_not_claimed_v1(self):

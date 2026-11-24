@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
 from alert_history import verify_input_coverage
 from batch50_sources import BATCH50
+from growth_wave50_sources import WAVE50_B
 
 CORE = (
     "vinted", "verifo-lithuania", "demivolt-lithuania", "lt-neo-finance",
@@ -37,7 +38,7 @@ REGULATED = (
 )
 REGULATOR50 = ("reg50-nomupay-europe", "reg50-mifinity-malta")
 REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
-OPTIONAL = EXPANSION + BATCH50 + REGULATED + REGULATOR50 + REG100_LIVE
+OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -74,7 +75,7 @@ def collect(core_dir: Path, optional_dir: Path):
             if sid in REG100_LIVE and (data.get("source_registry") != "regulated_emi_reg100_live_v1"
                                        or data.get("original_catalog_sources") != 339):
                 raise ValueError("Missing verified regulator100 official ATS source registry")
-            if sid in EXPANSION+BATCH50 and data.get("source_registry") not in (None,"original_339"):
+            if sid in EXPANSION+BATCH50+WAVE50_B and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
                 raise ValueError("Duplicate source evidence")
@@ -121,6 +122,9 @@ def collect(core_dir: Path, optional_dir: Path):
         "bulk50_expected": len(BATCH50),
         "bulk50_verified": sum(sid not in skipped for sid in BATCH50),
         "bulk50_verified_ids": [sid for sid in BATCH50 if sid not in skipped],
+        "growth50_expected":len(WAVE50_B),
+        "growth50_verified":sum(sid not in skipped for sid in WAVE50_B),
+        "growth50_verified_ids":[sid for sid in WAVE50_B if sid not in skipped],
         "regulated_external_expected": len(REGULATED),
         "regulated_external_verified": sum(sid not in skipped for sid in REGULATED),
         "regulated_external_ids": list(REGULATED),
