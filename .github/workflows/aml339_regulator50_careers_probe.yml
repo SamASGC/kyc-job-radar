@@ -1,8 +1,14 @@
-name: AML339 inspect 10 outside-catalog employer ATS links
+name: AML339 inspect employer recruitment links
 on:
   push:
     branches: [feat/aml339-regulator50-new-legal-entities-20261123]
     paths: [".github/workflows/aml339_regulator50_careers_probe.yml","experiments/aml339/inspect_regulator50_careers.py"]
+  pull_request:
+    paths:
+      - "experiments/aml339/lithuania_emi_wave01.json"
+      - "experiments/aml339/inspect_regulator50_careers.py"
+      - ".github/workflows/aml339_regulator50_careers_probe.yml"
+  workflow_dispatch:
 permissions: {contents: read}
 jobs:
   inspect:
@@ -14,4 +20,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python3 experiments/aml339/inspect_regulator50_careers.py
+      - name: Inspect original regulator50 research
+        if: github.event_name == 'push'
+        run: python3 experiments/aml339/inspect_regulator50_careers.py
+      - name: Inspect Lithuanian EMI employer pages
+        if: github.event_name != 'push'
+        run: |
+          python3 experiments/aml339/inspect_regulator50_careers.py --employer-only \
+            --candidates experiments/aml339/lithuania_emi_wave01.json --out lt-employer-pages.json
+      - name: Save link inventory
+        if: github.event_name != 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lt-emi-employer-page-evidence
+          path: lt-employer-pages.json
+          if-no-files-found: error
+          retention-days: 30

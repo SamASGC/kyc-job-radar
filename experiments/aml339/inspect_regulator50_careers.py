@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Discover real, employer-linked job posting paths on ten official careers pages.
+"""Discover real, employer-linked job posting paths on employer careers pages.
 
 Read-only diagnostics. HTTP 200 or the word "career" are not job-feed evidence.
 Never publish an employer until its listing and role details pass full auditing.
 """
+import argparse
+import datetime as dt
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin,urlsplit
-from urllib.request import Request,urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 import json,re
 
 class Links(HTMLParser):
@@ -25,16 +27,38 @@ class Links(HTMLParser):
         if self.open:self.open[-1]["txt"].append(data)
         if self.json_mode:self.ldjson[-1]+=data
 
+class EmployerRedirects(HTTPRedirectHandler):
+    """Follow an employer's canonical www redirect without probing external ATS providers."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        source = urlsplit(req.full_url)
+        target = urlsplit(urljoin(req.full_url, newurl))
+        if target.scheme != "https" or target.hostname is None or (
+            target.hostname.removeprefix("www.") != source.hostname.removeprefix("www.")
+        ):
+            raise ValueError(f"External redirect requires separate review: {target.hostname}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def main():
-    data=json.loads(Path("experiments/aml339/regulator50_external_candidates.json").read_text())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--candidates", type=Path,
+                        default=Path("experiments/aml339/regulator50_external_candidates.json"))
+    parser.add_argument("--out", type=Path)
+    parser.add_argument("--employer-only", action="store_true")
+    args = parser.parse_args()
+    data = json.loads(args.candidates.read_text(encoding="utf-8"))
+    fetch = build_opener(EmployerRedirects()).open if args.employer_only else urlopen
+    results = []
     for c in data["candidates"]:
         if not c["careers_url"]:continue
         url=c["careers_url"]
         try:
             req=Request(url,headers={"User-Agent":"AML339-regulated-careers-research/1.0"})
-            with urlopen(req,timeout=15) as r:
-                actual=r.url
-                html=r.read(650000).decode("utf-8","replace")
+            with fetch(req,timeout=15) as r:
+                actual = r.url
+                status = r.status
+                body = r.read(650001)
+                html = body[:650000].decode("utf-8", "replace")
             parser=Links();parser.feed(html)
             seen=set();best=[]
             for link in parser.pairs:
@@ -45,12 +69,24 @@ def main():
                 seen.add(href)
                 if re.search(r"/(job|career|position|vacanc|openings|opportunit)|\b(AML|KYC|screening|compliance|risk|fraud|fincrime)\b",href+" "+t,re.I):
                     best.append({"href":href,"text":t,"host":host})
-            dataout={"id":c["id"],"status":200,"last_url":actual,
+            dataout={"id":c["id"],"status":status,"last_url":actual,"body_truncated":len(body)>650000,
                 "all_links":len(parser.pairs),"matching_links":len(best),
                 "example_links":best[:35],"jsonld_count":len(parser.ldjson),
                 "jobposting_jsonld":sum("JobPosting" in x for x in parser.ldjson)}
         except Exception as e:
             dataout={"id":c["id"],"error":type(e).__name__+": "+str(e)[:160]}
+        results.append(dataout)
         print("REG50_OFFICIAL_CAREERS_LINKS",json.dumps(dataout,ensure_ascii=False),flush=True)
+
+    if args.out:
+        report = {
+            "checked_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "input": args.candidates.name,
+            "entities": len(data["candidates"]),
+            "portals_attempted": len(results),
+            "scope": "Careers page discovery only. No job list, live enrolment or alert certification.",
+            "results": results,
+        }
+        args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 if __name__=="__main__":main()
