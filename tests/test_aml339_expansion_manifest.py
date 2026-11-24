@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect, EXTERNAL50_LIVE
 from batch50_sources import BATCH50
 from growth_wave50_sources import WAVE50_B
 
@@ -47,7 +47,7 @@ class ExpansionManifestTests(unittest.TestCase):
         self.assertEqual(len(ids), 38)
         self.assertEqual(manifest["core_verified"], 18)
         self.assertEqual(manifest["expansion_verified"], 20)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATED)|set(BATCH50)|set(REGULATOR50)|set(REG100_LIVE)|set(WAVE50_B))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REGULATED)|set(BATCH50)|set(REGULATOR50)|set(REG100_LIVE)|set(WAVE50_B)|set(EXTERNAL50_LIVE))
 
     def test_optional_http_failure_keeps_all_18_core(self):
         for sid in EXPANSION:
@@ -57,7 +57,7 @@ class ExpansionManifestTests(unittest.TestCase):
         self.assertEqual(len(paths), 37)
         self.assertEqual(ids[:18], CORE)
         self.assertEqual(manifest["missing_or_failed_expansion"],
-                         {"nium": "partial_or_failed_listing", **{sid:"no_live_source_evidence" for sid in REGULATED+BATCH50+REGULATOR50+REG100_LIVE+WAVE50_B}})
+                         {"nium": "partial_or_failed_listing", **{sid:"no_live_source_evidence" for sid in REGULATED+BATCH50+REGULATOR50+REG100_LIVE+WAVE50_B+EXTERNAL50_LIVE}})
 
     def test_optional_unverified_job_is_suppressed(self):
         self.put(self.optional / "candidate_nexpay.json",

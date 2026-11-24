@@ -1,0 +1,24 @@
+name: AML339 external50 enrollment regression
+on:
+  pull_request:
+    paths:
+      - 'scripts/aml339_source_manifest.py'
+      - 'scripts/aml339_site.py'
+      - 'experiments/aml339/live_external50_wave02.py'
+      - 'tests/test_aml339_*.py'
+      - '.github/workflows/aml339_external50_regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m unittest discover -s tests -p 'test_aml339_*.py' -v
+      - run: python3 experiments/aml339/alert_history.py --self-test
+      - run: python3 -m py_compile experiments/aml339/live_external50_wave02.py scripts/aml339_source_manifest.py scripts/aml339_site.py

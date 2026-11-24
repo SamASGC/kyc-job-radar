@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from zipfile import ZipFile
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL, collect
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL, collect, EXTERNAL50_LIVE
 from scripts.aml339_site import build
 from batch50_sources import BATCH50
 from growth_wave50_sources import WAVE50_B
@@ -59,9 +59,9 @@ class Reg100LiveTests(unittest.TestCase):
         ids={r["id"] for r in self.queue["candidates"]}
         self.assertTrue(set(REG100_LIVE).issubset(ids))
         self.assertFalse(set(REG100_LIVE) & self.original_ids)
-        self.assertEqual(len(set(CORE+OPTIONAL)),147)
+        self.assertEqual(len(set(CORE+OPTIONAL)),150)
         self.assertEqual(len(CORE),18)
-        self.assertEqual(len(OPTIONAL),129)
+        self.assertEqual(len(OPTIONAL),132)
         self.assertNotIn("reg100-ie-currenxie-technologies-limited",OPTIONAL)
         self.assertNotIn("reg100-de-allunity-gmbh",OPTIONAL)
         self.assertNotIn("reg100-mt-payfuture-fs-mt-ltd",OPTIONAL)
@@ -77,7 +77,7 @@ class Reg100LiveTests(unittest.TestCase):
         build(paths,state,report,self.root/"site",manifest)
         summary=json.loads((self.root/"site"/"summary.json").read_text(encoding="utf-8"))
         self.assertEqual(summary["sources_complete"],97)
-        self.assertEqual(summary["sources_expected"],147)
+        self.assertEqual(summary["sources_expected"],150)
         self.assertEqual(summary["reg100_research_leads"],100)
         self.assertEqual(summary["reg100_live_verified"],2)
         self.assertTrue(summary["novelty_guard_enabled"])
@@ -90,7 +90,7 @@ class Reg100LiveTests(unittest.TestCase):
         self.assertEqual(len(ids),96)
         self.assertEqual(manifest["reg100_live_verified"],1)
         self.assertEqual(manifest["missing_or_failed_expansion"],{
-            sid:"partial_or_failed_listing", **{x:"no_live_source_evidence" for x in WAVE50_B}})
+            sid:"partial_or_failed_listing", **{x:"no_live_source_evidence" for x in WAVE50_B+EXTERNAL50_LIVE}})
         self.assertTrue(set(CORE+EXPANSION+REGULATED+REGULATOR50).issubset(ids))
 
     def test_two_missing_employers_preserves_old_95(self):
@@ -98,7 +98,7 @@ class Reg100LiveTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.extra)
         self.assertEqual(len(paths),95)
         self.assertEqual(manifest["reg100_live_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REG100_LIVE)|set(WAVE50_B))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(REG100_LIVE)|set(WAVE50_B)|set(EXTERNAL50_LIVE))
 
     def test_external_reg100_cannot_impersonate_original_or_previous_sidecar(self):
         sid=REG100_LIVE[0]

@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, EXTERNAL50_LIVE, OPTIONAL
 from scripts.aml339_site import FEED_FILES, ROOT as PUBLIC_URL
 
 
@@ -86,6 +86,7 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         summary.get("regulator50_live_expected")==len(REGULATOR50)
         and summary.get("reg100_live_expected")==len(REG100_LIVE)
         and summary.get("reg100_research_leads")==100
+        and summary.get("external50_live_expected")==len(EXTERNAL50_LIVE)
     )
     minimum_live_sources=130
     sufficient_coverage=sources>=minimum_live_sources
@@ -116,6 +117,8 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         "100_extra_company_leads_with_verified_active_ats":summary.get("reg100_live_verified",0),
         "100_extra_company_live_sources_configured":len(REG100_LIVE),
         "newly_discovered_regulator50_live_configured":len(REGULATOR50),
+        "external50_live_configured":len(EXTERNAL50_LIVE),
+        "external50_live_verified":summary.get("external50_live_verified",0),
         "fresh_publish":recent,
         "v1_published_verified":v1_published_verified,
         "limitations":[
