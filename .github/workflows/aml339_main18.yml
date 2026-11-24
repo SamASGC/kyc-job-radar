@@ -27,6 +27,9 @@ on:
       - "experiments/aml339/live_reg100_pilot.py"
       - "experiments/aml339/live_reg100_active.py"
       - "tests/test_aml339_reg100_live.py"
+      - "experiments/aml339/growth_wave50_sources.py"
+      - "experiments/aml339/live_growth50_probe.py"
+      - "tests/test_aml339_growth50.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
     # One daily full audit: low request frequency, including the formerly
@@ -271,6 +274,61 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  growth50:
+    name: Verify growth50 ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        source: [lt-b4b-employmenthero, citadele-banka-lt, vialet, riverbank, qonto, dojo, xtb, jtc-luxembourg, lt-finci-inline-careers, ufundservices, payoneer, boku, sumup, artea, mercuryo, alter-domus, aps-bank, vivid-money, upvest, trading212, seb, adyen, fimbank-malta, lt-nikulipe-official, avega-luxembourg, solidgate, etoroltd, remitly, avarda-bank, cafico-international, raisin, checkout-com, ocorian, lt-paynt-direct-employer, dm-financial, payhawk, dlocal, ofx, moss, lhv-uk, solarisbank, tide, finoa, tuum, lynxtech, fireblocks, chainalysis, flagright, fyst, xapo-bank]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original official source archive in read-only temporary directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,growth_wave50_sources.py,live_growth50_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Check current official employer listings, complete relevant details and apply links
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_growth50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+      - name: Keep official per-source evidence even on HTTP or verification failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-growth50-live-source-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+
   regulator50:
     name: Verify real new employer ${{ matrix.source }}
     runs-on: ubuntu-latest
@@ -384,7 +442,7 @@ jobs:
 
   publish:
     name: Audit complete scan, preserve history and publish independent page
-    needs: [scan, expansion, regulated, wave50, regulator50, reg100_live]
+    needs: [scan, expansion, regulated, wave50, growth50, regulator50, reg100_live]
     # Optional sources may fail; never let them suppress the complete 18-source core.
     if: ${{ always() && needs.scan.result == 'success' }}
     runs-on: ubuntu-latest
@@ -436,6 +494,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: aml339-reg100-live-*
+          path: extras
+      - name: Retrieve SECOND 50 verified official employer portals, each individually optional
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-growth50-live-source-*
           path: extras
       - name: Verify core 18 and accept only fully audited optional sources
         shell: bash
