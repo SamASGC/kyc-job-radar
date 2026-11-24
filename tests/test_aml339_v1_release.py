@@ -57,7 +57,6 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertEqual(health["configured_maximum_live_sources"],97)
         self.assertEqual(health["actual_verified_live_sources"],97)
         self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],2)
-        self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],0)
 
     def test_published_34_old_version_is_not_claimed_v1(self):
         raw=json.loads(Path("public/aml339/summary.json").read_text())
