@@ -1,4 +1,4 @@
-name: AML339 50-source wave and regulator50 discovery (18 core + up to 77 verified)
+name: AML339 V1 regulated source radar (18 mandatory + up to 79 independently audited)
 
 on:
   workflow_dispatch:
@@ -24,6 +24,9 @@ on:
       - "experiments/aml339/regulator50_external_candidates.json"
       - "experiments/aml339/live_regulator50_canary.py"
       - "tests/test_aml339_regulator50.py"
+      - "experiments/aml339/live_reg100_pilot.py"
+      - "experiments/aml339/live_reg100_active.py"
+      - "tests/test_aml339_reg100_live.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
     # One daily full audit: low request frequency, including the formerly
@@ -323,9 +326,65 @@ jobs:
           path: ${{ runner.temp }}/aml339/candidate_*.json
           retention-days: 14
           if-no-files-found: warn
+  reg100_live:
+    name: Verify regulated EMI reg100 official ATS ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [reg100-be-paynovate, reg100-lu-pingpong-europe-s-a]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original 339 archive and unpack isolated, read-only parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_reg100_pilot.py,live_reg100_active.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/regulator100_discovery_queue.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Audit official listings, positive baseline and relevant complete job applications
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_reg100_active.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+      - name: Preserve actual per-source report including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-reg100-live-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+
   publish:
     name: Audit complete scan, preserve history and publish independent page
-    needs: [scan, expansion, regulated, wave50, regulator50]
+    needs: [scan, expansion, regulated, wave50, regulator50, reg100_live]
     # Optional sources may fail; never let them suppress the complete 18-source core.
     if: ${{ always() && needs.scan.result == 'success' }}
     runs-on: ubuntu-latest
@@ -371,6 +430,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: aml339-regulator50-live-source-*
+          path: extras
+      - name: Retrieve two additionally verified regulator100 official ATS sources
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-reg100-live-*
           path: extras
       - name: Verify core 18 and accept only fully audited optional sources
         shell: bash
