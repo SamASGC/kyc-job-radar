@@ -36,7 +36,8 @@ REGULATED = (
     "emi-andaria-mt", "emi-finxp-mt", "emi-paydo-mt",
 )
 REGULATOR50 = ("reg50-nomupay-europe", "reg50-mifinity-malta")
-OPTIONAL = EXPANSION + BATCH50 + REGULATED + REGULATOR50
+REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
+OPTIONAL = EXPANSION + BATCH50 + REGULATED + REGULATOR50 + REG100_LIVE
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -70,6 +71,9 @@ def collect(core_dir: Path, optional_dir: Path):
             if sid in REGULATOR50 and (data.get("source_registry") != "regulated_employer_sidecar_v2"
                                        or data.get("original_catalog_sources") != 339):
                 raise ValueError("Missing verifiable newly discovered regulated employer registry")
+            if sid in REG100_LIVE and (data.get("source_registry") != "regulated_emi_reg100_live_v1"
+                                       or data.get("original_catalog_sources") != 339):
+                raise ValueError("Missing verified regulator100 official ATS source registry")
             if sid in EXPANSION+BATCH50 and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
@@ -124,6 +128,10 @@ def collect(core_dir: Path, optional_dir: Path):
         "regulator50_live_expected": len(REGULATOR50),
         "regulator50_live_verified": sum(sid not in skipped for sid in REGULATOR50),
         "regulator50_live_verified_ids": [sid for sid in REGULATOR50 if sid not in skipped],
+        "reg100_research_leads": 100,
+        "reg100_live_expected": len(REG100_LIVE),
+        "reg100_live_verified": sum(sid not in skipped for sid in REG100_LIVE),
+        "reg100_live_verified_ids": [sid for sid in REG100_LIVE if sid not in skipped],
         "total_verified": len(paths),
         "verified_source_ids": list(ids),
         "missing_or_failed_expansion": skipped,
