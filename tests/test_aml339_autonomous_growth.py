@@ -34,9 +34,21 @@ class AutonomousGrowthTests(unittest.TestCase):
         led,summ,proposals=reconcile(selection(rows),p,[dict(r,verified=True,status="TECHNICAL_PASS_REVIEW_REQUIRED",listed=3,unverified=0,config={"id":r["id"]})])
         self.assertEqual(summ["technical_passes"],1)
         self.assertEqual(len(proposals),1)
+    def test_discovery_cache_persists_across_batches(self):
+        p={"schema":"aml339_growth_ledger_v1","records":{}}
+        cache={"checked_at":NOW.isoformat(),"rows":[row(1)],"errors":[]}
+        first=selection([])
+        first["discovery_cache"]=cache
+        updated,summary,_=reconcile(first,p,[])
+        self.assertEqual(updated["discovery_cache"],cache)
+        later,_,_=reconcile(selection([]),updated,[])
+        self.assertEqual(later["discovery_cache"],cache)
+        self.assertEqual(summary["selected"],0)
     def test_workflow_write_separation(self):
         text=Path(".github/workflows/aml339_autonomous_growth.yml").read_text()
-        self.assertIn("cron: '13 1,13 * * *'",text)
+        self.assertIn("cron: '3-58/5 * * * *'",text)
+        self.assertIn("fromJSON(needs.select.outputs.shards)",text)
+        self.assertIn("needs.select.outputs.count != '0'",text)
         self.assertIn("git push origin HEAD:refs/heads/aml339-growth-evidence",text)
         self.assertIn("github.event_name != 'pull_request'",text)
         self.assertNotIn("git push origin HEAD:main",text)
