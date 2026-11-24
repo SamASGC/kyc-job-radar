@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.error import URLError
 
-from scripts.aml339_source_manifest import CORE, OPTIONAL
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE
 from scripts.aml339_v1_status import check_pages, evaluate, main
 
 
@@ -34,7 +34,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
            "regulator50_live_expected":2,
            "reg100_research_leads":100,
            "reg100_live_expected":2,
-           "external50_live_expected":5,
+           "external50_live_expected":len(EXTERNAL50_LIVE),
            "reg100_live_verified":2,
            "new_counts":{"confirmed_recent":0,"promising_date_unconfirmed":0}
         }
@@ -63,7 +63,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
         health=evaluate(self.summary(),self.discovery,
                         now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertTrue(health["v1_published_verified"])
-        self.assertEqual(health["configured_maximum_live_sources"],152)
+        self.assertEqual(health["configured_maximum_live_sources"],len(CORE+OPTIONAL))
         self.assertEqual(health["actual_verified_live_sources"],147)
         self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],2)
 

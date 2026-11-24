@@ -1,4 +1,4 @@
-name: AML339 V1 regulated source radar (18 original core + up to 134 independently audited)
+name: AML339 V1 regulated source radar (original core and audited optional source registry)
 
 on:
   workflow_dispatch:
@@ -455,7 +455,19 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  prepare_external:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    outputs:
+      matrix: ${{ steps.registry.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - id: registry
+        run: echo "matrix=$(python3 experiments/aml339/external_live_registry.py)" >> "$GITHUB_OUTPUT"
+
   external50_live:
+    needs: prepare_external
     name: Verify newly discovered external employer ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -463,9 +475,8 @@ jobs:
     continue-on-error: true
     strategy:
       fail-fast: false
-      max-parallel: 2
-      matrix:
-        source: [external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor, external50b-es-unnax, external50b-es-onyx]
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.prepare_external.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -491,7 +502,7 @@ jobs:
               assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
               z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
           PY
-          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json} "$RUNNER_TEMP/aml339/"
           cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
@@ -500,13 +511,18 @@ jobs:
         shell: bash
         env:
           SOURCE: ${{ matrix.source }}
+          DRIVER: ${{ matrix.driver }}
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          if [[ "$SOURCE" == "external50b-es-unnax" || "$SOURCE" == "external50b-es-onyx" ]]; then
+          if [[ "$DRIVER" == "next" ]]; then
             python3 live_external50_next.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
-          else
+          elif [[ "$DRIVER" == "wave02" ]]; then
             python3 live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          elif [[ "$DRIVER" == "generic" ]]; then
+            python3 live_external_generic.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          else
+            exit 1
           fi
       - name: Preserve actual per-source report including failures
         if: always()

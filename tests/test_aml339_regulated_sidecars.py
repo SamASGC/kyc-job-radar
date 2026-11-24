@@ -50,7 +50,7 @@ class RegulatedEMISidecarTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.extra)
         self.assertEqual(len(paths),43)
         self.assertEqual(manifest["core_verified"],18)
-        self.assertEqual(manifest["expansion_expected"],134)
+        self.assertEqual(manifest["expansion_expected"],129+len(EXTERNAL50_LIVE))
         self.assertEqual(manifest["regulated_external_expected"],5)
         self.assertEqual(manifest["regulated_external_verified"],5)
         self.assertEqual(set(manifest["regulated_external_ids"]),set(REGULATED))

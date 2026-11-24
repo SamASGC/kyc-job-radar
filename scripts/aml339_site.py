@@ -327,7 +327,7 @@ def main():
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
     if not 17 <= len(paths) <= len(CORE+OPTIONAL):
-        raise ValueError("Expected 17-18 independently audited core sources and up to 134 complete optional source snapshots")
+        raise ValueError("Expected 17-18 independently audited core sources and the configured complete optional source snapshots")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
