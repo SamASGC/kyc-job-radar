@@ -43,7 +43,7 @@ REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
 # remaining 17 complete mandatory providers and up to 129 optional providers.
 QUARANTINABLE_CORE = ("payabl",)
 STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
-EXTERNAL50_LIVE = ("external50b-lv-neverless", "external50b-lv-noah", "external50b-es-treezor")
+EXTERNAL50_LIVE = ("external50b-lv-neverless", "external50b-lv-noah", "external50b-es-treezor", "external50b-es-unnax", "external50b-es-onyx")
 OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE + EXTERNAL50_LIVE
 
 
