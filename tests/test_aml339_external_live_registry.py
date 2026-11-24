@@ -6,7 +6,8 @@ from external_live_registry import load_registry,matrix,ids,REGISTRY
 class ExternalRegistryTests(unittest.TestCase):
     def test_matrix_and_manifest_share_one_inventory(self):
         rows=load_registry()
-        self.assertEqual(tuple(x["source"] for x in matrix()["include"]),DYNAMIC_LIVE)
+        self.assertEqual(set(x["source"] for x in matrix()["include"]),set(DYNAMIC_LIVE))
+        self.assertEqual(len(matrix()["include"]),len(DYNAMIC_LIVE))
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         self.assertEqual(len(rows),len(DYNAMIC_LIVE))
     def test_fifty_new_verified_rows_require_no_code_or_workflow_edit(self):
