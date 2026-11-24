@@ -59,68 +59,13 @@ jobs:
               "original_run_conclusion":parent.get("conclusion"),
           }),flush=True)
           PY
-      - name: Retrieve ALL 18 live official source reports
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-main18-source-*
-          path: sources
-      - name: Retrieve OPTIONAL new source reports without risking the core
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-expansion-source-*
-          path: extras
-      - name: Retrieve NEW regulated EMI source reports (independent of 339 source archive)
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-regulated-source-*
-          path: extras
-      - name: Retrieve BULK 50 additional employer audits without risking original core
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-wave50-source-*
-          path: extras
-      - name: Retrieve genuinely NEW regulated-company ATS reports (two proven live)
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-regulator50-live-source-*
-          path: extras
-      - name: Retrieve two additionally verified regulator100 official ATS sources
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-reg100-live-*
-          path: extras
-      - name: Retrieve SECOND 50 verified official employer portals, each individually optional
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ github.repository }}
-          run-id: 45434801153
-          github-token: ${{ github.token }}
-          pattern: aml339-growth50-live-source-*
-          path: extras
+      - name: Restore all 147 original per-employer artifacts with complete paginated GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/aml339_replay_artifacts.py \
+            --run-id 45434801153 --core-dir sources --optional-dir extras
       - name: Verify core 18 and accept only fully audited optional sources
         shell: bash
         run: |
