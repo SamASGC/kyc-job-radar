@@ -8,6 +8,7 @@ from zipfile import ZipFile
 from growth_wave50_sources import WAVE50_B
 from batch50_sources import BATCH50
 from scripts.aml339_source_manifest import (
+    EXTERNAL50_LIVE,
     CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect,
 )
 from scripts.aml339_site import build
@@ -71,7 +72,7 @@ class Growth50Integration(unittest.TestCase):
         self.assertEqual(len(ids),147)
         self.assertEqual(manifest["growth50_expected"],50)
         self.assertEqual(manifest["growth50_verified"],50)
-        self.assertFalse(manifest["missing_or_failed_expansion"])
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(EXTERNAL50_LIVE))
         initial=blank_history()
         current,preview=select_and_merge(read_evidence(paths),initial,
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
@@ -80,7 +81,7 @@ class Growth50Integration(unittest.TestCase):
         build(paths,current,preview,out,manifest)
         summary=json.loads((out/"summary.json").read_text())
         self.assertEqual(summary["sources_complete"],147)
-        self.assertEqual(summary["sources_expected"],147)
+        self.assertEqual(summary["sources_expected"],150)
         self.assertEqual(summary["growth50_verified"],50)
         again,replay=select_and_merge(read_evidence(paths),current,
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
@@ -93,7 +94,7 @@ class Growth50Integration(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.optional)
         self.assertEqual(len(paths),146)
         self.assertEqual(manifest["growth50_verified"],49)
-        self.assertEqual(manifest["missing_or_failed_expansion"],{sid:"partial_or_failed_listing"})
+        self.assertEqual(manifest["missing_or_failed_expansion"],{sid:"partial_or_failed_listing", **{x:"no_live_source_evidence" for x in EXTERNAL50_LIVE}})
         self.assertTrue(set(CORE).issubset(ids))
         self.assertNotIn(sid,ids)
 
@@ -103,7 +104,7 @@ class Growth50Integration(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.optional)
         self.assertEqual(len(paths),97)
         self.assertEqual(manifest["growth50_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(WAVE50_B))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(WAVE50_B)|set(EXTERNAL50_LIVE))
         self.assertEqual(manifest["reg100_live_verified"],2)
 
     def test_forged_or_incomplete_role_evidence_is_excluded(self):
