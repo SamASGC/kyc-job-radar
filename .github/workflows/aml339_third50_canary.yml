@@ -1,0 +1,133 @@
+name: AML339 third fifty official employer source audit - skills first
+on:
+  push:
+    branches: [feat/aml339-third50-skills-first-20261124]
+    paths:
+      - .github/workflows/aml339_third50_canary.yml
+      - experiments/aml339/live_third50_probe.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: aml339-bulk50-canary
+  cancel-in-progress: false
+jobs:
+  audit:
+    name: Full source + role details ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [lt-paystrax-official-external, lt-nayax-global-legal-compliance, flywire, rain, transak, visa-currencycloud, telcoin, strike, aspora, creem, gnosis, squads, bitpanda, bitgo, falconx, verifone, trm-labs, caliza, coinflow, capitalontap, marqeta-inc, allica-bank, griffin, gohenry, seon, whitetech, mergemoney, incard, moniepoint, melio, coinspaid, payrails, finvari, lemfi, taptapsend, capimoney, fourthline, primer, sibill, notabene, xendit, luno, b2c2, taxbit, nexo, bitvavo, merklescience, wetravel, planet, monzo]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify immutable 339-source archive and set up isolated parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import os
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not f.filename.startswith("/") and ".." not in Path(f.filename).parts for f in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,third_wave50_sources.py,live_third50_probe.py} "$RUNNER_TEMP/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Check complete live source and every geographically plausible matching job
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_third50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+      - name: Preserve complete per-employer evidence even for HTTP failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-third50-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  summary:
+    name: Report actual 50-source coverage without inventing healthy sources
+    needs: [audit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-third50-*
+          path: incoming
+      - name: Compare exact expected 50 source ID set with live evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,"experiments/aml339")
+          from third_wave50_sources import WAVE50_C
+          seen={}
+          for p in Path("incoming").rglob("candidate_*.json"):
+              d=json.loads(p.read_text(encoding="utf-8"))
+              assert d["mode"]=="READ_ONLY_ISOLATED_NO_PRODUCTION_DATA"
+              assert d.get("source_registry")=="original_339"
+              assert d["total_configured_sources"]==339 and len(d["sources"])==1
+              s=d["sources"][0]
+              sid=s["source_id"]
+              assert sid in WAVE50_C and sid not in seen and p.name==f"candidate_{sid}.json"
+              ok=(s.get("state")=="listing_extracted"
+                  and s.get("list_complete") is True
+                  and isinstance(s.get("relevant_leads"),int)
+                  and len(s.get("audited",[]))==s["relevant_leads"]
+                  and s.get("unverified_in_scope",0)==0
+                  and isinstance(s.get("listing_role_keys"),list))
+              seen[sid]={"verified":bool(ok),"total_listed":s.get("total_listed"),
+                         "relevant_leads":s.get("relevant_leads"),
+                         "audited":len(s.get("audited",[])),
+                         "unverified_in_scope":s.get("unverified_in_scope"),
+                         "errors":s.get("errors",[]),"warnings":s.get("warnings",[])[:2]}
+          missing=sorted(set(WAVE50_C)-set(seen))
+          healthy=sum(int(x["verified"]) for x in seen.values())
+          summary={"batch_size":50,"reports_received":len(seen),
+                   "live_verified":healthy,"failed_or_partial":50-healthy,
+                   "missing":missing,"sources":seen}
+          Path("third50_canary_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2)+"\n")
+          print("AML339_THIRD50_CANARY_SUMMARY",json.dumps({
+             "batch_size":50,"reports_received":len(seen),
+             "live_verified":healthy,"failed_or_partial":50-healthy,
+             "missing":missing,
+             "failed_source_ids":[sid for sid,x in seen.items() if not x["verified"]],
+          },ensure_ascii=False),flush=True)
+          if len(seen)!=50 or healthy!=50:
+              raise RuntimeError("Not all 50 employer career feeds were healthy; never fake full coverage")
+          PY
+      - name: Retain machine-readable evidence summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-third50-summary
+          path: third50_canary_summary.json
+          retention-days: 14
+          if-no-files-found: warn
