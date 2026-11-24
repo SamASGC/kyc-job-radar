@@ -2,7 +2,7 @@ name: AML339 autonomous regulated employer growth
 on:
   workflow_dispatch:
   schedule:
-    - cron: '13 1,13 * * *'
+    - cron: '3-58/5 * * * *'
   pull_request:
     paths:
       - 'experiments/aml339/growth_*.py'
@@ -24,6 +24,10 @@ jobs:
   select:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
+    outputs:
+      count: ${{ steps.batch.outputs.count }}
+      shards: ${{ steps.batch.outputs.shards }}
+      refreshed: ${{ steps.batch.outputs.refreshed }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -33,8 +37,18 @@ jobs:
           path: previous
           persist-credentials: false
       - name: Select up to 50 unprocessed regulated employer leads
+        id: batch
         run: |
           python3 experiments/aml339/growth_discovery.py --ledger previous/growth/ledger.json --out selection.json
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open("selection.json"))
+          n=len(d["selected"])
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              print("count="+str(n),file=f)
+              print("shards="+json.dumps(list(range(max(1,(n+4)//5))),separators=(",",":")),file=f)
+              print("refreshed="+str(d.get("discovery_refreshed",False)).lower(),file=f)
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: growth-selection
@@ -42,13 +56,14 @@ jobs:
           retention-days: 30
   audit:
     needs: select
+    if: ${{ needs.select.outputs.count != '0' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
       fail-fast: false
       max-parallel: 6
       matrix:
-        shard: [0,1,2,3,4,5,6,7,8,9]
+        shard: ${{ fromJSON(needs.select.outputs.shards) }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -111,7 +126,7 @@ jobs:
           if-no-files-found: error
   report:
     needs: [select,audit]
-    if: ${{ always() && needs.select.result == 'success' }}
+    if: ${{ always() && needs.select.result == 'success' && (needs.select.outputs.count != '0' || needs.select.outputs.refreshed == 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -126,6 +141,7 @@ jobs:
           name: growth-selection
           path: selection
       - uses: actions/download-artifact@v4
+        if: ${{ needs.select.outputs.count != '0' }}
         with:
           pattern: growth-shard-*
           path: reports
