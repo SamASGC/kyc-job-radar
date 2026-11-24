@@ -1,4 +1,4 @@
-name: Inspect authorized company boards and current licence categories
+name: Verify five country official payment service provider registers
 on:
   push:
     branches: [feat/aml339-regulated-watch]
@@ -6,44 +6,27 @@ on:
 permissions:
   contents: read
 jobs:
-  sample:
+  register:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
     steps:
-      - name: Check public company job search and regulatory exports
+      - name: Read ECB payment institution lists distributed by Banco de España
         run: |
-          mkdir -p snapshots
+          mkdir -p registers
           python - <<'PY'
-          import urllib.request as req, urllib.parse as up, urllib.robotparser as robots, time, pathlib, json, re
-          from html.parser import HTMLParser
-          def get(url):
-              request=req.Request(url,headers={'User-Agent':'AML339/1.0 (public vacancy research)','Accept':'*/*'})
-              with req.urlopen(request,timeout=20) as r: return r.read(3000000)
-          for host,company in [('www.cvonline.lt','41802'),('www.cv.ee','3209')]:
-              try:
-                  origin='https://'+host
-                  raw=get(origin+'/robots.txt').decode()
-                  print('ROBOTS',host,raw[:2000],flush=True)
-                  rp=robots.RobotFileParser(); rp.parse(raw.splitlines())
-                  page=origin+'/en/search/employer/'+company
-                  if not rp.can_fetch('AML339',page) or not rp.can_fetch('AML339',origin+'/en/employers'): continue
-                  data=get(page); pathlib.Path('snapshots',host+'.html').write_bytes(data)
-                  matches=re.findall(rb'href="(/en/vacancy/[^"?]+)',data)
-                  if matches:
-                      detail=origin+matches[0].decode()
-                      if rp.can_fetch('AML339',detail): pathlib.Path('snapshots',host+'-detail.html').write_bytes(get(detail))
-              except Exception as e: print('ERROR',host,str(e),flush=True)
-          for form in ('24','124','60','78'):
-              page='https://www.lb.lt/en/sfi-financial-market-participants?business_form='+form+'&market=1&page=1&export=csv'
-              try:
-                  raw=get(page)
-                  pathlib.Path('snapshots','category'+form+'.csv').write_bytes(raw)
-                  print('REGULATOR',form,len(raw),repr(raw[:70]),flush=True)
-              except Exception as e: print('REG_ERROR',form,str(e),flush=True)
-              time.sleep(0.5)
+          import csv,io,pathlib,urllib.request as req,time
+          base='https://www.bde.es/webbe/en/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-'
+          for cc in ('es','lt','lu','mt','ee'):
+              with req.urlopen(req.Request(base+cc+'.csv', headers={'User-Agent':'AML339/1.0 regulation and vacancies'}), timeout=25) as r:
+                  raw=r.read(3000000)
+              rows=list(csv.DictReader(line.rstrip() for line in raw.decode('utf-8-sig').splitlines() if line.strip()))
+              if not rows or 'TYPE OF LICENCE' not in rows[0]: raise ValueError(cc+' registry schema')
+              pathlib.Path('registers',cc+'.csv').write_bytes(raw)
+              print('PROVIDERS',cc,len(rows),sum(x['TYPE OF LICENCE']=='Explicit' for x in rows))
+              time.sleep(0.7)
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: current-channel-evidence
-          path: snapshots
-          retention-days: 2
+          name: published-psp-registers
+          path: registers
+          retention-days: 3
