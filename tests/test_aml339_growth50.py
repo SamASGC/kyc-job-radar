@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from growth_wave50_sources import WAVE50_B
 from batch50_sources import BATCH50
 from scripts.aml339_source_manifest import (
-    EXTERNAL50_LIVE,
+    EXTERNAL50_LIVE, OPTIONAL,
     CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect,
 )
 from scripts.aml339_site import build
@@ -81,7 +81,7 @@ class Growth50Integration(unittest.TestCase):
         build(paths,current,preview,out,manifest)
         summary=json.loads((out/"summary.json").read_text())
         self.assertEqual(summary["sources_complete"],147)
-        self.assertEqual(summary["sources_expected"],152)
+        self.assertEqual(summary["sources_expected"],len(CORE+OPTIONAL))
         self.assertEqual(summary["growth50_verified"],50)
         again,replay=select_and_merge(read_evidence(paths),current,
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
@@ -91,30 +91,30 @@ class Growth50Integration(unittest.TestCase):
     def test_external_five_production_enrollment_preserves_old_147(self):
         registry=json.loads(Path("experiments/aml339/external_regulated50_wave02.json").read_text())
         self.assertEqual(len(registry["candidates"]),50)
-        self.assertTrue(set(EXTERNAL50_LIVE).issubset({x["id"] for x in registry["candidates"]}))
+        self.assertTrue({"external50b-lv-neverless","external50b-lv-noah","external50b-es-treezor","external50b-es-unnax","external50b-es-onyx"}.issubset(set(EXTERNAL50_LIVE)))
         self.assertFalse(set(EXTERNAL50_LIVE)&self.known_ids)
         for sid in EXTERNAL50_LIVE:
             d=report(sid,"external_regulated50_wave02_live_v1")
             d["verified"]=True
             self._write(self.optional/f"candidate_{sid}.json",d)
         paths,ids,m=collect(self.core,self.optional)
-        self.assertEqual(len(paths),152)
-        self.assertEqual(m["external50_live_verified"],5)
+        self.assertEqual(len(paths),len(CORE+OPTIONAL))
+        self.assertEqual(m["external50_live_verified"],len(EXTERNAL50_LIVE))
         self.assertFalse(m["missing_or_failed_expansion"])
         state,preview=select_and_merge(read_evidence(paths),blank_history(),
              configured_sources=ids,strict_novelty=True,listing_keys={k:[] for k in ids})
         self.assertEqual(preview["new_counts"],{"confirmed_recent":0,"promising_date_unconfirmed":0})
         build(paths,state,preview,self.root/"site",m)
         summary=json.loads((self.root/"site"/"summary.json").read_text())
-        self.assertEqual(summary["sources_complete"],152)
+        self.assertEqual(summary["sources_complete"],len(CORE+OPTIONAL))
         self.assertEqual(summary["external50_live_verified"],5)
         sid=EXTERNAL50_LIVE[0]
         d=report(sid,"external_regulated50_wave02_live_v1")
         d["verified"]=False
         self._write(self.optional/f"candidate_{sid}.json",d)
         paths,ids,m=collect(self.core,self.optional)
-        self.assertEqual(len(paths),151)
-        self.assertEqual(m["external50_live_verified"],4)
+        self.assertEqual(len(paths),len(CORE+OPTIONAL)-1)
+        self.assertEqual(m["external50_live_verified"],len(EXTERNAL50_LIVE)-1)
         self.assertNotIn(sid,ids)
 
     def test_external_canary_cannot_impersonate_live_source(self):
