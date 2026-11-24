@@ -130,7 +130,7 @@ def render_html(roles, history, report):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/97 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/147 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
         f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
@@ -194,7 +194,7 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 18 <= count <= 97:
+    if not isinstance(count, int) or not 18 <= count <= 147:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count > 18 and manifest is None:
         raise ValueError("Expanded source publication requires a verified manifest")
@@ -202,7 +202,12 @@ def build(evidence_paths, state, report, output, manifest=None):
         manifest.get("core_verified") != 18
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - 18
-        or manifest.get("expansion_expected") != 79
+        or manifest.get("expansion_expected") != 129
+        or manifest.get("growth50_expected") != 50
+        or manifest.get("growth50_verified") != sum(
+            sid in set(manifest.get("verified_source_ids", []))
+            for sid in manifest.get("growth50_verified_ids", []))
+        or len(manifest.get("growth50_verified_ids", [])) != manifest.get("growth50_verified")
         or manifest.get("reg100_research_leads") != 100
         or manifest.get("reg100_live_expected") != 2
         or manifest.get("reg100_live_verified") != sum(
@@ -247,7 +252,9 @@ def build(evidence_paths, state, report, output, manifest=None):
         "checked_at_utc": report["checked_at_utc"],
         "sources_complete": count,
         "source_count": count,
-        "sources_expected": 97,
+        "sources_expected": 147,
+        "growth50_expected": (manifest or {}).get("growth50_expected",0),
+        "growth50_verified": (manifest or {}).get("growth50_verified",0),
         "reg100_research_leads": (manifest or {}).get("reg100_research_leads",0),
         "reg100_live_expected": (manifest or {}).get("reg100_live_expected",0),
         "reg100_live_verified": (manifest or {}).get("reg100_live_verified",0),
