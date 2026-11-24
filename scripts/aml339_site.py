@@ -205,7 +205,7 @@ def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
     if not isinstance(count, int) or not 17 <= count <= 147:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
-    if count > 18 and manifest is None:
+    if count != 18 and manifest is None:
         raise ValueError("Expanded source publication requires a verified manifest")
     if manifest is not None and (
         manifest.get("core_expected") != 18
