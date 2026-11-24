@@ -36,7 +36,8 @@ def wait_for_upload(repo: str, run_id: str, token: str,
         raise ValueError("Missing repository, GitHub run ID or token")
     if attempts < 1 or not 1 <= interval <= 20:
         raise ValueError("Invalid API poll controls")
-    url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+    # A large scan produces one audit artifact per employer. Request only the deployment.
+    url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts?name=github-pages&per_page=100"
     for i in range(attempts):
         req = urllib.request.Request(url, headers={
             "Authorization": "Bearer " + token,
