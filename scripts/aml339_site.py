@@ -317,8 +317,8 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 18 <= len(paths) <= 97:
-        raise ValueError("Expected 18 complete core snapshots plus up to 75 independently audited additions")
+    if not 17 <= len(paths) <= 147:
+        raise ValueError("Expected 17-18 independently audited core sources and up to 129 complete optional source snapshots")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
