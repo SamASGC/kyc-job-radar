@@ -1,0 +1,37 @@
+name: AML339 V1 read-only production release health
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/aml339_v1_health.yml"
+      - "scripts/aml339_v1_status.py"
+      - "experiments/aml339/regulator100_discovery_queue.json"
+  schedule:
+    # Runs after the 07:23 UTC multi-source scan; no API or site writes.
+    - cron: "40 8 * * *"
+permissions:
+  contents: read
+jobs:
+  audit-published:
+    name: Check actual public V1 verified source coverage and immutable discovery queue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check 100 discovery entries and current PUBLISHED V1 readiness
+        run: python3 scripts/aml339_v1_status.py --out v1_status.json --require-live
+      - name: Retain honest status even on an incomplete or stale scan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-v1-readiness-check
+          path: v1_status.json
+          retention-days: 14
+          if-no-files-found: warn

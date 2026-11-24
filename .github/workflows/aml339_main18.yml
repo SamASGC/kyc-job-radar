@@ -332,7 +332,7 @@ jobs:
     timeout-minutes: 12
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -520,4 +520,14 @@ jobs:
         run: python3 scripts/aml339_pages_ready.py
       - name: Deploy both dashboards without replacing existing radar
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      # GitHub's upload API can report the artifact before deploy-pages indexes it.
+      # This retry is ONLY for publication; it does not rerun a job scan or touch history.
+      - name: Allow GitHub Pages artifact propagation if first deploy failed
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        run: sleep 35
+      - name: Retry Pages deployment once after propagation
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        id: deployment_retry
         uses: actions/deploy-pages@v5
