@@ -64,7 +64,7 @@ class Regulator50SourceTests(unittest.TestCase):
         self.assertFalse(ids & self.pinned_ids)
         self.assertFalse(ids & set(CORE+EXPANSION+BATCH50+REGULATED))
         self.assertTrue(set(REGULATOR50).issubset(ids))
-        self.assertEqual(len(CORE+OPTIONAL),152)
+        self.assertEqual(len(CORE+OPTIONAL),147+len(EXTERNAL50_LIVE))
         for c in d["candidates"]:
             self.assertEqual(c["live_alerts_enabled"],False)
             self.assertTrue(c["regulatory_discovery_url"].startswith("https://"))
@@ -75,7 +75,7 @@ class Regulator50SourceTests(unittest.TestCase):
         self.assertEqual(len(paths),95)
         self.assertEqual(len(ids),95)
         self.assertEqual(manifest["core_verified"],18)
-        self.assertEqual(manifest["expansion_expected"],134)
+        self.assertEqual(manifest["expansion_expected"],129+len(EXTERNAL50_LIVE))
         self.assertEqual(manifest["regulator50_discovered"],50)
         self.assertEqual(manifest["regulator50_live_expected"],2)
         self.assertEqual(manifest["regulator50_live_verified"],2)
