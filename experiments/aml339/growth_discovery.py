@@ -126,12 +126,27 @@ def select(rows,active,original,registry,ledger,now,limit=50):
 def main():
     p=argparse.ArgumentParser();p.add_argument("--ledger",type=Path,required=True);p.add_argument("--out",type=Path,required=True);p.add_argument("--limit",type=int,default=50);p.add_argument("--offline",action="store_true");a=p.parse_args()
     if not 1<=a.limit<=50:raise ValueError("Batch limit 50")
-    now=dt.datetime.now(dt.timezone.utc);ledger=json.loads(a.ledger.read_text())["records"] if a.ledger.exists() else {}
+    now=dt.datetime.now(dt.timezone.utc)
+    previous=json.loads(a.ledger.read_text()) if a.ledger.exists() else {}
+    ledger=previous.get("records",{})
     with ZipFile(DIR/"full_original_339_sources.zip") as z:original=json.loads(z.read("fuentes.json"))["sources"]
     if hashlib.sha256((DIR/"full_original_339_sources.zip").read_bytes()).hexdigest()!="e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02":raise ValueError("Catalog hash mismatch")
-    fresh,errors=([],[]) if a.offline else discover()
-    selected,pending=select(collect_queues()+fresh,set(CORE+OPTIONAL),original,load_registry(),ledger,now,a.limit)
-    data={"schema":"aml339_growth_batch_v1","checked_at":now.isoformat(),"selected":selected,"eligible_pending":pending,"new_register_profiles_observed":len({r["profile"] for r in fresh}),"discovery_errors":errors}
+    cache=previous.get("discovery_cache",{})
+    refreshed=False
+    if a.offline:
+        fresh,errors=[],[]
+    elif cache.get("checked_at") and 0<=(now-dt.datetime.fromisoformat(cache["checked_at"])).total_seconds()<21600:
+        fresh,errors=cache["rows"],cache["errors"]
+    else:
+        fresh,errors=discover()
+        cache={"checked_at":now.isoformat(),"rows":fresh,"errors":errors}
+        refreshed=True
+    active=set(CORE+OPTIONAL)
+    if len(active)>=500:
+        selected,pending=[],0
+    else:
+        selected,pending=select(collect_queues()+fresh,active,original,load_registry(),ledger,now,a.limit)
+    data={"schema":"aml339_growth_batch_v1","checked_at":now.isoformat(),"selected":selected,"eligible_pending":pending,"new_register_profiles_observed":len({r["profile"] for r in fresh}),"discovery_errors":errors,"discovery_cache":cache,"discovery_refreshed":refreshed}
     a.out.write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n")
     print("GROWTH_SELECTED",json.dumps({"selected":len(selected),"pending":pending,"profiles":data["new_register_profiles_observed"],"errors":errors},ensure_ascii=False),flush=True)
 if __name__=="__main__":main()
