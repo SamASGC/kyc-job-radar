@@ -5,3 +5,5 @@ Original complete source evidence: 147 employers scanned, 145 independently acce
 History/novelty: 3 prior records preserved, zero new notifications, two new job identity records.
 
 This trigger starts ONLY the separate offline replay workflow. It does not request new employer career pages, generate alerts from discovered company names, reset the user's job history, or reclassify historic jobs as newly posted.
+
+Second replay uses paginated official GitHub Actions artifact discovery (148 artifacts, 147 source reports) to avoid the first-100 artifact listing limit, and never rescrapes careers providers. Triggered after PR #89, regression 391/391, at 2026-11-24.
