@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, OPTIONAL
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL
 
 
 def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -> dict:
@@ -47,11 +47,18 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
     history_guard=summary.get("novelty_guard_enabled") is True
     complete_core=core==len(CORE)
     recent=0<=age<=36
-    has_new_source_metadata=summary.get("regulator50_live_expected")==len(REGULATOR50)
+    has_new_source_metadata=(
+        summary.get("regulator50_live_expected")==len(REGULATOR50)
+        and summary.get("reg100_live_expected")==len(REG100_LIVE)
+        and summary.get("reg100_research_leads")==100
+    )
+    minimum_live_sources=90
+    sufficient_coverage=sources>=minimum_live_sources
     # The launch is not verified until the publication actually reflects the
     # current code's schema and the mandatory complete core, within 36 h.
     v1_published_verified=bool(
         recent and complete_core and history_guard and has_new_source_metadata
+        and sufficient_coverage
         and summary.get("regulator50_discovered")==50
         and summary.get("sources_expected")==len(CORE+OPTIONAL)
     )
@@ -61,17 +68,20 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         "age_hours":round(age,2),
         "actual_verified_live_sources":sources,
         "configured_maximum_live_sources":len(CORE+OPTIONAL),
+        "minimum_live_sources_for_stable_v1":minimum_live_sources,
+        "sufficient_live_coverage":sufficient_coverage,
         "mandatory_core_expected":len(CORE),
         "mandatory_core_verified":core,
         "novelty_history_guard_confirmed":history_guard,
         "100_extra_regulated_company_leads_imported":100,
-        "100_extra_company_leads_with_verified_active_ats":0,
+        "100_extra_company_leads_with_verified_active_ats":summary.get("reg100_live_verified",0),
+        "100_extra_company_live_sources_configured":len(REG100_LIVE),
         "newly_discovered_regulator50_live_configured":len(REGULATOR50),
         "fresh_publish":recent,
         "v1_published_verified":v1_published_verified,
         "limitations":[
             "100 extra companies were found in a secondary EMI registry, not individually certified active by national regulators",
-            "No official ATS or jobs verified for any of the extra 100 research-only entries",
+            "The 100-company queue is the original research snapshot; sources graduated later are verified separately in the live source manifest",
             "The 100 research-only leads are excluded from daily live source count and alert notifications",
             "Only a completed and published production scan confirms actual V1 readiness",
         ],
