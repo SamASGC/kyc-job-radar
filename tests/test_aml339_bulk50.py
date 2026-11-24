@@ -62,8 +62,8 @@ class Bulk50EvidenceTests(unittest.TestCase):
         self.assertEqual(len(set(BATCH50)),50)
         self.assertTrue(set(BATCH50).issubset(self.pinned))
         self.assertFalse(set(BATCH50)&set(CORE+EXPANSION+REGULATED))
-        self.assertEqual(len(OPTIONAL),132)
-        self.assertEqual(len(CORE+OPTIONAL),150)
+        self.assertEqual(len(OPTIONAL),134)
+        self.assertEqual(len(CORE+OPTIONAL),152)
 
     def test_93_source_site_from_verified_evidence_and_zero_false_new_alerts(self):
         paths,ids,manifest=collect(self.core,self.optional)
