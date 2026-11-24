@@ -15,7 +15,6 @@ jobs:
           mkdir -p snapshots
           python - <<'PY'
           import csv, io, json, pathlib, time, urllib.request as request, urllib.parse as up
-          from bs4 import BeautifulSoup
           root='https://get.data.gov.lt/datasets/gov/uzt/ldv/Vieta'
           def get(url):
               headers={'User-Agent':'RegulatedJobRadar/1.0 public employment monitor','Accept':'*/*'}
