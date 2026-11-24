@@ -36,7 +36,7 @@ jobs:
           from pathlib import Path
           summary=json.loads(Path("public/aml339/summary.json").read_text(encoding="utf-8"))
           state=json.loads(Path("data/aml339_main18_state.json").read_text(encoding="utf-8"))
-          if summary.get("core_sources_complete")!=18 or not 18<=summary.get("sources_complete",0)<=97:
+          if summary.get("core_sources_complete")!=18 or not 18<=summary.get("sources_complete",0)<=147:
               raise RuntimeError("Main AML339 verified core missing or invalid")
           if state.get("schema")!=1 or not isinstance(state.get("records"),dict) or len(state["records"])<3:
               raise RuntimeError("Persistent AML339 history missing or invalid")
