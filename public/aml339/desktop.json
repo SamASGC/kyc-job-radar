@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-24T20:18:52+00:00",
+  "checked_at_utc": "2026-11-24T20:31:27+00:00",
   "sources_expected": 269,
-  "sources_complete": 266,
-  "roles_evaluated": 1259,
+  "sources_complete": 263,
+  "roles_evaluated": 1250,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -125,10 +125,10 @@
     {
       "id": "payabl",
       "name": "payabl",
-      "status": "verified",
-      "reason": null,
-      "listed": 18,
-      "relevant": 2
+      "status": "failed",
+      "reason": "no_live_source_evidence",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "airwallex",
@@ -557,17 +557,17 @@
     {
       "id": "unlimit",
       "name": "unlimit",
-      "status": "verified",
-      "reason": null,
-      "listed": 48,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "unzer",
       "name": "unzer",
       "status": "verified",
       "reason": null,
-      "listed": 13,
+      "listed": 14,
       "relevant": 4
     },
     {
@@ -1117,10 +1117,10 @@
     {
       "id": "emi-trumia-mt",
       "name": "emi-trumia-mt",
-      "status": "verified",
-      "reason": null,
-      "listed": 10,
-      "relevant": 1
+      "status": "failed",
+      "reason": "no_live_source_evidence",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "emi-zen-lt",

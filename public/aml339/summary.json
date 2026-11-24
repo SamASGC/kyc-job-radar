@@ -1,7 +1,7 @@
 {
-  "checked_at_utc": "2026-11-24T20:18:52+00:00",
-  "sources_complete": 266,
-  "source_count": 266,
+  "checked_at_utc": "2026-11-24T20:31:27+00:00",
+  "sources_complete": 263,
+  "source_count": 263,
   "sources_expected": 269,
   "catalog_live_expected": 113,
   "catalog_live_verified": 112,
@@ -17,7 +17,7 @@
   "regulator50_live_expected": 2,
   "regulator50_live_verified": 2,
   "bulk50_expected": 50,
-  "bulk50_verified": 49,
+  "bulk50_verified": 48,
   "original_catalog_sources": 339,
   "external_regulated_source_ids": [
     "emi-trumia-mt",
@@ -26,18 +26,22 @@
     "emi-finxp-mt",
     "emi-paydo-mt"
   ],
-  "external_regulated_sources_verified": 5,
-  "core_sources_complete": 18,
+  "external_regulated_sources_verified": 4,
+  "core_sources_complete": 17,
   "core_sources_expected": 18,
   "strict_core_sources_complete": 17,
-  "missing_or_failed_core": {},
-  "expanded_sources_complete": 248,
+  "missing_or_failed_core": {
+    "payabl": "no_live_source_evidence"
+  },
+  "expanded_sources_complete": 246,
   "missing_or_failed_expansion": {
     "mangopay": "unverified_in_scope_details",
+    "unlimit": "partial_or_failed_listing",
+    "emi-trumia-mt": "no_live_source_evidence",
     "reg100-be-paynovate": "partial_or_failed_listing",
     "blackrock": "partial_or_failed_listing"
   },
-  "roles_evaluated": 1259,
+  "roles_evaluated": 1250,
   "current_qualifying": 6,
   "current_lanes": {
     "confirmed_recent": 0,
@@ -48,7 +52,7 @@
     "promising_date_unconfirmed": 0
   },
   "novelty_guard_enabled": true,
-  "listing_ids_added_to_tracking_index_not_new_publications": 2,
+  "listing_ids_added_to_tracking_index_not_new_publications": 1,
   "sources_previously_baselined": 267,
   "limitations": [
     "Source discovery does not imply all 50 regulated companies have viable official job boards",
