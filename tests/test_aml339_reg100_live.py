@@ -53,7 +53,7 @@ class Reg100LiveTests(unittest.TestCase):
     def write(path,data):
         path.write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
 
-    def test_only_two_out_of_100_research_sources_promoted(self):
+    def test_two_original_reg100_sources_and_separate_audited_enrollment(self):
         self.assertEqual(len(self.queue["candidates"]),100)
         self.assertEqual(len(REG100_LIVE),2)
         ids={r["id"] for r in self.queue["candidates"]}
@@ -63,7 +63,9 @@ class Reg100LiveTests(unittest.TestCase):
         self.assertEqual(len(CORE),18)
         self.assertEqual(len(OPTIONAL),129+len(EXTERNAL50_LIVE))
         self.assertNotIn("reg100-ie-currenxie-technologies-limited",OPTIONAL)
-        self.assertNotIn("reg100-de-allunity-gmbh",OPTIONAL)
+        self.assertNotIn("reg100-de-allunity-gmbh",REG100_LIVE)
+        if "reg100-de-allunity-gmbh" in OPTIONAL:
+            self.assertIn("reg100-de-allunity-gmbh",EXTERNAL50_LIVE)
         self.assertNotIn("reg100-mt-payfuture-fs-mt-ltd",OPTIONAL)
 
     def test_full_97_source_synthetic_publish_reports_exact_promotion(self):

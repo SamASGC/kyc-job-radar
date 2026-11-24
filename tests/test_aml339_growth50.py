@@ -107,7 +107,7 @@ class Growth50Integration(unittest.TestCase):
         build(paths,state,preview,self.root/"site",m)
         summary=json.loads((self.root/"site"/"summary.json").read_text())
         self.assertEqual(summary["sources_complete"],len(CORE+OPTIONAL))
-        self.assertEqual(summary["external50_live_verified"],5)
+        self.assertEqual(summary["external50_live_verified"],len(EXTERNAL50_LIVE))
         sid=EXTERNAL50_LIVE[0]
         d=report(sid,"external_regulated50_wave02_live_v1")
         d["verified"]=False
