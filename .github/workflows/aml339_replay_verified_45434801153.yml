@@ -1,0 +1,285 @@
+name: AML339 replay verified 145 official sources from 2026-11-24 (no live rescan)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "docs/aml339_replay_trigger_45434801153.txt"
+permissions:
+  contents: write
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: kyc-job-radar-hourly
+  cancel-in-progress: false
+jobs:
+  replay:
+    name: Replay official scan evidence, preserve history and publish 145 sources
+    # Preserve 17 strictly mandatory independent sources; the Payabl Workable provider is quarantinable.
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test the two-lane rules, previous state policy and site
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p 'test_aml339_*.py' -v
+          python3 experiments/aml339/alert_history.py --self-test
+      - name: Verify parent run provenance and freshness without performing HTTP career scans
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime,json,os,urllib.request
+          repo=os.environ['GITHUB_REPOSITORY']
+          url=f"https://api.github.com/repos/{repo}/actions/runs/45434801153"
+          req=urllib.request.Request(url,headers={
+              "Authorization":"Bearer "+os.environ['GH_TOKEN'],
+              "Accept":"application/vnd.github+json",
+              "User-Agent":"AML339-offline-verified-source-replay"})
+          with urllib.request.urlopen(req,timeout=20) as response:
+              parent=json.load(response)
+          date=datetime.datetime.fromisoformat(parent["created_at"].replace("Z","+00:00"))
+          age=(datetime.datetime.now(datetime.timezone.utc)-date).total_seconds()/3600
+          if (parent.get("id")!=45434801153 or parent.get("head_branch")!="main"
+                  or parent.get("status")!="completed" or not 0<=age<=24):
+              raise RuntimeError("Refuse replay: parent run is wrong, incomplete, or too stale")
+          # This source run failed only in its final static HTML CLI ceiling;
+          # every individual source is re-checked by manifest and novelty logic.
+          print("AML339_REPLAY_PARENT",json.dumps({
+              "source_run_id":parent["id"],"age_hours":round(age,2),
+              "original_run_conclusion":parent.get("conclusion"),
+          }),flush=True)
+          PY
+      - name: Retrieve ALL 18 live official source reports
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-main18-source-*
+          path: sources
+      - name: Retrieve OPTIONAL new source reports without risking the core
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-expansion-source-*
+          path: extras
+      - name: Retrieve NEW regulated EMI source reports (independent of 339 source archive)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-regulated-source-*
+          path: extras
+      - name: Retrieve BULK 50 additional employer audits without risking original core
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-wave50-source-*
+          path: extras
+      - name: Retrieve genuinely NEW regulated-company ATS reports (two proven live)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-regulator50-live-source-*
+          path: extras
+      - name: Retrieve two additionally verified regulator100 official ATS sources
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-reg100-live-*
+          path: extras
+      - name: Retrieve SECOND 50 verified official employer portals, each individually optional
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45434801153
+          github-token: ${{ github.token }}
+          pattern: aml339-growth50-live-source-*
+          path: extras
+      - name: Verify core 18 and accept only fully audited optional sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p extras
+          python3 scripts/aml339_source_manifest.py \
+            --core-dir sources --expansion-dir extras \
+            --paths-out source_paths.txt --ids-out source_ids.txt \
+            --manifest-out coverage_manifest.json
+      - name: Reject a silent history reset when main state is unexpectedly absent
+        if: ${{ hashFiles('data/aml339_main18_state.json') == '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Missing state is allowed ONLY for the first deployment. If any
+          # earlier main18 workflow completed, do not fall back to the seed.
+          python3 - <<'PY'
+          import json,os,urllib.request
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/workflows/aml339_main18.yml/runs?status=success&per_page=5"
+          req=urllib.request.Request(url,headers={
+             "Authorization":"Bearer "+os.environ["GH_TOKEN"],
+             "Accept":"application/vnd.github+json",
+             "User-Agent":"AML339-safe-bootstrap"})
+          with urllib.request.urlopen(req,timeout=20) as resp:
+             data=json.load(resp)
+          if not isinstance(data.get("total_count"),int):
+             raise RuntimeError("Cannot inspect prior successful main runs")
+          if data["total_count"]:
+             raise RuntimeError("Missing existing AML339 state after prior successful execution: NO RESET")
+          print("AML339_INITIAL_BOOTSTRAP_ALLOWED",flush=True)
+          PY
+      - name: First run only - fetch exact previously audited 3-record state
+        if: ${{ hashFiles('data/aml339_main18_state.json') == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: 45200484405
+          github-token: ${{ github.token }}
+          name: aml339-live18-full-state
+          path: restored
+      - name: Validate existing state or exact historical seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p restored
+          if test -s data/aml339_main18_state.json; then
+            cp data/aml339_main18_state.json restored/history.json
+            echo "AML339_RESTORED_FROM_MAIN"
+          else
+            test -s restored/isolated_alert_history.json
+            cp restored/isolated_alert_history.json restored/history.json
+            echo "AML339_RESTORED_FROM_VERIFIED_EXPERIMENT"
+          fi
+          python3 - <<'PY'
+          import sys,json
+          sys.path.insert(0,"experiments/aml339")
+          from alert_history import check_history
+          s=check_history(json.load(open("restored/history.json",encoding="utf-8")))
+          if len(s["records"])<3:raise RuntimeError("Historic pilot records lost; refusing reset")
+          print("AML339_HISTORY_VALIDATED",len(s["records"]),flush=True)
+          PY
+      - name: Evaluate both lanes, verify no duplicates or history loss
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports state
+          mapfile -t files < source_paths.txt
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources "$(cat source_ids.txt)" \
+            --state-in restored/history.json --run-id "$GITHUB_RUN_ID" --strict-novelty \
+            --state-out state/isolated_alert_history.json \
+            --json-out reports/alerts.json --md-out reports/alerts.md "${files[@]}"
+          python3 experiments/aml339/alert_history.py \
+            --expect-sources "$(cat source_ids.txt)" \
+            --state-in state/isolated_alert_history.json --strict-novelty \
+            --state-out state/replay.json \
+            --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md "${files[@]}"
+          python3 - <<'PY'
+          import json
+          prior=json.load(open("restored/history.json"))
+          now=json.load(open("state/isolated_alert_history.json"))
+          current=json.load(open("reports/alerts.json"))
+          replay=json.load(open("reports/replay_alerts.json"))
+          if not set(prior["records"]).issubset(now["records"]):
+             raise RuntimeError("Historical alert keys lost")
+          coverage=json.load(open("coverage_manifest.json"))
+          if (current["source_count"]!=coverage["total_verified"]
+              or coverage["core_verified"] not in (17,18)
+              or coverage.get("strict_core_verified")!=17
+              or set(coverage.get("missing_or_failed_core",{})) != (
+                  {"payabl"} if coverage["core_verified"]==17 else set())
+              or replay["new_counts"]!={"confirmed_recent":0,"promising_date_unconfirmed":0}):
+             raise RuntimeError("Incomplete core source audit or duplicate alerts on replay")
+          print("AML339_CONTINUITY_AND_NO_REPEAT_PASSED",json.dumps({
+            "previous_records":len(prior["records"]),"final_records":len(now["records"]),
+            "new":current["new_counts"],"replay":replay["new_counts"]}),flush=True)
+          PY
+      - name: Build SEPARATE AML339 web view and RSS, preserving 500-employer radar
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp state/isolated_alert_history.json data/aml339_main18_state.json
+          python3 scripts/aml339_site.py \
+            --sources-file source_paths.txt \
+            --state-file data/aml339_main18_state.json \
+            --report-file reports/alerts.json \
+            --manifest-file coverage_manifest.json \
+            --dest public/aml339
+          test -s public/index.html
+          test -s public/feed.xml
+          test -s public/aml339/index.html
+          test -s public/aml339/confirmed.xml
+          test -s public/aml339/review.xml
+      - name: Commit atomic AML339 history + view only after every check passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "kyc-radar-bot"
+          git config user.email "kyc-radar-bot@users.noreply.github.com"
+          git add data/aml339_main18_state.json public/aml339/
+          if git diff --cached --quiet; then
+            echo "AML339_NO_CHANGES"
+          else
+            git commit -m "aml339: publish guarded 18-plus verified expansion [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Preserve complete alert audit for troubleshooting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-main18-audit
+          path: |
+            reports/
+            source_paths.txt
+            source_ids.txt
+            coverage_manifest.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Upload full GitHub Pages site including original radar
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+      - name: Wait until the uploaded Pages artifact is visible through the API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/aml339_pages_ready.py
+      - name: Deploy both dashboards without replacing existing radar
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      # GitHub's upload API can report the artifact before deploy-pages indexes it.
+      # This retry is ONLY for publication; it does not rerun a job scan or touch history.
+      - name: Allow GitHub Pages artifact propagation if first deploy failed
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        run: sleep 35
+      - name: Retry Pages deployment once after propagation
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        id: deployment_retry
+        uses: actions/deploy-pages@v5
