@@ -140,7 +140,7 @@ def render_html(roles, history, report, manifest=None):
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
         f"{report['source_count']}/147 fuentes configuradas · {report['roles_evaluated']} fichas evaluadas.</p>"
         + core_warning
-        f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
+        + f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
