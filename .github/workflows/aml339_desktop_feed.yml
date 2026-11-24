@@ -1,0 +1,42 @@
+name: AML339 desktop feed validation
+on:
+  pull_request:
+    paths:
+      - 'scripts/aml339_site.py'
+      - 'public/aml339/desktop.json'
+      - '.github/workflows/aml339_desktop_feed.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Validate desktop snapshot against existing public audited summary and exact source manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          from scripts.aml339_source_manifest import CORE, OPTIONAL
+          from pathlib import Path
+          p=Path("public/aml339")
+          d=json.loads((p/"desktop.json").read_text())
+          s=json.loads((p/"summary.json").read_text())
+          assert d["schema"]=="aml339_desktop_v1" and d["novelty_guard_enabled"] is True
+          assert d["checked_at_utc"]==s["checked_at_utc"]
+          assert len(d["sources"])==d["sources_expected"]==s["sources_expected"]
+          assert {r["id"] for r in d["sources"]}==set(CORE+OPTIONAL)
+          assert sum(r["status"]=="verified" for r in d["sources"])==d["sources_complete"]==s["sources_complete"]
+          assert len(d["jobs"])==s["current_qualifying"]
+          assert d["new_counts"]==s["new_counts"]
+          for lane in d["new_counts"]:
+              assert sum(j["new_in_scan"] and j["lane"]==lane for j in d["jobs"])==d["new_counts"][lane]
+          print("DESKTOP_SEED_VERIFIED",len(d["sources"]),len(d["jobs"]))
+          PY
+      - name: Verify existing AML339 publication tests
+        run: python3 -m unittest discover -s tests -p 'test_aml339_*.py'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aml339-desktop-seed
+          path: public/aml339/desktop.json
+          retention-days: 14

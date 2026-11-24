@@ -317,6 +317,43 @@ def build(evidence_paths, state, report, output, manifest=None):
             "Swiss roles require independent verification of work eligibility and permits",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Stable, data-only feed for the original private Windows radar client.
+    # Export only current audited job facts, never application history or private state.
+    if manifest is not None and report.get("strict_novelty"):
+        verified = set(manifest["verified_source_ids"])
+        failures = {**manifest.get("missing_or_failed_core",{}), **manifest.get("missing_or_failed_expansion",{})}
+        configured = tuple(CORE+OPTIONAL)
+        if (len(set(configured)) != len(configured) or verified & set(failures)
+                or verified | set(failures) != set(configured) or len(verified) != count):
+            raise ValueError("Desktop source inventory differs from verified manifest")
+        source_data = {}
+        for path in evidence_paths:
+            src = json.loads(Path(path).read_text(encoding="utf-8"))["sources"][0]
+            source_data[src["source_id"]] = src
+        new_keys = {lane: {x["role_key"] for x in report["new_alert_previews"][lane]} for lane in LANES}
+        desktop_jobs = []
+        for item in roles:
+            desktop_jobs.append({
+                "role_key": item["role_key"], "employer_id": item["employer_id"],
+                "title": item["title"], "url": item["url"], "location": item["location"],
+                "lane": item["lane"], "original_date": item.get("original_date"),
+                "confirmed_job_duties": item.get("confirmed_job_duties") or [],
+                "geography": item.get("geography"),
+                "first_seen": history["records"][item["role_key"]].get("first_seen"),
+                "new_in_scan": item["role_key"] in new_keys[item["lane"]],
+            })
+        desktop_sources = []
+        for sid in configured:
+            src = source_data.get(sid,{})
+            desktop_sources.append({"id": sid, "name": src.get("source_name") or src.get("name") or sid,
+                "status": "verified" if sid in verified else "failed",
+                "reason": failures.get(sid), "listed": src.get("total_listed"),
+                "relevant": src.get("relevant_leads")})
+        desktop = {"schema":"aml339_desktop_v1", "checked_at_utc":report["checked_at_utc"],
+            "sources_expected":len(configured), "sources_complete":count,
+            "roles_evaluated":report["roles_evaluated"], "novelty_guard_enabled":True,
+            "new_counts":report["new_counts"], "sources":desktop_sources,"jobs":desktop_jobs}
+        (output / "desktop.json").write_text(json.dumps(desktop, ensure_ascii=False, indent=2)+"\n",encoding="utf-8")
     print("AML339_PUBLIC_SITE_BUILT", json.dumps({
         "current": len(roles), "new": report["new_counts"]
     }, ensure_ascii=False), flush=True)
