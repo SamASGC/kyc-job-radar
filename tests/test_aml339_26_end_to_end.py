@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect, EXTERNAL50_LIVE
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, collect, DYNAMIC_LIVE
 from batch50_sources import BATCH50
 from growth_wave50_sources import WAVE50_B
 from scripts.aml339_site import build
@@ -86,7 +86,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         self.assertEqual(summary["core_sources_complete"], 18)
         self.assertEqual(summary["missing_or_failed_expansion"], {
             "nexpay": "partial_or_failed_listing",
-            **{sid:"no_live_source_evidence" for sid in REGULATED+BATCH50+REGULATOR50+REG100_LIVE+WAVE50_B+EXTERNAL50_LIVE},
+            **{sid:"no_live_source_evidence" for sid in REGULATED+BATCH50+REGULATOR50+REG100_LIVE+WAVE50_B+DYNAMIC_LIVE},
         })
         self.assertEqual(report["new_counts"], {
             "confirmed_recent": 0, "promising_date_unconfirmed": 0,
@@ -104,7 +104,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         history, replay, manifest, summary, out = self._run(prior=first)
         self.assertEqual(summary["sources_complete"], 26)
         self.assertEqual(summary["expanded_sources_complete"], 8)
-        self.assertEqual(set(summary["missing_or_failed_expansion"]), set(EXPANSION[8:]) | set(REGULATED) | set(BATCH50) | set(REGULATOR50) | set(REG100_LIVE)|set(WAVE50_B)|set(EXTERNAL50_LIVE))
+        self.assertEqual(set(summary["missing_or_failed_expansion"]), set(EXPANSION[8:]) | set(REGULATED) | set(BATCH50) | set(REGULATOR50) | set(REG100_LIVE)|set(WAVE50_B)|set(DYNAMIC_LIVE))
         self.assertEqual(replay["new_counts"], {
             "confirmed_recent": 0, "promising_date_unconfirmed": 0,
         })
