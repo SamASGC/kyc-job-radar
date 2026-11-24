@@ -26,6 +26,43 @@
       "id": "external50b-es-onyx",
       "driver": "next",
       "audit_run": 45445704499
+    },
+    {
+      "id": "reg50-wallee-europe",
+      "name": "Wallee Europe S.A.",
+      "careers_url": "https://join.com/companies/wallee",
+      "route": [
+        "site_jobs",
+        "join.com",
+        "^/companies/wallee/[0-9]+-[^/]+/?$"
+      ],
+      "job_pattern": "^/companies/wallee/[0-9]+-[^/]+/?$",
+      "regulatory_reference": "https://www.lb.lt/en/sfi-financial-market-participants/wallee-europe-s-a",
+      "employer_reference": "https://en.wallee.com/about-wallee/career",
+      "aliases": [
+        "wallee",
+        "snapswap"
+      ],
+      "driver": "generic",
+      "audit_run": 45448388827
+    },
+    {
+      "id": "reg100-de-allunity-gmbh",
+      "name": "AllUnity GmbH",
+      "careers_url": "https://allunity.com/careers",
+      "route": [
+        "site_jobs",
+        "allunity.com",
+        "^/(?:[a-z]{2}/)?(?:careers|jobs|vacancies)/(?:jobs/)?(?:[0-9]+(?:-[^/]+)?|[0-9a-f-]{36})/?$"
+      ],
+      "job_pattern": "^/(?:[a-z]{2}/)?(?:careers|jobs|vacancies)/(?:jobs/)?(?:[0-9]+(?:-[^/]+)?|[0-9a-f-]{36})/?$",
+      "regulatory_reference": "https://www.lb.lt/finansu-rinku-dalyviai/allunity-gmbh",
+      "employer_reference": "https://allunity.com/news/allunity-secures-bafin-emi-license-to-launch-its-micar-compliant-euro-stablecoin",
+      "aliases": [
+        "allunity"
+      ],
+      "driver": "generic",
+      "audit_run": 45448388827
     }
   ]
 }
