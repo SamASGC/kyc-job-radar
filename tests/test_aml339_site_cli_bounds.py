@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts import aml339_site
+from scripts.aml339_source_manifest import CORE, OPTIONAL
 
 
 class SiteCLIUpperBoundTests(unittest.TestCase):
@@ -35,15 +36,15 @@ class SiteCLIUpperBoundTests(unittest.TestCase):
     def test_real_145_sources_are_allowed_by_cli(self):
         self.invoke(145)
 
-    def test_future_maximum_152_is_allowed_by_cli(self):
-        self.invoke(152)
+    def test_future_maximum_registry_is_allowed_by_cli(self):
+        self.invoke(len(CORE+OPTIONAL))
 
     def test_payabl_degraded_seventeen_core_allowed_with_manifest(self):
         self.invoke(17)
 
     def test_extra_source_is_not_silently_accepted(self):
         with self.assertRaisesRegex(ValueError,"17-18"):
-            self.invoke(153)
+            self.invoke(len(CORE+OPTIONAL)+1)
 
     def test_too_small_unverified_core_is_rejected(self):
         with self.assertRaisesRegex(ValueError,"17-18"):
