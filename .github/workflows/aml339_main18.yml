@@ -123,7 +123,7 @@ jobs:
             echo "Payabl reserved for daily scheduled audit; no network request"
             exit 0
           fi
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_e2e18_full.py" --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_e2e18_full.py --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
       - name: Always retain source-level evidence for diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -188,7 +188,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_expansion_probe.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_expansion_probe.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Always retain source-level evidence for diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -253,9 +253,9 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
           if [[ "$SOURCE" == "emi-trumia-mt" || "$SOURCE" == "emi-zen-lt" ]]; then
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_regulated_sidecar.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_regulated_sidecar.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
           else
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "probe_malta_three_new.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" probe_malta_three_new.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
           fi
       - name: Retain source-level evidence
         if: always()
@@ -319,7 +319,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_batch50_probe.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_batch50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
       - name: Keep official per-source evidence even on HTTP or verification failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -383,7 +383,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_growth50_probe.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_growth50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
       - name: Keep official per-source evidence even on HTTP or verification failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -448,7 +448,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_regulator50_canary.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_regulator50_canary.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Preserve evidence and failures per employer
         if: always()
         uses: actions/upload-artifact@v4
@@ -512,7 +512,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_reg100_active.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_reg100_active.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Preserve actual per-source report including failures
         if: always()
         uses: actions/upload-artifact@v4
@@ -589,13 +589,13 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
           if [[ "$DRIVER" == "next" ]]; then
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external50_next.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_external50_next.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "wave02" ]]; then
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external50_wave02.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "generic" ]]; then
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external_generic.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_external_generic.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "catalog" ]]; then
-            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_catalog_registry.py" --source "$SOURCE" --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_catalog_registry.py --source "$SOURCE" --out "candidate_${SOURCE}.json"
           else
             exit 1
           fi
