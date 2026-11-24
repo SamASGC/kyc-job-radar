@@ -32,8 +32,8 @@ on:
       - "tests/test_aml339_growth50.py"
       - "scripts/aml339_pages_ready.py"
   schedule:
-    # One daily full audit: low request frequency, including the formerly
-    # rate-limited Payabl Workable source. Github cron timing may vary.
+    # Hourly production scans, with a separate daily slot for Workable/Payabl.
+    - cron: "23 0-6,8-23 * * *"
     - cron: "23 7 * * *"
 
 permissions:
@@ -49,7 +49,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare_cooldowns:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main, persist-credentials: false}
+      - name: Load latest persistent provider pause ledger
+        run: |
+          mkdir -p cooldown
+          python3 experiments/aml339/hourly_http_guard.py merge --prior data/aml339_http_cooldowns.json --receipts cooldown --out cooldown/prior.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: cooldown/prior.json
+          retention-days: 2
   scan:
+    needs: prepare_cooldowns
     name: Verify ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -65,6 +81,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -95,20 +115,28 @@ jobs:
         shell: bash
         env:
           SOURCE: ${{ matrix.source }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_e2e18_full.py --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
+          if [[ "$SOURCE" == "payabl" && "$EVENT_SCHEDULE" != "23 7 * * *" ]]; then
+            echo "Payabl reserved for daily scheduled audit; no network request"
+            exit 0
+          fi
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_e2e18_full.py" --source "$SOURCE" --minutes 4 --out "source_${SOURCE}.json"
       - name: Always retain source-level evidence for diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-main18-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/source_*.json
+          path: |
+            ${{ runner.temp }}/aml339/source_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
   expansion:
+    needs: prepare_cooldowns
     name: Verify added ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -123,6 +151,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -156,17 +188,20 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_expansion_probe.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_expansion_probe.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Always retain source-level evidence for diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-expansion-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
   regulated:
+    needs: prepare_cooldowns
     name: Verify new regulated EMI ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -181,6 +216,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -214,19 +253,22 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
           if [[ "$SOURCE" == "emi-trumia-mt" || "$SOURCE" == "emi-zen-lt" ]]; then
-            python3 live_regulated_sidecar.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_regulated_sidecar.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
           else
-            python3 probe_malta_three_new.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "probe_malta_three_new.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
           fi
       - name: Retain source-level evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-regulated-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
   wave50:
+    needs: prepare_cooldowns
     name: Verify wave50 ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -241,6 +283,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -273,17 +319,20 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_batch50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_batch50_probe.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
       - name: Keep official per-source evidence even on HTTP or verification failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-wave50-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
   growth50:
+    needs: prepare_cooldowns
     name: Verify growth50 ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -298,6 +347,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -330,17 +383,20 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_growth50_probe.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_growth50_probe.py" --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
       - name: Keep official per-source evidence even on HTTP or verification failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-growth50-live-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
   regulator50:
+    needs: prepare_cooldowns
     name: Verify real new employer ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -354,6 +410,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -388,16 +448,19 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_regulator50_canary.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_regulator50_canary.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Preserve evidence and failures per employer
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-regulator50-live-source-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
   reg100_live:
+    needs: prepare_cooldowns
     name: Verify regulated EMI reg100 official ATS ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -411,6 +474,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -445,13 +512,15 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
-          python3 live_reg100_active.py --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_reg100_active.py" --source "$SOURCE" --minutes 4 --out "candidate_${SOURCE}.json"
       - name: Preserve actual per-source report including failures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aml339-reg100-live-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
@@ -467,7 +536,7 @@ jobs:
         run: echo "matrix=$(python3 experiments/aml339/external_live_registry.py)" >> "$GITHUB_OUTPUT"
 
   external50_live:
-    needs: prepare_external
+    needs: [prepare_external, prepare_cooldowns]
     name: Verify dynamically enrolled employer ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
@@ -480,6 +549,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-http-cooldown-prior
+          path: ${{ runner.temp }}/aml339-cooldown
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -516,13 +589,13 @@ jobs:
           set -euo pipefail
           cd "$RUNNER_TEMP/aml339"
           if [[ "$DRIVER" == "next" ]]; then
-            python3 live_external50_next.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external50_next.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "wave02" ]]; then
-            python3 live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external50_wave02.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "generic" ]]; then
-            python3 live_external_generic.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_external_generic.py" --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "catalog" ]]; then
-            python3 live_catalog_registry.py --source "$SOURCE" --out "candidate_${SOURCE}.json"
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" "live_catalog_registry.py" --source "$SOURCE" --out "candidate_${SOURCE}.json"
           else
             exit 1
           fi
@@ -531,15 +604,42 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aml339-external50-live-${{ matrix.source }}
-          path: ${{ runner.temp }}/aml339/candidate_*.json
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
           retention-days: 14
           if-no-files-found: warn
 
+  persist_cooldowns:
+    needs: [prepare_cooldowns, scan, expansion, regulated, wave50, growth50, regulator50, reg100_live, external50_live]
+    if: ${{ always() && needs.prepare_cooldowns.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-*
+          path: cooldown-evidence
+      - name: Persist longest observed provider pauses even if a source audit failed
+        run: |
+          set -euo pipefail
+          python3 experiments/aml339/hourly_http_guard.py merge --prior data/aml339_http_cooldowns.json --receipts cooldown-evidence --out data/aml339_http_cooldowns.json
+          git config user.name "kyc-radar-bot"
+          git config user.email "kyc-radar-bot@users.noreply.github.com"
+          git add data/aml339_http_cooldowns.json
+          if ! git diff --cached --quiet; then
+            git commit -m "aml339: persist HTTP provider pauses [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
   publish:
     name: Audit complete scan, preserve history and publish independent page
-    needs: [scan, expansion, regulated, wave50, growth50, regulator50, reg100_live, external50_live]
+    needs: [scan, expansion, regulated, wave50, growth50, regulator50, reg100_live, external50_live, persist_cooldowns]
     # Preserve 17 strictly mandatory independent sources; the Payabl Workable provider is quarantinable.
-    if: ${{ always() && needs.scan.result == 'success' }}
+    if: ${{ always() && needs.scan.result == 'success' && needs.persist_cooldowns.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment:
