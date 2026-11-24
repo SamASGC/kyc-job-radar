@@ -14,7 +14,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
         cls.discovery=json.loads(Path("experiments/aml339/regulator100_discovery_queue.json").read_text(encoding="utf-8"))
 
     @staticmethod
-    def summary(age=2,source_count=95):
+    def summary(age=2,source_count=97):
         return {
            "checked_at_utc":(dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc)
                               -dt.timedelta(hours=age)).isoformat(),
@@ -24,6 +24,9 @@ class V1ReleaseHealthTests(unittest.TestCase):
            "novelty_guard_enabled":True,
            "regulator50_discovered":50,
            "regulator50_live_expected":2,
+           "reg100_research_leads":100,
+           "reg100_live_expected":2,
+           "reg100_live_verified":2,
            "new_counts":{"confirmed_recent":0,"promising_date_unconfirmed":0}
         }
 
@@ -47,13 +50,13 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertEqual(set(x["country"] for x in d["candidates"]),
            {"LT","MT","LU","ES","IE","NL","BE","LV","CY","PT","FR","DE","CZ","FI","IT"})
 
-    def test_published_fresh_95_source_v1_may_be_verified_without_counting_100(self):
+    def test_published_fresh_97_source_v1_may_be_verified_without_counting_100(self):
         health=evaluate(self.summary(),self.discovery,
                         now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertTrue(health["v1_published_verified"])
-        self.assertEqual(health["configured_maximum_live_sources"],95)
-        self.assertEqual(health["actual_verified_live_sources"],95)
-        self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],0)
+        self.assertEqual(health["configured_maximum_live_sources"],97)
+        self.assertEqual(health["actual_verified_live_sources"],97)
+        self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],2)
 
     def test_published_34_old_version_is_not_claimed_v1(self):
         raw=json.loads(Path("public/aml339/summary.json").read_text())
@@ -62,6 +65,12 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertFalse(health["v1_published_verified"])
         self.assertEqual(health["actual_verified_live_sources"],34)
         self.assertEqual(health["status"],"PENDING_PRODUCTION_VALIDATION")
+
+    def test_low_optional_source_coverage_blocks_stable_release(self):
+        s=self.summary(source_count=60)
+        health=evaluate(s,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
+        self.assertFalse(health["v1_published_verified"])
+        self.assertEqual(health["minimum_live_sources_for_stable_v1"],90)
 
     def test_stale_scan_never_claimed_released(self):
         s=self.summary(age=37)

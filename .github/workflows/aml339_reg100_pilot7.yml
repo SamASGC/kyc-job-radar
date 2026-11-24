@@ -1,0 +1,124 @@
+name: AML339 7 regulated-company official careers pilot
+on:
+  push:
+    branches: [feat/aml339-reg100-ats-pilot7-20261124]
+    paths:
+      - ".github/workflows/aml339_reg100_pilot7.yml"
+      - "experiments/aml339/live_reg100_pilot.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate-source:
+    name: Official full source ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [reg100-be-paynovate, reg100-ie-currenxie-technologies-limited, reg100-lu-pingpong-europe-s-a, reg100-mt-payfuture-fs-mt-ltd, reg100-de-allunity-gmbh, reg100-es-outpayce-s-a, reg100-lt-uab-monavate]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify immutable original 339-source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_reg100_pilot.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/regulator100_discovery_queue.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Full official job listings and relevant role details with bounded HTTP
+        shell: bash
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_reg100_pilot.py --source "$SOURCE" --minutes 3 --out "candidate_${SOURCE}.json"
+      - name: Retain evidence for each source including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-reg100-pilot-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          retention-days: 14
+          if-no-files-found: warn
+  report:
+    needs: [candidate-source]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-reg100-pilot-*
+          path: artifacts
+      - name: Classify actual usable official sources without false coverage claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          expected=set(["reg100-be-paynovate","reg100-ie-currenxie-technologies-limited","reg100-lu-pingpong-europe-s-a","reg100-mt-payfuture-fs-mt-ltd","reg100-de-allunity-gmbh","reg100-es-outpayce-s-a","reg100-lt-uab-monavate"])
+          found={}
+          for f in Path("artifacts").rglob("candidate_*.json"):
+              d=json.loads(f.read_text(encoding="utf-8"))
+              assert d["source_registry"]=="regulated_emi_reg100_canary_v1"
+              assert d["original_catalog_sources"]==339
+              s=d["sources"][0]
+              sid=s["source_id"]
+              assert sid in expected and sid not in found
+              matched=s.get("relevant_leads")
+              ok=(s.get("list_complete") is True and
+                  s.get("state")=="listing_extracted" and
+                  isinstance(matched,int) and
+                  len(s.get("audited",[]))==matched and
+                  s.get("unverified_in_scope")==0 and
+                  isinstance(s.get("listing_role_keys"),list))
+              found[sid]={"full_audit_pass":ok,"listed":s.get("total_listed"),
+                          "matched":matched,"unverified_in_scope":s.get("unverified_in_scope"),
+                          "errors":s.get("errors"),"warnings":s.get("warnings")}
+          missing=sorted(expected-set(found))
+          print("REG100_PILOT_REPORT",json.dumps({
+              "candidates":len(expected),"results":len(found),
+              "passed":[sid for sid,x in found.items() if x["full_audit_pass"]],
+              "failed":[sid for sid,x in found.items() if not x["full_audit_pass"]],
+              "missing":missing,"detail":found},ensure_ascii=False),flush=True)
+          Path("reg100_pilot7_report.json").write_text(json.dumps(found,ensure_ascii=False,indent=2)+"\n")
+          if missing or len(found)!=7:
+              raise RuntimeError("Missing source diagnostics")
+          PY
+      - name: Save summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml339-reg100-pilot7-summary
+          path: reg100_pilot7_report.json
+          retention-days: 14
+          if-no-files-found: warn

@@ -130,7 +130,7 @@ def render_html(roles, history, report):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/95 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/97 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
         f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
@@ -194,7 +194,7 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 18 <= count <= 95:
+    if not isinstance(count, int) or not 18 <= count <= 97:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count > 18 and manifest is None:
         raise ValueError("Expanded source publication requires a verified manifest")
@@ -202,7 +202,13 @@ def build(evidence_paths, state, report, output, manifest=None):
         manifest.get("core_verified") != 18
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - 18
-        or manifest.get("expansion_expected") != 77
+        or manifest.get("expansion_expected") != 79
+        or manifest.get("reg100_research_leads") != 100
+        or manifest.get("reg100_live_expected") != 2
+        or manifest.get("reg100_live_verified") != sum(
+            sid in set(manifest.get("verified_source_ids",[]))
+            for sid in manifest.get("reg100_live_verified_ids",[]))
+        or len(manifest.get("reg100_live_verified_ids",[])) != manifest.get("reg100_live_verified")
         or manifest.get("regulator50_discovered") != 50
         or manifest.get("regulator50_live_expected") != 2
         or manifest.get("regulator50_live_verified") != sum(
@@ -241,7 +247,10 @@ def build(evidence_paths, state, report, output, manifest=None):
         "checked_at_utc": report["checked_at_utc"],
         "sources_complete": count,
         "source_count": count,
-        "sources_expected": 95,
+        "sources_expected": 97,
+        "reg100_research_leads": (manifest or {}).get("reg100_research_leads",0),
+        "reg100_live_expected": (manifest or {}).get("reg100_live_expected",0),
+        "reg100_live_verified": (manifest or {}).get("reg100_live_verified",0),
         "regulator50_discovered": (manifest or {}).get("regulator50_discovered",0),
         "regulator50_live_expected": (manifest or {}).get("regulator50_live_expected",0),
         "regulator50_live_verified": (manifest or {}).get("regulator50_live_verified",0),
@@ -284,7 +293,7 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 18 <= len(paths) <= 95:
+    if not 18 <= len(paths) <= 97:
         raise ValueError("Expected 18 complete core snapshots plus up to 75 independently audited additions")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
