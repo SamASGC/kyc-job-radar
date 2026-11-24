@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - ".github/workflows/aml339_pages_recovery.yml"
+      - "public/aml339/progress.html"
 permissions:
   contents: read
   actions: read
