@@ -31,7 +31,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [external50b-lv-paybis, external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor]
+        source: [external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor]
+        # Paybis detail endpoint returned 403 for all five roles; do not repeatedly hit it.
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
