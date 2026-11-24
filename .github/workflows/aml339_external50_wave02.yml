@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [external50b-lv-paybis, external50b-lv-neverless, external50b-lv-noah]
+        source: [external50b-lv-paybis, external50b-lv-neverless, external50b-lv-noah, external50b-es-treezor]
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
