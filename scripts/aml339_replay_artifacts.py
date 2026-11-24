@@ -18,10 +18,13 @@ import io
 import json
 import os
 from pathlib import Path
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.aml339_source_manifest import (
     CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE,
