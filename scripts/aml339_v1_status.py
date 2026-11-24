@@ -7,13 +7,39 @@ Never reads, modifies or publishes personal application information.
 from __future__ import annotations
 import argparse
 import datetime as dt
+import http.client
 import json
 import sys
+import urllib.request
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL
+from scripts.aml339_site import FEED_FILES, ROOT as PUBLIC_URL
+
+
+def check_pages(summary_path: Path) -> dict:
+    """Check the exact release files delivered to an anonymous Pages reader."""
+    results = {}
+    for name in ("summary.json", "index.html", *FEED_FILES.values()):
+        path = summary_path if name == "summary.json" else summary_path.with_name(name)
+        try:
+            expected = path.read_bytes()
+            if not expected:
+                raise ValueError("empty local release file")
+            request = urllib.request.Request(PUBLIC_URL + name, headers={
+                "User-Agent": "AML339-release-health",
+                "Cache-Control": "no-cache",
+            })
+            with urllib.request.urlopen(request, timeout=10) as response:
+                if response.status != 200:
+                    raise ValueError(f"HTTP {response.status}")
+                matches = response.read(len(expected) + 1) == expected
+            results[name] = "match" if matches else "different from committed release"
+        except (OSError, ValueError, http.client.HTTPException) as exc:
+            results[name] = str(exc)
+    return results
 
 
 def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -> dict:
@@ -98,6 +124,14 @@ def main():
     args=p.parse_args()
     v=evaluate(json.loads(Path(args.summary).read_text(encoding="utf-8")),
                json.loads(Path(args.candidates).read_text(encoding="utf-8")))
+    if args.require_live:
+        v["public_files"] = check_pages(Path(args.summary))
+        if any(result != "match" for result in v["public_files"].values()):
+            v["status"] = "PENDING_PRODUCTION_VALIDATION"
+            v["v1_published_verified"] = False
+    elif v["v1_published_verified"]:
+        v["status"] = "SNAPSHOT_READY_TO_VERIFY"
+        v["v1_published_verified"] = False
     if args.out:
         Path(args.out).write_text(json.dumps(v,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print("AML339_V1_RELEASE_STATUS",json.dumps(v,ensure_ascii=False),flush=True)

@@ -1,11 +1,16 @@
 """V1 release is based on PUBLISHED coverage, never on guessed 100 lead readiness."""
 import datetime as dt
+from contextlib import redirect_stdout
+import io
 import json
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+from urllib.error import URLError
 
 from scripts.aml339_source_manifest import CORE, OPTIONAL
-from scripts.aml339_v1_status import evaluate
+from scripts.aml339_v1_status import check_pages, evaluate, main
 
 
 class V1ReleaseHealthTests(unittest.TestCase):
@@ -59,12 +64,64 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertEqual(health["100_extra_company_leads_with_verified_active_ats"],2)
 
     def test_published_34_old_version_is_not_claimed_v1(self):
-        raw=json.loads(Path("public/aml339/summary.json").read_text())
+        raw = {
+            "checked_at_utc": "2026-11-23T17:14:53+00:00",
+            "sources_complete": 34, "sources_expected": 34, "core_sources_complete": 18,
+        }
         health=evaluate(raw,self.discovery,
                         now=dt.datetime(2026,11,24,1,tzinfo=dt.timezone.utc))
         self.assertFalse(health["v1_published_verified"])
         self.assertEqual(health["actual_verified_live_sources"],34)
         self.assertEqual(health["status"],"PENDING_PRODUCTION_VALIDATION")
+
+    def test_public_dashboard_summary_and_both_feeds_must_match(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("summary.json", "index.html", "confirmed.xml", "review.xml"):
+                (root / name).write_bytes(name.encode())
+
+            def read(request, timeout):
+                name = request.full_url.rsplit("/", 1)[1]
+                if name == "confirmed.xml":
+                    raise URLError("service unavailable")
+                content = name.encode() + (b" stale" if name == "review.xml" else b"")
+                response = io.BytesIO(content)
+                response.status = 200
+                return response
+
+            with patch("urllib.request.urlopen", side_effect=read):
+                results = check_pages(root / "summary.json")
+        self.assertEqual(results["summary.json"], "match")
+        self.assertEqual(results["index.html"], "match")
+        self.assertIn("service unavailable", results["confirmed.xml"])
+        self.assertIn("different", results["review.xml"])
+
+    def test_release_status_requires_a_matching_deployment_even_with_full_coverage(self):
+        reports = [
+            ([], None, "SNAPSHOT_READY_TO_VERIFY"),
+            (["--require-live"], "different from committed release", "PENDING_PRODUCTION_VALIDATION"),
+            (["--require-live"], "match", "VERIFIED_PRODUCTION"),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "summary.json"
+            out = Path(directory) / "status.json"
+            summary = self.summary()
+            summary["checked_at_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
+            path.write_text(json.dumps(summary))
+            for options, remote, status in reports:
+                with self.subTest(status=status), patch("sys.argv", [
+                    "health", "--summary", str(path), "--out", str(out), *options,
+                ]), patch("scripts.aml339_v1_status.check_pages",
+                          return_value={"review.xml": remote}) as check, redirect_stdout(io.StringIO()):
+                    if status == "PENDING_PRODUCTION_VALIDATION":
+                        with self.assertRaises(SystemExit):
+                            main()
+                    else:
+                        main()
+                    self.assertEqual(check.call_count, int(bool(options)))
+                    result = json.loads(out.read_text())
+                    self.assertEqual(result["status"], status)
+                    self.assertEqual(result["v1_published_verified"], status == "VERIFIED_PRODUCTION")
 
     def test_low_optional_source_coverage_blocks_stable_release(self):
         s=self.summary(source_count=60)
