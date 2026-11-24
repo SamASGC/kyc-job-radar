@@ -45,7 +45,12 @@
       "careers_url": "https://blueemi.com/careers/",
       "employer_posting": "https://lt.linkedin.com/jobs/view/kyc-aml-specialist-at-blue-emi-4392622123",
       "posting_title": "KYC/AML Specialist",
-      "note": "Historical closed posting. Required English and Lithuanian."
+      "note": "Historical closed posting. Required English and Lithuanian.",
+      "page_probe": {
+        "http_status": 200,
+        "landing_url": "https://blueemi.com/careers/",
+        "body_truncated": false
+      }
     },
     {
       "id": "lt-emi-research-cbi-money-uab",
@@ -166,7 +171,12 @@
       "careers_url": "https://www.ibsettle.com/careers",
       "employer_posting": "https://lt.linkedin.com/jobs/view/compliance-quality-assurance-specialist-at-ibsettle-4445095920",
       "posting_title": "Compliance Quality Assurance Specialist",
-      "note": "The official careers page also directs readers to the company LinkedIn page."
+      "note": "The official careers page also directs readers to the company LinkedIn page.",
+      "page_probe": {
+        "http_status": 200,
+        "landing_url": "https://www.ibsettle.com/careers",
+        "body_truncated": false
+      }
     },
     {
       "id": "lt-emi-research-akcine-bendrove-lietuvos-pastas",
@@ -254,7 +264,10 @@
       "regulator_profile": "https://www.lb.lt/lt/finansu-rinku-dalyviai/opal-transfer-eu-uab",
       "prior_source_ids": [],
       "careers_url": "https://www.opaltransfer.com/index.php/en/job-opportunities",
-      "note": "Group careers page. Attribute each vacancy to the employer and location before use."
+      "note": "The indexed group careers URL returned HTTP 404 in the official-page probe. A current recruitment channel still needs to be located.",
+      "page_probe": {
+        "error": "HTTPError: HTTP Error 404: Not Found"
+      }
     },
     {
       "id": "lt-emi-research-payhawk-financial-services-uab",
@@ -273,7 +286,12 @@
         "reg100-lt-paymont-uab"
       ],
       "careers_url": "https://www.paymont.eu/career/",
-      "note": "The November page listed three management positions in Vilnius, including Head of FCP."
+      "note": "The November page listed three management positions in Vilnius, including Head of FCP.",
+      "page_probe": {
+        "http_status": 200,
+        "landing_url": "https://www.paymont.eu/career/",
+        "body_truncated": false
+      }
     },
     {
       "id": "lt-emi-research-paynt-uab",
@@ -331,7 +349,12 @@
       "careers_url": "https://satchel.eu/careers/",
       "employer_posting": "https://lt.linkedin.com/jobs/view/aml-compliance-officer-at-satchel-4255130264",
       "posting_title": "AML Compliance Officer",
-      "note": "General CV intake on the employer site. The separate historical job posting is closed."
+      "note": "General CV intake on the employer site. The separate historical job posting is closed.",
+      "page_probe": {
+        "http_status": 200,
+        "landing_url": "https://satchel.eu/careers/",
+        "body_truncated": false
+      }
     },
     {
       "id": "lt-emi-research-secure-nordic-payments-uab",
@@ -451,5 +474,6 @@
       ],
       "careers_url": null
     }
-  ]
+  ],
+  "employer_page_probe": "https://github.com/SamASGC/kyc-job-radar/actions/runs/45384462123"
 }
