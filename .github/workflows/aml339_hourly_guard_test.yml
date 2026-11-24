@@ -43,7 +43,7 @@ jobs:
               p=Path(tmp);(p/"prior.json").write_text('{"schema":"aml339_http_pause_v1","hosts":{}}')
               (p/"worker.py").write_text("""import urllib.request as u
           from urllib.error import HTTPError
-          class Simulated(u.BaseHandler):
+          class Simulated(u.HTTPHandler):
               def http_open(self,req):
                   raise HTTPError(req.full_url,429,'rate limited',{'Retry-After':'3600'},None)
           opener=u.build_opener(Simulated())
