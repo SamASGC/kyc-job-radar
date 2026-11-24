@@ -1,4 +1,4 @@
-name: Check central bank exports and public labour-market schema
+name: Inspect authorized company boards and current licence categories
 on:
   push:
     branches: [feat/aml339-regulated-watch]
@@ -8,45 +8,42 @@ permissions:
 jobs:
   sample:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 6
     steps:
-      - name: Read published regulatory categories and public dataset metadata
+      - name: Check public company job search and regulatory exports
         run: |
           mkdir -p snapshots
           python - <<'PY'
-          import csv, io, json, pathlib, time, urllib.request as request, urllib.error, urllib.parse as up
-          root='https://get.data.gov.lt/datasets/gov/uzt/ldv/Vieta'
+          import urllib.request as req, urllib.parse as up, urllib.robotparser as robots, time, pathlib, json, re
+          from html.parser import HTMLParser
           def get(url):
-              headers={'User-Agent':'RegulatedJobRadar/1.0 public employment monitor','Accept':'*/*'}
-              with request.urlopen(request.Request(url,headers=headers),timeout=25) as r:
-                  return r.read(6_000_000)
-          for name in ['namespace','model','row','resource','catalogue','category32','category33','category27','category28','category82','category110','category60','category23','category22','category45','category63']:
+              request=req.Request(url,headers={'User-Agent':'AML339/1.0 (public vacancy research)','Accept':'*/*'})
+              with req.urlopen(request,timeout=20) as r: return r.read(3000000)
+          for host,company in [('www.cvonline.lt','41802'),('www.cv.ee','3209')]:
               try:
-                  if name.startswith('category'):
-                      form=name.removeprefix('category')
-                      market='3' if form in ('60','63') else '1'
-                      url='https://www.lb.lt/en/sfi-financial-market-participants?business_form='+form+'&market='+market+'&page=1&export=csv'
-                      data=get(url)
-                      pathlib.Path('snapshots',name+'.csv').write_bytes(data)
-                      print(name,len(data),repr(data[:230]),flush=True)
-                  else:
-                      url={'row':root+'?limit(1)','model':root+'/:format/json?limit(1)','namespace':'https://get.data.gov.lt/datasets/gov/uzt/ldv/:ns','resource':'https://data.gov.lt/datasets/2894/models/','catalogue':'https://data.gov.lt/datasets/2894/dynamic-resource/ldv/'}[name]
-                      data=get(url)
-                      print(name,len(data),flush=True)
-                      if name in ('row','model','namespace'):
-                          parsed=json.loads(data)
-                          rows=parsed.get('_data',[])
-                          print(name,'keys',list(rows[0]) if rows else list(parsed),flush=True)
-                          if rows: pathlib.Path('snapshots',name+'.json').write_text(json.dumps(sorted(rows[0])))
-                      elif name=='resource': pathlib.Path('snapshots','resource.html').write_bytes(data)
-              except urllib.error.HTTPError as exc:
-                  print(name,'HTTP',exc.code,repr(exc.read(450)),flush=True)
-              except Exception as exc:
-                  print(name,'FAIL',str(exc)[:170],flush=True)
-              time.sleep(1)
+                  origin='https://'+host
+                  raw=get(origin+'/robots.txt').decode()
+                  print('ROBOTS',host,raw[:2000],flush=True)
+                  rp=robots.RobotFileParser(); rp.parse(raw.splitlines())
+                  page=origin+'/en/search/employer/'+company
+                  if not rp.can_fetch('AML339',page) or not rp.can_fetch('AML339',origin+'/en/employers'): continue
+                  data=get(page); pathlib.Path('snapshots',host+'.html').write_bytes(data)
+                  matches=re.findall(rb'href="(/en/vacancy/[^"?]+)',data)
+                  if matches:
+                      detail=origin+matches[0].decode()
+                      if rp.can_fetch('AML339',detail): pathlib.Path('snapshots',host+'-detail.html').write_bytes(get(detail))
+              except Exception as e: print('ERROR',host,str(e),flush=True)
+          for form in ('24','124','60','78'):
+              page='https://www.lb.lt/en/sfi-financial-market-participants?business_form='+form+'&market=1&page=1&export=csv'
+              try:
+                  raw=get(page)
+                  pathlib.Path('snapshots','category'+form+'.csv').write_bytes(raw)
+                  print('REGULATOR',form,len(raw),repr(raw[:70]),flush=True)
+              except Exception as e: print('REG_ERROR',form,str(e),flush=True)
+              time.sleep(0.5)
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: bank-categories-and-public-schema
+          name: current-channel-evidence
           path: snapshots
           retention-days: 2
