@@ -44,10 +44,12 @@ REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
 QUARANTINABLE_CORE = ("payabl",)
 STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
 from external_live_registry import ids as external_live_ids
-EXTERNAL50_LIVE = external_live_ids()
-if set(EXTERNAL50_LIVE)&set(CORE+EXPANSION+BATCH50+WAVE50_B+REGULATED+REGULATOR50+REG100_LIVE):
+EXTERNAL50_LIVE = external_live_ids(catalog=False)
+CATALOG_LIVE = external_live_ids(catalog=True)
+DYNAMIC_LIVE = EXTERNAL50_LIVE + CATALOG_LIVE
+if set(DYNAMIC_LIVE)&set(CORE+EXPANSION+BATCH50+WAVE50_B+REGULATED+REGULATOR50+REG100_LIVE):
     raise ValueError("Duplicate live external employer identity")
-OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE + EXTERNAL50_LIVE
+OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE + DYNAMIC_LIVE
 
 
 def collect(core_dir: Path, optional_dir: Path):
@@ -128,7 +130,9 @@ def collect(core_dir: Path, optional_dir: Path):
                 raise ValueError("Missing external50 production source registry")
             if sid in EXTERNAL50_LIVE and data.get("verified") is not True:
                 obj=dict(obj,state="listing_failed",list_complete=False)
-            if sid in EXPANSION+BATCH50+WAVE50_B and data.get("source_registry") not in (None,"original_339"):
+            if sid in CATALOG_LIVE and (data.get("source_registry")!="original_339" or data.get("verified") is not True):
+                obj=dict(obj,state="listing_failed",list_complete=False)
+            if sid in EXPANSION+BATCH50+WAVE50_B+CATALOG_LIVE and data.get("source_registry") not in (None,"original_339"):
                 raise ValueError("Unexpected or mismatched source identifier")
             if sid in by_id:
                 raise ValueError("Duplicate source evidence")
@@ -192,6 +196,9 @@ def collect(core_dir: Path, optional_dir: Path):
         "reg100_live_expected": len(REG100_LIVE),
         "reg100_live_verified": sum(sid not in skipped for sid in REG100_LIVE),
         "reg100_live_verified_ids": [sid for sid in REG100_LIVE if sid not in skipped],
+        "catalog_live_expected":len(CATALOG_LIVE),
+        "catalog_live_verified":sum(sid not in skipped for sid in CATALOG_LIVE),
+        "catalog_live_verified_ids":[sid for sid in CATALOG_LIVE if sid not in skipped],
         "external50_research_leads":50,
         "external50_live_expected":len(EXTERNAL50_LIVE),
         "external50_live_verified":sum(sid not in skipped for sid in EXTERNAL50_LIVE),
