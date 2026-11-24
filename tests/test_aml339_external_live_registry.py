@@ -1,14 +1,14 @@
 import json,tempfile,unittest
 from pathlib import Path
-from scripts.aml339_source_manifest import EXTERNAL50_LIVE,CORE,OPTIONAL
+from scripts.aml339_source_manifest import DYNAMIC_LIVE,CORE,OPTIONAL
 from external_live_registry import load_registry,matrix,ids,REGISTRY
 
 class ExternalRegistryTests(unittest.TestCase):
     def test_matrix_and_manifest_share_one_inventory(self):
         rows=load_registry()
-        self.assertEqual(tuple(x["source"] for x in matrix()["include"]),EXTERNAL50_LIVE)
+        self.assertEqual(tuple(x["source"] for x in matrix()["include"]),DYNAMIC_LIVE)
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
-        self.assertEqual(len(rows),len(EXTERNAL50_LIVE))
+        self.assertEqual(len(rows),len(DYNAMIC_LIVE))
     def test_fifty_new_verified_rows_require_no_code_or_workflow_edit(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"registry.json"
@@ -16,8 +16,8 @@ class ExternalRegistryTests(unittest.TestCase):
             for n in range(50):
                 d["sources"].append({"id":f"synthetic-batch-test-{n}","driver":"generic","audit_run":1})
             p.write_text(json.dumps(d))
-            self.assertEqual(len(matrix(p)["include"]),len(EXTERNAL50_LIVE)+50)
-            self.assertEqual(len(ids(p)),len(EXTERNAL50_LIVE)+50)
+            self.assertEqual(len(matrix(p)["include"]),len(DYNAMIC_LIVE)+50)
+            self.assertEqual(len(ids(p)),len(DYNAMIC_LIVE)+50)
             d["sources"].append(d["sources"][0])
             p.write_text(json.dumps(d))
             with self.assertRaisesRegex(ValueError,"Duplicate"):load_registry(p)
