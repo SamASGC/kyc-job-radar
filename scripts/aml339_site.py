@@ -16,9 +16,11 @@ from email.utils import format_datetime
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
 from two_lane_alert_preview import triage, read_evidence
 from alert_history import check_history
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE
 
 ROOT = "https://samasgc.github.io/kyc-job-radar/aml339/"
 LANES = ("confirmed_recent", "promising_date_unconfirmed")
@@ -138,7 +140,7 @@ def render_html(roles, history, report, manifest=None):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/147 fuentes configuradas · {report['roles_evaluated']} fichas evaluadas.</p>"
+        f"{report['source_count']}/{len(CORE+OPTIONAL)} fuentes configuradas · {report['roles_evaluated']} fichas evaluadas.</p>"
         + core_warning
         + f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
@@ -203,7 +205,7 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 17 <= count <= 147:
+    if not isinstance(count, int) or not 17 <= count <= len(CORE+OPTIONAL):
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count != 18 and manifest is None:
         raise ValueError("Refuse partial or expanded source publication without a verified manifest")
@@ -216,7 +218,11 @@ def build(evidence_paths, state, report, output, manifest=None):
             {"payabl"} if manifest.get("core_verified")==17 else set())
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - manifest.get("core_verified")
-        or manifest.get("expansion_expected") != 129
+        or manifest.get("expansion_expected") != len(OPTIONAL)
+        or manifest.get("external50_research_leads") != 50
+        or manifest.get("external50_live_expected") != len(EXTERNAL50_LIVE)
+        or manifest.get("external50_live_verified_ids") != [sid for sid in EXTERNAL50_LIVE if sid in set(manifest.get("verified_source_ids",[]))]
+        or manifest.get("external50_live_verified") != len(manifest.get("external50_live_verified_ids",[]))
         or manifest.get("growth50_expected") != 50
         or manifest.get("growth50_verified") != sum(
             sid in set(manifest.get("verified_source_ids", []))
@@ -266,7 +272,10 @@ def build(evidence_paths, state, report, output, manifest=None):
         "checked_at_utc": report["checked_at_utc"],
         "sources_complete": count,
         "source_count": count,
-        "sources_expected": 147,
+        "sources_expected": len(CORE+OPTIONAL),
+        "external50_research_leads": (manifest or {}).get("external50_research_leads",0),
+        "external50_live_expected": (manifest or {}).get("external50_live_expected",0),
+        "external50_live_verified": (manifest or {}).get("external50_live_verified",0),
         "growth50_expected": (manifest or {}).get("growth50_expected",0),
         "growth50_verified": (manifest or {}).get("growth50_verified",0),
         "reg100_research_leads": (manifest or {}).get("reg100_research_leads",0),
@@ -317,8 +326,8 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 17 <= len(paths) <= 147:
-        raise ValueError("Expected 17-18 independently audited core sources and up to 129 complete optional source snapshots")
+    if not 17 <= len(paths) <= len(CORE+OPTIONAL):
+        raise ValueError("Expected 17-18 independently audited core sources and up to 132 complete optional source snapshots")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
