@@ -73,7 +73,7 @@ def render_card(item, first_seen, new_keys):
     )
 
 
-def render_html(roles, history, report):
+def render_html(roles, history, report, manifest=None):
     esc = lambda v: html.escape(str(v or ""), quote=True)
     recent = {lane: [] for lane in LANES}
     for item in roles:
@@ -112,6 +112,14 @@ def render_html(roles, history, report):
         if report.get("strict_novelty") else
         "Modo de verificación sin comparación estricta de novedades."
     )
+    excluded_core=(manifest or {}).get("missing_or_failed_core",{})
+    core_warning=(
+        "<p><strong>Fuente temporalmente inaccesible: Payabl.</strong> "
+        "Sus anuncios no se han comprobado ni incorporado en esta ejecución; "
+        "las demás fuentes sí se han auditado. No debe interpretarse como "
+        "cierre de vacantes ni ausencia de contrataciones.</p>"
+        if excluded_core else ""
+    )
     # The audited count is derived from complete evidence, never from the 339-source archive.
     return (
         "<!doctype html><html lang='es'><head><meta charset='utf-8'>"
@@ -130,8 +138,9 @@ def render_html(roles, history, report):
         "<link rel='alternate' type='application/rss+xml' title='AML339 revisión' href='review.xml'>"
         f"</head><body><h1>Radar AML339 · {report['source_count']} fuentes verificadas</h1>"
         f"<p>Última auditoría completa: {esc(checked)} UTC · "
-        f"{report['source_count']}/147 fuentes del primer lote · {report['roles_evaluated']} fichas evaluadas.</p>"
-        f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
+        f"{report['source_count']}/147 fuentes configuradas · {report['roles_evaluated']} fichas evaluadas.</p>"
+        + core_warning
+        + f"<section id='novedades'><h2>Nuevas en este seguimiento: {len(truly_new)}</h2>"
         f"<p>{esc(novelty_text)}</p>{newest_html}</section>"
         "<div class='notice'><strong>Monitor independiente y conservador.</strong> "
         "El radar principal de 500 empleadores sigue separado. La fecha no acreditada "
@@ -144,7 +153,7 @@ def render_html(roles, history, report):
         + "<details><summary>Ver inventario histórico y vacantes con fecha desconocida "
           "(no son nuevos descubrimientos)</summary>"
         + "".join(sections) + "</details>"
-        + "<footer><p>Solo ofertas obtenidas de 18 fuentes obligatorias, 70 fuentes opcionales del catálogo original y hasta 5 EMIs externas verificadas en cada ejecución; "
+        + "<footer><p>Solo anuncios comprobados hoy; 17 fuentes esenciales, una fuente susceptible de bloqueo temporal (Payabl), más fuentes opcionales con exclusión individual de fallos; "
         "no representa la cobertura efectiva de las 339 fuentes originales.</p></footer></body></html>"
     )
 
@@ -194,14 +203,19 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 18 <= count <= 147:
+    if not isinstance(count, int) or not 17 <= count <= 147:
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
-    if count > 18 and manifest is None:
-        raise ValueError("Expanded source publication requires a verified manifest")
+    if count != 18 and manifest is None:
+        raise ValueError("Refuse partial or expanded source publication without a verified manifest")
     if manifest is not None and (
-        manifest.get("core_verified") != 18
+        manifest.get("core_expected") != 18
+        or manifest.get("strict_core_expected") != 17
+        or manifest.get("strict_core_verified") != 17
+        or manifest.get("core_verified") not in (17,18)
+        or set(manifest.get("missing_or_failed_core",{})) != (
+            {"payabl"} if manifest.get("core_verified")==17 else set())
         or manifest.get("total_verified") != count
-        or manifest.get("expansion_verified") != count - 18
+        or manifest.get("expansion_verified") != count - manifest.get("core_verified")
         or manifest.get("expansion_expected") != 129
         or manifest.get("growth50_expected") != 50
         or manifest.get("growth50_verified") != sum(
@@ -241,7 +255,7 @@ def build(evidence_paths, state, report, output, manifest=None):
     if any(item["role_key"] not in history["records"] for item in roles):
         raise ValueError("Missing role from persistent history")
     output.mkdir(parents=True, exist_ok=True)
-    (output / "index.html").write_text(render_html(roles, history, report), encoding="utf-8")
+    (output / "index.html").write_text(render_html(roles, history, report, manifest), encoding="utf-8")
     for lane, filename in FEED_FILES.items():
         lane_roles = [x for x in roles if x["lane"] == lane]
         (output / filename).write_text(
@@ -266,8 +280,11 @@ def build(evidence_paths, state, report, output, manifest=None):
         "original_catalog_sources":339,
         "external_regulated_source_ids": (manifest or {}).get("regulated_external_ids",[]),
         "external_regulated_sources_verified": (manifest or {}).get("regulated_external_verified",0),
-        "core_sources_complete": 18,
-        "expanded_sources_complete": count - 18,
+        "core_sources_complete": (manifest or {}).get("core_verified",18),
+        "core_sources_expected":18,
+        "strict_core_sources_complete":(manifest or {}).get("strict_core_verified",17),
+        "missing_or_failed_core":(manifest or {}).get("missing_or_failed_core",{}),
+        "expanded_sources_complete": count - (manifest or {}).get("core_verified",18),
         "missing_or_failed_expansion": (manifest or {}).get("missing_or_failed_expansion", {}),
         "roles_evaluated": report["roles_evaluated"],
         "current_qualifying": len(roles),

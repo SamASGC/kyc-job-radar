@@ -38,14 +38,58 @@ REGULATED = (
 )
 REGULATOR50 = ("reg50-nomupay-europe", "reg50-mifinity-malta")
 REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
+# Workable sends multi-hour HTTP 429 throttles unrelated to source quality.
+# A quarantined provider cannot publish a role, but it cannot suppress the
+# remaining 17 complete mandatory providers and up to 129 optional providers.
+QUARANTINABLE_CORE = ("payabl",)
+STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
 OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE
 
 
 def collect(core_dir: Path, optional_dir: Path):
-    core_paths = sorted(core_dir.rglob("source_*.json"))
-    if len(core_paths) != len(CORE):
-        raise ValueError("Missing or duplicate core evidence: 18 complete sources required")
-    verify_input_coverage(core_paths, CORE, require_complete=True)
+    # A single throttled Workable employer must not stall the entire radar.
+    # Every other original core source remains mandatory and strictly checked.
+    raw_core_paths = sorted(core_dir.rglob("source_*.json"))
+    if len(raw_core_paths)>len(CORE):
+        raise ValueError("Duplicate/unexpected original core evidence")
+    core_by_id={}
+    for path in raw_core_paths:
+        envelope=json.loads(path.read_text(encoding="utf-8"))
+        roles=envelope.get("sources")
+        if (envelope.get("mode")!="READ_ONLY_ISOLATED_NO_PRODUCTION_DATA"
+                or envelope.get("total_configured_sources")!=339
+                or not isinstance(roles,list) or len(roles)!=1):
+            raise ValueError("Malformed original core evidence")
+        sid=roles[0].get("source_id")
+        if sid not in CORE or path.name != f"source_{sid}.json" or sid in core_by_id:
+            raise ValueError("Wrong or duplicate original core source identity")
+        core_by_id[sid]=path
+    missing_required=set(STRICT_CORE)-set(core_by_id)
+    if missing_required:
+        raise ValueError("Missing mandatory core evidence: "+repr(sorted(missing_required)))
+    core_paths=[]
+    core_ids=[]
+    excluded_core={}
+    for sid in CORE:
+        path=core_by_id.get(sid)
+        if path is None:
+            # Never invent a listing or reuse a previous snapshot in place of
+            # fresh source evidence; this source contributes zero roles today.
+            if sid in QUARANTINABLE_CORE:
+                excluded_core[sid]="no_live_source_evidence"
+                continue
+            raise ValueError("Missing mandatory core evidence: "+sid)
+        try:
+            verify_input_coverage([path],[sid],require_complete=True)
+        except ValueError:
+            if sid not in QUARANTINABLE_CORE:
+                raise
+            excluded_core[sid]="incomplete_or_rate_limited_source"
+            continue
+        core_paths.append(path)
+        core_ids.append(sid)
+    if set(STRICT_CORE)-set(core_ids):
+        raise ValueError("Incomplete hard mandatory core: refuse publication")
     extras = sorted(optional_dir.rglob("candidate_*.json")) if optional_dir.exists() else []
     if len(extras) > len(OPTIONAL):
         raise ValueError("Duplicate/unexpected extra source artifact")
@@ -109,13 +153,16 @@ def collect(core_dir: Path, optional_dir: Path):
         accepted.append(path)
 
     paths = core_paths + accepted
-    ids = CORE + tuple(sid for sid in OPTIONAL if sid not in skipped)
+    ids = tuple(core_ids) + tuple(sid for sid in OPTIONAL if sid not in skipped)
     verify_input_coverage(paths, ids, require_complete=True)
     manifest = {
         "checked_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "configured_original": 339,
         "core_expected": len(CORE),
-        "core_verified": len(CORE),
+        "core_verified": len(core_ids),
+        "strict_core_expected":len(STRICT_CORE),
+        "strict_core_verified":len(STRICT_CORE),
+        "missing_or_failed_core":excluded_core,
         "expansion_expected": len(OPTIONAL),
         "expansion_verified": len(accepted),
         "original_optional_expected": len(EXPANSION),
@@ -141,6 +188,8 @@ def collect(core_dir: Path, optional_dir: Path):
         "missing_or_failed_expansion": skipped,
         "new_sources_are_optional": True,
         "core_failures_block_publication": True,
+        "quarantinable_core_source_ids":list(QUARANTINABLE_CORE),
+        "quarantined_provider_role_count":0,
     }
     return paths, ids, manifest
 

@@ -26,6 +26,9 @@ class V1ReleaseHealthTests(unittest.TestCase):
            "sources_complete":source_count,
            "sources_expected":len(CORE+OPTIONAL),
            "core_sources_complete":len(CORE),
+           "core_sources_expected":18,
+           "strict_core_sources_complete":17,
+           "missing_or_failed_core":{},
            "novelty_guard_enabled":True,
            "regulator50_discovered":50,
            "regulator50_live_expected":2,
@@ -127,12 +130,29 @@ class V1ReleaseHealthTests(unittest.TestCase):
         s=self.summary(source_count=60)
         health=evaluate(s,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertFalse(health["v1_published_verified"])
-        self.assertEqual(health["minimum_live_sources_for_stable_v1"],90)
+        self.assertEqual(health["minimum_live_sources_for_stable_v1"],130)
 
     def test_stale_scan_never_claimed_released(self):
         s=self.summary(age=37)
         health=evaluate(s,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertFalse(health["fresh_publish"])
+        self.assertFalse(health["v1_published_verified"])
+
+    def test_only_payabl_http429_can_be_quarantined_without_blocking_v1(self):
+        summary=self.summary(source_count=146)
+        summary["core_sources_complete"]=17
+        summary["missing_or_failed_core"]={"payabl":"incomplete_or_rate_limited_source"}
+        health=evaluate(summary,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
+        self.assertTrue(health["v1_published_verified"])
+        self.assertTrue(health["degraded_core_but_safe"])
+        self.assertEqual(health["quarantined_core_source_ids"],["payabl"])
+        self.assertEqual(health["mandatory_core_verified"],17)
+
+    def test_another_missing_original_core_disables_release(self):
+        summary=self.summary(source_count=146)
+        summary["core_sources_complete"]=17
+        summary["missing_or_failed_core"]={"wise":"incomplete_or_rate_limited_source"}
+        health=evaluate(summary,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
         self.assertFalse(health["v1_published_verified"])
 
     def test_missing_original_core_disables_release(self):

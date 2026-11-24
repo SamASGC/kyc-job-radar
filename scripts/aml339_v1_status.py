@@ -71,14 +71,23 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         raise ValueError("Invalid core verification count")
     age=(now-scan).total_seconds()/3600
     history_guard=summary.get("novelty_guard_enabled") is True
-    complete_core=core==len(CORE)
+    quarantined=summary.get("missing_or_failed_core",{})
+    # One known Workable provider's HTTP429 may be omitted, but no other
+    # original core can fail silently. Never count the blocked source as live.
+    valid_quarantine=isinstance(quarantined,dict) and (
+        (core==18 and not quarantined)
+        or (core==17 and set(quarantined)=={"payabl"})
+    )
+    complete_core=(summary.get("core_sources_expected")==18
+                   and summary.get("strict_core_sources_complete")==17
+                   and valid_quarantine)
     recent=0<=age<=36
     has_new_source_metadata=(
         summary.get("regulator50_live_expected")==len(REGULATOR50)
         and summary.get("reg100_live_expected")==len(REG100_LIVE)
         and summary.get("reg100_research_leads")==100
     )
-    minimum_live_sources=90
+    minimum_live_sources=130
     sufficient_coverage=sources>=minimum_live_sources
     # The launch is not verified until the publication actually reflects the
     # current code's schema and the mandatory complete core, within 36 h.
@@ -96,8 +105,12 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         "configured_maximum_live_sources":len(CORE+OPTIONAL),
         "minimum_live_sources_for_stable_v1":minimum_live_sources,
         "sufficient_live_coverage":sufficient_coverage,
-        "mandatory_core_expected":len(CORE),
-        "mandatory_core_verified":core,
+        "mandatory_core_expected":17,
+        "original_core_expected":len(CORE),
+        "quarantined_core_source_ids":sorted(quarantined) if isinstance(quarantined,dict) else [],
+        "degraded_core_but_safe":bool(quarantined) if isinstance(quarantined,dict) else False,
+        "mandatory_core_verified":17 if complete_core else 0,
+        "original_core_verified":core,
         "novelty_history_guard_confirmed":history_guard,
         "100_extra_regulated_company_leads_imported":100,
         "100_extra_company_leads_with_verified_active_ats":summary.get("reg100_live_verified",0),

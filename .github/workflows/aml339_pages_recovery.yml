@@ -36,8 +36,14 @@ jobs:
           from pathlib import Path
           summary=json.loads(Path("public/aml339/summary.json").read_text(encoding="utf-8"))
           state=json.loads(Path("data/aml339_main18_state.json").read_text(encoding="utf-8"))
-          if summary.get("core_sources_complete")!=18 or not 18<=summary.get("sources_complete",0)<=147:
-              raise RuntimeError("Main AML339 verified core missing or invalid")
+          core=summary.get("core_sources_complete")
+          excluded=summary.get("missing_or_failed_core",{})
+          if (core not in (17,18)
+                  or not isinstance(excluded,dict)
+                  or set(excluded)!=({"payabl"} if core==17 else set())
+                  or summary.get("strict_core_sources_complete")!=17
+                  or not 17<=summary.get("sources_complete",0)<=147):
+              raise RuntimeError("Main AML339 strict core is incomplete or untruthfully reported")
           if state.get("schema")!=1 or not isinstance(state.get("records"),dict) or len(state["records"])<3:
               raise RuntimeError("Persistent AML339 history missing or invalid")
           checked=dt.datetime.fromisoformat(summary["checked_at_utc"].replace("Z","+00:00"))
