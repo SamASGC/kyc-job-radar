@@ -99,6 +99,10 @@ def select(rows,active,original,registry,ledger,now,limit=50):
     names.update(norm(x.get("name",x["id"])) for x in registry)
     names.update(norm(a) for x in registry for a in x.get("aliases",[]))
     hosts.update(hostkey(x.get("careers_url")) for x in registry if x.get("careers_url") and hostkey(x.get("careers_url")) not in shared)
+    for r in rows:
+        if r["id"] in active or r.get("known_aliases"):
+            names.add(key(r))
+            if r.get("trading_name"):names.add(norm(r["trading_name"]))
     grouped={}
     for r in rows:
         k=key(r)
@@ -124,6 +128,7 @@ def main():
     if not 1<=a.limit<=50:raise ValueError("Batch limit 50")
     now=dt.datetime.now(dt.timezone.utc);ledger=json.loads(a.ledger.read_text())["records"] if a.ledger.exists() else {}
     with ZipFile(DIR/"full_original_339_sources.zip") as z:original=json.loads(z.read("fuentes.json"))["sources"]
+    if hashlib.sha256((DIR/"full_original_339_sources.zip").read_bytes()).hexdigest()!="e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02":raise ValueError("Catalog hash mismatch")
     fresh,errors=([],[]) if a.offline else discover()
     selected,pending=select(collect_queues()+fresh,set(CORE+OPTIONAL),original,load_registry(),ledger,now,a.limit)
     data={"schema":"aml339_growth_batch_v1","checked_at":now.isoformat(),"selected":selected,"eligible_pending":pending,"new_register_profiles_observed":len({r["profile"] for r in fresh}),"discovery_errors":errors}
