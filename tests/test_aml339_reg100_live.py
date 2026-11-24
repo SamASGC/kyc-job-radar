@@ -59,7 +59,7 @@ class Reg100LiveTests(unittest.TestCase):
         ids={r["id"] for r in self.queue["candidates"]}
         self.assertTrue(set(REG100_LIVE).issubset(ids))
         self.assertFalse(set(REG100_LIVE) & self.original_ids)
-        self.assertEqual(len(set(CORE+OPTIONAL)),97)
+        self.assertEqual(len(set(CORE+OPTIONAL)),147)
         self.assertEqual(len(CORE),18)
         self.assertEqual(len(OPTIONAL),129)
         self.assertNotIn("reg100-ie-currenxie-technologies-limited",OPTIONAL)
