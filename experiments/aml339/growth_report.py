@@ -24,7 +24,7 @@ def reconcile(selection,previous,reports):
         records[k]={**r,"checked_at":selection["checked_at"],"run_id":selection["run_id"]}
     proposals=[r for r in records.values() if r.get("verified") is True and r.get("status")=="TECHNICAL_PASS_REVIEW_REQUIRED"]
     summary={"schema":"aml339_growth_report_v1","run_id":selection["run_id"],"checked_at":selection["checked_at"],"selected":len(rows),"eligible_pending_before_batch":selection["eligible_pending"],"register_profiles_observed":selection["new_register_profiles_observed"],"discovery_errors":selection["discovery_errors"],"dispositions":dict(Counter(r["status"] for r in by.values())),"technical_passes":sum(r["verified"] for r in by.values()),"total_researched_unique_keys":len(records),"review_proposals_total":len(proposals),"results":list(by.values())}
-    return {"schema":"aml339_growth_ledger_v1","records":records},summary,proposals
+    return {"schema":"aml339_growth_ledger_v1","records":records,"discovery_cache":selection.get("discovery_cache",previous.get("discovery_cache",{}))},summary,proposals
 def main():
     p=argparse.ArgumentParser();p.add_argument("--selection",type=Path,required=True);p.add_argument("--previous",type=Path,required=True);p.add_argument("--reports",type=Path,required=True);p.add_argument("--out",type=Path,required=True);p.add_argument("--run-id",type=int,required=True);a=p.parse_args()
     selection=json.loads(a.selection.read_text());selection["run_id"]=a.run_id
