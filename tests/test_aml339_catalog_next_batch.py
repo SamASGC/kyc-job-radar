@@ -8,7 +8,7 @@ class NextCatalogBatchTests(unittest.TestCase):
         with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
             original={x["id"]:x for x in json.loads(z.read("fuentes.json"))["sources"]}
         rows=[r for r in load_registry() if r["audit_run"]==45462680827]
-        self.assertEqual(len(rows),23)
+        self.assertEqual(len(rows),27)
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         for r in rows:
             self.assertIn(r["id"],CATALOG_LIVE)
