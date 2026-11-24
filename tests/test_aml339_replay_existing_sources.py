@@ -1,6 +1,8 @@
 """Offline replay must consume prior run's artifacts, not scan live job portals."""
 import unittest
 from pathlib import Path
+import subprocess
+import sys
 from unittest.mock import patch
 
 from scripts.aml339_replay_artifacts import expected_artifacts, list_complete_run_artifacts, RUN_ID
@@ -30,6 +32,15 @@ class OfflineReplaySafetyTests(unittest.TestCase):
             "python3 live_reg100_active.py --source",
         ):
             self.assertNotIn(forbidden,yaml)
+
+    def test_actual_workflow_command_imports_script_from_scripts_path(self):
+        # Importing in unittest from repo root did not reproduce the prior
+        # GitHub runner's ModuleNotFoundError from direct script execution.
+        result=subprocess.run(
+            [sys.executable,"scripts/aml339_replay_artifacts.py","--help"],
+            capture_output=True,text=True,timeout=15,check=False)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn("--core-dir",result.stdout)
 
     def test_paginated_github_api_finds_late_original_core_jobs(self):
         # Cross-run actions/download-artifact only exposed the FIRST 100
