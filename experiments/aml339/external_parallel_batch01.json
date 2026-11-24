@@ -1,0 +1,508 @@
+{
+  "schema": "aml339_parallel_research_batch_v1",
+  "count": 50,
+  "as_of": "2026-11-24",
+  "scope": "50 pending leads from existing research queues; no claim of 50 new or audited live sources. Missing portal recorded explicitly; group aliases and licence require review. Do not query blocked Sage/Workable or LinkedIn.",
+  "candidates": [
+    {
+      "id": "external50b-lv-fibonatix",
+      "name": "Fibonatix (LV) SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://www.fibonatix.com/careers/",
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-maksekeskus",
+      "name": "Maksekeskus AS",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://makecommerce.net/work-at-makecommerce/",
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lt-coingate",
+      "name": "UAB Decentralized",
+      "country": "LT",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://coingate.com/career",
+      "regulatory_source": "https://www.lb.lt/en/licences-1?ff=1&type=43",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-globalexchange",
+      "name": "Global Exchange Payment Solutions Entidad de Pago SLU",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://www.global-exchange.com/trabaja-con-nosotros",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-inespay",
+      "name": "Inespay Financial Technologies EP SL",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://es.inespay.com/transferenciaonline/empleo/",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-exactchange",
+      "name": "Maccorp Exact Change Entidad de Pago SA",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://www.exactchange.es/trabaja-con-nosotros",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-paycomet",
+      "name": "Paycomet SL",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://www.paycomet.com/trabaja-con-nosotros",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-paynopain",
+      "name": "Paynopain Financial Services SL",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://paynopain.com/sobre-nosotros/",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-es-uinku",
+      "name": "Uinku Payments Entidad de Pago SL",
+      "country": "ES",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://sipay.es/empleo/",
+      "regulatory_source": "https://www.bde.es/webbe/es/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-es.html",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lt-remitchoice",
+      "name": "UAB Remit Choice Limited",
+      "country": "LT",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": "https://cpanel.remitchoice.com/careers.php",
+      "regulatory_source": "https://www.lb.lt/en/licences-1?ff=1&type=43",
+      "group_and_licence_review_required": true,
+      "notes": "Inline page includes open AND closed roles; never infer open from presence"
+    },
+    {
+      "id": "reg50-paysera-lt",
+      "name": "Paysera LT UAB",
+      "country": "LT",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://www.paysera.lt/v2/en-LT/career",
+      "regulatory_source": "https://regulatoratlas.com/en/country/lt/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-wittix",
+      "name": "Wittix UAB",
+      "country": "LT",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://wittix.com/faq/more/careers-at-wittix",
+      "regulatory_source": "https://regulatoratlas.com/en/country/lt/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-connectpay",
+      "name": "UAB ConnectPay",
+      "country": "LT",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://connectpay.com/es/carrera-profesional/",
+      "regulatory_source": "https://regulatoratlas.com/en/country/lt/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-payhound",
+      "name": "Payhound Limited",
+      "country": "MT",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://payhound.com/jobs",
+      "regulatory_source": "https://regulatoratlas.com/en/country/mt/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-finance-incorporated",
+      "name": "Finance Incorporated Limited",
+      "country": "MT",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://newsite.financeincorp.com/careers/",
+      "regulatory_source": "https://regulatoratlas.com/en/country/mt/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-three-s-money",
+      "name": "3S Money (Luxembourg) S.A.",
+      "country": "LU",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://3s.money/careers",
+      "regulatory_source": "https://regulatoratlas.com/en/country/lu/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg50-wallee-europe",
+      "name": "Wallee Europe S.A.",
+      "country": "LU",
+      "research_source": "regulator50_external_candidates.json",
+      "careers_url": "https://en.wallee.com/about-wallee/career",
+      "regulatory_source": "https://regulatoratlas.com/en/country/lu/emi",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "lt-emi-research-uab-blue-emi-lt",
+      "name": "UAB BLUE EMI LT",
+      "country": "LT",
+      "research_source": "lithuania_emi_wave01.json",
+      "careers_url": "https://blueemi.com/careers/",
+      "regulatory_source": "https://www.lb.lt/en/sfi-financial-market-participants/uab-blue-emi-lt",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "lt-emi-research-ibsettle-uab",
+      "name": "ibsettle UAB",
+      "country": "LT",
+      "research_source": "lithuania_emi_wave01.json",
+      "careers_url": "https://www.ibsettle.com/careers",
+      "regulatory_source": "https://www.lb.lt/en/sfi-financial-market-participants/ibsettle-uab",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "lt-emi-research-opal-transfer-eu-uab",
+      "name": "Opal Transfer EU, UAB",
+      "country": "LT",
+      "research_source": "lithuania_emi_wave01.json",
+      "careers_url": "https://www.opaltransfer.com/index.php/en/job-opportunities",
+      "regulatory_source": "https://www.lb.lt/lt/finansu-rinku-dalyviai/opal-transfer-eu-uab",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "lt-emi-research-paymont-uab",
+      "name": "PAYMONT, UAB",
+      "country": "LT",
+      "research_source": "lithuania_emi_wave01.json",
+      "careers_url": "https://www.paymont.eu/career/",
+      "regulatory_source": "https://www.lb.lt/lt/finansu-rinku-dalyviai/paymont-uab",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "lt-emi-research-satchelpay-uab",
+      "name": "SatchelPay, UAB",
+      "country": "LT",
+      "research_source": "lithuania_emi_wave01.json",
+      "careers_url": "https://satchel.eu/careers/",
+      "regulatory_source": "https://www.lb.lt/lt/finansu-rinku-dalyviai/satchelpay-uab",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "reg100-cy-altery-eu-limited-formerly-named-heado-limited",
+      "name": "ALTERY EU LIMITED (formerly named: HEADO LIMITED)",
+      "country": "CY",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://altery.com/careers/",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-fr-bcb-payments-europe",
+      "name": "BCB Payments (Europe)",
+      "country": "FR",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.bcbgroup.com/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-fi-narvi-payments-oy-ab",
+      "name": "Narvi Payments Oy Ab",
+      "country": "FI",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://narvi.com/about/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-ie-decta-limited",
+      "name": "Decta Limited",
+      "country": "IE",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.decta.com/company/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-nl-mews-financial-services-b-v",
+      "name": "Mews Financial Services B.V.",
+      "country": "NL",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.mews.com/en/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-ie-navro-payments-europe-limited",
+      "name": "Navro Payments Europe Limited",
+      "country": "IE",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://navro.com/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-mt-moneybase-limited",
+      "name": "MONEYBASE LIMITED",
+      "country": "MT",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://moneybase.com/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-de-allunity-gmbh",
+      "name": "AllUnity GmbH",
+      "country": "DE",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://allunity.com/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-lt-uab-monavate",
+      "name": "UAB Monavate",
+      "country": "LT",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.monavate.com/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-mt-payfuture-fs-mt-ltd",
+      "name": "PAYFUTURE FS MT LTD.",
+      "country": "MT",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.payfuture.net/careers/",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-ie-currenxie-technologies-limited",
+      "name": "Currenxie Technologies Limited",
+      "country": "IE",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://currenxie.com/eu/company/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-es-outpayce-s-a",
+      "name": "OUTPAYCE, S.A.",
+      "country": "ES",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://outpayce.com/en/company/careers",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "reg100-mt-weavr-europe-ltd",
+      "name": "Weavr (Europe) Ltd",
+      "country": "MT",
+      "research_source": "regulator100_discovery_queue.json",
+      "careers_url": "https://www.weavr.io/about-weavr/",
+      "regulatory_source": "https://www.eba.europa.eu/risk-and-data-analysis/data/registers/payment-institutions-register",
+      "group_and_licence_review_required": true,
+      "notes": "Official or previously researched employer page; validate actual recruitment channel"
+    },
+    {
+      "id": "external50b-lv-moin",
+      "name": "SIA MOIN Payments",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=78-authorized-electronic-money-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-mobilly",
+      "name": "Mobilly SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=78-authorized-electronic-money-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-nodu",
+      "name": "Nodu Digital SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-trek",
+      "name": "Trek Technologies SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-catego",
+      "name": "Catego SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-easybill",
+      "name": "EasyBill Payments Latvia SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lv-jool",
+      "name": "JOOL PAY SIA",
+      "country": "LV",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.bank.lv/en/financial-market-participant-register/market-participants?segments=97-authorized-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-adson",
+      "name": "Adson AS",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-crowdestate",
+      "name": "Crowdestate AS",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-maaelu",
+      "name": "Maaelu Edendamise Hoiu-laenuühistu",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-meieni",
+      "name": "Meieni OÜ",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-ee-modena",
+      "name": "Modena Payments OÜ",
+      "country": "EE",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.fi.ee/en/payment-services/payment-services/payment-institutions/estonian-payment-institutions",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lt-opay",
+      "name": "UAB OPAY solutions",
+      "country": "LT",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.lb.lt/en/licences-1?ff=1&type=43",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lt-ema",
+      "name": "UAB Elektroninių mokėjimų agentūra",
+      "country": "LT",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.lb.lt/en/licences-1?ff=1&type=43",
+      "group_and_licence_review_required": true,
+      "notes": null
+    },
+    {
+      "id": "external50b-lt-tbf",
+      "name": "TBF Finance UAB",
+      "country": "LT",
+      "research_source": "external_regulated50_wave02.json",
+      "careers_url": null,
+      "regulatory_source": "https://www.lb.lt/en/licences-1?ff=1&type=43",
+      "group_and_licence_review_required": true,
+      "notes": null
+    }
+  ]
+}
