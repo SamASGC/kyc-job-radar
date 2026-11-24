@@ -10,7 +10,7 @@ permissions:
 jobs:
   audit:
     name: Inspect official board ${{ matrix.source }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       fail-fast: false
