@@ -41,7 +41,7 @@ jobs:
 
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -104,4 +104,14 @@ jobs:
 
       - name: Deploy dashboard
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      # GitHub's upload API can report the artifact before deploy-pages indexes it.
+      # This retry is ONLY for publication; it does not rerun a job scan or touch history.
+      - name: Allow GitHub Pages artifact propagation if first deploy failed
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        run: sleep 35
+      - name: Retry Pages deployment once after propagation
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        id: deployment_retry
         uses: actions/deploy-pages@v5
