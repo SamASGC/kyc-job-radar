@@ -1,0 +1,61 @@
+name: AML339 public employer channel inspection
+on:
+  push:
+    branches: [feat/aml339-regulated-watch]
+    paths: ['.github/workflows/aml339_channel_probe.yml']
+permissions: {contents: read}
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python -m pip install --quiet beautifulsoup4
+      - name: Identify publication and application formats
+        run: |
+          python - <<'PY'
+          import json, urllib.request, concurrent.futures
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          from bs4 import BeautifulSoup
+          urls={
+            'cvbankas': 'https://en.cvbankas.lt/satchelpay-siulo-darba/4-96023',
+            'cvad': 'https://www.cvbankas.lt/customer-support-specialist-vilniuje/1-14127774',
+            'cvonline': 'https://www.cvonline.lt/en/employers',
+            'cvee': 'https://www.cv.ee/en/employers',
+            'moovi': 'https://en.moovijob.com/company/banque-internationale-a-luxembourg-bil',
+            'fima': 'https://fima.mt/careers',
+            'abbl': 'https://www.abbl.lu/professionals/our-members/',
+            'abbljobs': 'https://www.abbl.lu/professionals/job-offers/',
+            'aeb': 'https://aebanca.es/sobre-aeb/bancos-socios/',
+            'bde': 'https://www.bde.es/webbe/en/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-lt.csv',
+            'bol': 'https://www.lb.lt/en/sfi-financial-market-participants?business_form=32&market=1&page=1',
+            'bol-profile': 'https://www.lb.lt/en/sfi-financial-market-participants/dipocket-uab',
+            'lu-psp': 'https://www.bde.es/webbe/en/estadisticas/otras-clasificaciones/clasificacion-entidades/listas-instituciones-financieras/listas-instituciones-relevantes-estadisticas-pago-pais/lista-psri-lu.csv',
+            'satchel': 'https://satchel.eu/careers/',
+            'ibsettle': 'https://www.ibsettle.com/careers',
+            'paymont': 'https://www.paymont.eu/career/',
+            'breezy': 'https://paynovate.breezy.hr/json',
+          }
+          Path('inspection').mkdir(exist_ok=True)
+          def fetch(row):
+            key,url=row
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'AML339 public recruitment research/1.0','Accept':'*/*'})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                data=r.read(2_000_000); dest=r.geturl(); ct=r.headers.get('Content-Type','')
+              if ('text/html' in ct and 'cvad'==key):
+                # Retain public employer/job publishing markup only.
+                pass
+              Path('inspection',key).write_bytes(data)
+              soup=BeautifulSoup(data,'html.parser') if 'html' in ct else None
+              print('SAMPLE',key,len(data),dest,ct,(soup.title.get_text(strip=True) if soup and soup.title else '')[:80],flush=True)
+            except Exception as e: print('SAMPLE',key,'FAILED',str(e)[:160],flush=True)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool: list(pool.map(fetch,urls.items()))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-employer-markup
+          path: inspection/
+          retention-days: 2
