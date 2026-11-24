@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL, collect
 from batch50_sources import BATCH50
+from growth_wave50_sources import WAVE50_B
 from scripts.aml339_site import build
 from alert_history import blank_history, select_and_merge, read_evidence
 
@@ -61,8 +62,8 @@ class Bulk50EvidenceTests(unittest.TestCase):
         self.assertEqual(len(set(BATCH50)),50)
         self.assertTrue(set(BATCH50).issubset(self.pinned))
         self.assertFalse(set(BATCH50)&set(CORE+EXPANSION+REGULATED))
-        self.assertEqual(len(OPTIONAL),79)
-        self.assertEqual(len(CORE+OPTIONAL),97)
+        self.assertEqual(len(OPTIONAL),129)
+        self.assertEqual(len(CORE+OPTIONAL),147)
 
     def test_93_source_site_from_verified_evidence_and_zero_false_new_alerts(self):
         paths,ids,manifest=collect(self.core,self.optional)
@@ -107,7 +108,7 @@ class Bulk50EvidenceTests(unittest.TestCase):
         self.assertEqual(manifest["bulk50_verified"],49)
         self.assertEqual(manifest["missing_or_failed_expansion"],{
             sid:"partial_or_failed_listing",
-            **{reg:"no_live_source_evidence" for reg in REGULATOR50+REG100_LIVE},
+            **{reg:"no_live_source_evidence" for reg in REGULATOR50+REG100_LIVE+WAVE50_B},
         })
         self.assertTrue(set(CORE+EXPANSION+REGULATED).issubset(ids))
         self.assertNotIn(sid,ids)
@@ -118,7 +119,7 @@ class Bulk50EvidenceTests(unittest.TestCase):
         paths,ids,manifest=collect(self.core,self.optional)
         self.assertEqual(len(paths),43)
         self.assertEqual(manifest["bulk50_verified"],0)
-        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(BATCH50)|set(REGULATOR50)|set(REG100_LIVE))
+        self.assertEqual(set(manifest["missing_or_failed_expansion"]),set(BATCH50)|set(REGULATOR50)|set(REG100_LIVE)|set(WAVE50_B))
         self.assertEqual(manifest["regulated_external_verified"],5)
 
     def test_truncated_aggregate_archive_never_impersonates_50_complete_sources(self):
