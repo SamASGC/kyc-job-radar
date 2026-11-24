@@ -4,7 +4,7 @@ from pathlib import Path
 from zipfile import ZipFile
 import json
 
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, OPTIONAL
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, OPTIONAL
 from probe_malta_three_new import REGULATED_CANDIDATES
 from batch50_sources import BATCH50
 
@@ -23,8 +23,8 @@ class MaltaExtraSourcesTests(unittest.TestCase):
         self.assertEqual(set(REGULATED),{"emi-trumia-mt","emi-zen-lt"}|three)
         self.assertFalse(three&self.original)
         self.assertFalse(three&set(CORE+EXPANSION+BATCH50))
-        self.assertEqual(len(OPTIONAL),77)
-        self.assertEqual(len(CORE+OPTIONAL),95)
+        self.assertEqual(len(OPTIONAL),79)
+        self.assertEqual(len(CORE+OPTIONAL),97)
 
     def test_careers_are_owned_official_host_with_real_licence_reference(self):
         for sid, cfg in REGULATED_CANDIDATES.items():
