@@ -1,0 +1,72 @@
+name: AML339 external regulated 50 wave 02 evidence
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/external_regulated50_wave02.json'
+      - 'experiments/aml339/live_external50_wave02.py'
+      - '.github/workflows/aml339_external50_wave02.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python3 experiments/aml339/inspect_regulator50_careers.py --employer-only --candidates experiments/aml339/external_regulated50_wave02.json --out external50-careers.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external50-careers-evidence
+          path: external50-careers.json
+          if-no-files-found: error
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [external50b-lv-paybis, external50b-lv-neverless, external50b-lv-noah]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify pinned archive and isolate full source audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py","amlradar/employer_links.py","amlradar/sources.py","fuentes.json","VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed and sum(x.file_size for x in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Live listing and full matching role detail audit
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          cd "$RUNNER_TEMP/aml339"
+          python3 live_external50_wave02.py --source "$SOURCE" --out "candidate_$SOURCE.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: external50-canary-${{ matrix.source }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          if-no-files-found: warn
