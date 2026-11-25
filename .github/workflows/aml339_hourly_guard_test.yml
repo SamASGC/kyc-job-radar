@@ -14,7 +14,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Verify workflow structure and source scheduling
         run: |
           python3 - <<'PY'
