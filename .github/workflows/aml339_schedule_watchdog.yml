@@ -1,0 +1,41 @@
+name: AML339 missed schedule recovery
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Hourly KYC job radar"]
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/aml339_schedule_watchdog.yml"
+      - "scripts/aml339_schedule_watchdog.py"
+  schedule:
+    - cron: "11,41 * * * *"
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: aml339-schedule-recovery
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.event != 'pull_request') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Recover overdue official AML339 workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/aml339_schedule_watchdog.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-schedule-recovery-report
+          path: aml339-watchdog.json
+          retention-days: 7
+          if-no-files-found: warn
