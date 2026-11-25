@@ -1,0 +1,39 @@
+name: AML339 schedule recovery regression
+on:
+  pull_request:
+    paths:
+      - "scripts/aml339_schedule_watchdog.py"
+      - "tests/test_aml339_schedule_watchdog.py"
+      - ".github/workflows/aml339_schedule_watchdog*.yml"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Test recovery decision and workflow syntax
+        run: |
+          python3 -m unittest discover -s tests -p 'test_aml339_schedule_watchdog.py' -v
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+          d=yaml.safe_load(Path(".github/workflows/aml339_schedule_watchdog.yml").read_text())
+          assert d["permissions"]=={"contents":"read","actions":"write"}
+          assert d[True]["workflow_run"]["workflows"]==["Hourly KYC job radar"]
+          assert d["concurrency"]["cancel-in-progress"] is False
+          PY
+      - name: Verify read-only live access to both target workflow run lists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from scripts.aml339_schedule_watchdog import api,TARGETS
+          for name in TARGETS:
+              d=api(name+"/runs?branch=main&per_page=30",os.environ["GH_TOKEN"])
+              assert isinstance(d["workflow_runs"],list)
+              print("WATCHDOG_TARGET_READ_OK",name,len(d["workflow_runs"]))
+          PY
