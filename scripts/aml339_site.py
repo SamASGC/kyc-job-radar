@@ -117,7 +117,7 @@ def render_html(roles, history, report, manifest=None):
     excluded_core=(manifest or {}).get("missing_or_failed_core",{})
     core_warning=(
         "<p><strong>Fuentes del núcleo temporalmente no verificadas: "
-        + html.escape(", ".join(sorted(excluded_core))) + ".</strong> "
+        + html.escape(", ".join({"payabl":"Payabl","corpay":"Corpay"}.get(sid,sid) for sid in sorted(excluded_core))) + ".</strong> "
         "Sus anuncios se excluyen de esta ejecución. No debe interpretarse como "
         "cierre de vacantes ni ausencia de contrataciones.</p>"
         if excluded_core else ""
