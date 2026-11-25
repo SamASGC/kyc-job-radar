@@ -125,7 +125,7 @@ class ExpandedFeedE2E(unittest.TestCase):
         self.assertNotIn("corpay", manifest["verified_source_ids"])
         self.assertEqual(set(first["records"]), set(history["records"]))
         self.assertEqual(report["new_counts"], {"confirmed_recent": 0, "promising_date_unconfirmed": 0})
-        self.assertIn("corpay, payabl", (out / "index.html").read_text())
+        self.assertIn("Corpay, Payabl", (out / "index.html").read_text())
         path.write_text(json.dumps(evidence("corpay", self.role)))
         _, replay, _, restored, _ = self._run(prior=history)
         self.assertEqual(restored["core_sources_complete"], 17)
