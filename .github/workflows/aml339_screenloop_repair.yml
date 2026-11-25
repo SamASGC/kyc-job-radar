@@ -1,0 +1,102 @@
+name: AML339 Screenloop pagination repair canary
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/audit_screenloop_repair.py'
+      - '.github/workflows/aml339_screenloop_repair.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    name: Inspect official board ${{ matrix.source }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        source: [reg50-three-s-money]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: current-main
+          sparse-checkout: data/aml339_http_cooldowns.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original 339 archive and unpack isolated, read-only parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json,live_catalog_registry.py,hourly_http_guard.py,audit_screenloop_repair.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Install standard browser for JS-rendered public boards
+        run: |
+          python3 -m pip install 'playwright==1.58.0'
+          python3 -m playwright install --with-deps chromium
+      - name: Verify full official listing pagination and role detail coverage
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          cd "$RUNNER_TEMP/aml339"
+          export AML339_PRIOR="$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json"
+          export AML339_RECEIPT="$RUNNER_TEMP/aml339/http_pause_$SOURCE.json"
+          python3 hourly_http_guard.py run --prior "$AML339_PRIOR" --receipt "$AML339_RECEIPT" audit_screenloop_repair.py --source "$SOURCE" --out "browser_full_$SOURCE.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-screenloop-repair-${{ matrix.source }}
+          path: |
+            ${{ runner.temp }}/aml339/browser_full_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
+          if-no-files-found: error
+          retention-days: 30
+  report:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-screenloop-repair-*
+          path: evidence
+      - run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rows=[json.loads(p.read_text()) for p in Path("evidence").rglob("browser_full_*.json")]
+          print("BROWSER_FULL_SUMMARY",json.dumps([{"id":r["id"],"verified":r["verified"],"listed":r.get("listing_count"),"pages":r.get("pages"),"error":r.get("error"),"unverified":r.get("source",{}).get("unverified_in_scope")} for r in rows]),flush=True)
+          Path("browser_full_summary.json").write_text(json.dumps(rows,ensure_ascii=False,indent=2)+"\n")
+          assert len(rows)==len({r["id"] for r in rows})==1
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-screenloop-repair-summary
+          path: browser_full_summary.json
+          retention-days: 30
