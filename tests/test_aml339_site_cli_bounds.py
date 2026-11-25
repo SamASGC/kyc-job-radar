@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts import aml339_site
-from scripts.aml339_source_manifest import CORE, OPTIONAL
+from scripts.aml339_source_manifest import CORE, OPTIONAL, STRICT_CORE
 
 
 class SiteCLIUpperBoundTests(unittest.TestCase):
@@ -43,12 +43,15 @@ class SiteCLIUpperBoundTests(unittest.TestCase):
         self.invoke(17)
 
     def test_extra_source_is_not_silently_accepted(self):
-        with self.assertRaisesRegex(ValueError,"17-18"):
+        with self.assertRaisesRegex(ValueError,"Expected complete strict core"):
             self.invoke(len(CORE+OPTIONAL)+1)
 
     def test_too_small_unverified_core_is_rejected(self):
-        with self.assertRaisesRegex(ValueError,"17-18"):
-            self.invoke(16)
+        with self.assertRaisesRegex(ValueError,"Expected complete strict core"):
+            self.invoke(len(STRICT_CORE)-1)
+
+    def test_two_quarantined_core_allowed_with_manifest(self):
+        self.invoke(len(STRICT_CORE))
 
     def test_legacy_18_source_preview_without_manifest_is_still_possible(self):
         self.invoke(18,False)
