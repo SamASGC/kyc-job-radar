@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-25T21:17:06+00:00",
+  "checked_at_utc": "2026-11-25T23:16:30+00:00",
   "sources_expected": 269,
-  "sources_complete": 266,
-  "roles_evaluated": 1266,
+  "sources_complete": 265,
+  "roles_evaluated": 1246,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -47,7 +47,7 @@
       "name": "swedbank",
       "status": "verified",
       "reason": null,
-      "listed": 61,
+      "listed": 58,
       "relevant": 2
     },
     {
@@ -55,7 +55,7 @@
       "name": "luminor",
       "status": "verified",
       "reason": null,
-      "listed": 64,
+      "listed": 63,
       "relevant": 0
     },
     {
@@ -71,16 +71,16 @@
       "name": "wise",
       "status": "verified",
       "reason": null,
-      "listed": 416,
+      "listed": 417,
       "relevant": 80
     },
     {
       "id": "corpay",
       "name": "corpay",
-      "status": "verified",
-      "reason": null,
-      "listed": 163,
-      "relevant": 19
+      "status": "failed",
+      "reason": "incomplete_or_rate_limited_source",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "openpayd",
@@ -135,7 +135,7 @@
       "name": "airwallex",
       "status": "verified",
       "reason": null,
-      "listed": 507,
+      "listed": 508,
       "relevant": 50
     },
     {
@@ -840,15 +840,15 @@
       "status": "verified",
       "reason": null,
       "listed": 216,
-      "relevant": 25
+      "relevant": 24
     },
     {
       "id": "aps-bank",
       "name": "aps-bank",
       "status": "verified",
       "reason": null,
-      "listed": 9,
-      "relevant": 1
+      "listed": 8,
+      "relevant": 0
     },
     {
       "id": "vivid-money",
@@ -935,8 +935,8 @@
       "name": "remitly",
       "status": "verified",
       "reason": null,
-      "listed": 155,
-      "relevant": 17
+      "listed": 151,
+      "relevant": 18
     },
     {
       "id": "avarda-bank",
@@ -1647,8 +1647,8 @@
       "name": "deutsche-bank",
       "status": "verified",
       "reason": null,
-      "listed": 435,
-      "relevant": 74
+      "listed": 434,
+      "relevant": 73
     },
     {
       "id": "gate",
@@ -1695,7 +1695,7 @@
       "name": "aavelabs",
       "status": "verified",
       "reason": null,
-      "listed": 13,
+      "listed": 14,
       "relevant": 2
     },
     {
@@ -1711,8 +1711,8 @@
       "name": "bbva",
       "status": "verified",
       "reason": null,
-      "listed": 66,
-      "relevant": 11
+      "listed": 65,
+      "relevant": 10
     },
     {
       "id": "blackrock",
@@ -1767,8 +1767,8 @@
       "name": "coinbase",
       "status": "verified",
       "reason": null,
-      "listed": 250,
-      "relevant": 31
+      "listed": 257,
+      "relevant": 34
     },
     {
       "id": "infront",
@@ -1799,7 +1799,7 @@
       "name": "amadeus-fincrime",
       "status": "verified",
       "reason": null,
-      "listed": 125,
+      "listed": 126,
       "relevant": 0
     },
     {
@@ -1807,7 +1807,7 @@
       "name": "apex-group",
       "status": "verified",
       "reason": null,
-      "listed": 1067,
+      "listed": 1068,
       "relevant": 69
     },
     {
@@ -1847,7 +1847,7 @@
       "name": "experian",
       "status": "verified",
       "reason": null,
-      "listed": 417,
+      "listed": 416,
       "relevant": 11
     },
     {
@@ -1911,7 +1911,7 @@
       "name": "imc",
       "status": "verified",
       "reason": null,
-      "listed": 144,
+      "listed": 143,
       "relevant": 7
     },
     {
@@ -1919,7 +1919,7 @@
       "name": "ing",
       "status": "verified",
       "reason": null,
-      "listed": 297,
+      "listed": 296,
       "relevant": 37
     },
     {
@@ -1951,7 +1951,7 @@
       "name": "kraken",
       "status": "verified",
       "reason": null,
-      "listed": 93,
+      "listed": 92,
       "relevant": 11
     },
     {
@@ -1983,7 +1983,7 @@
       "name": "mastercard",
       "status": "verified",
       "reason": null,
-      "listed": 298,
+      "listed": 297,
       "relevant": 19
     },
     {
@@ -2039,8 +2039,8 @@
       "name": "western-union",
       "status": "verified",
       "reason": null,
-      "listed": 79,
-      "relevant": 19
+      "listed": 77,
+      "relevant": 18
     },
     {
       "id": "sonata-one",
@@ -2164,23 +2164,6 @@
     }
   ],
   "jobs": [
-    {
-      "role_key": "1d72a92836c459efcfd222d5",
-      "employer_id": "aps-bank",
-      "title": "APS.98.26 - Reviews Analyst",
-      "url": "https://apsbank.hire.trakstar.com/jobs/fk0zclq",
-      "location": "Malta",
-      "lane": "promising_date_unconfirmed",
-      "original_date": null,
-      "confirmed_job_duties": [
-        "SAR/STR",
-        "SoF",
-        "SoW"
-      ],
-      "geography": "target",
-      "first_seen": "2026-11-24T16:35:01+00:00",
-      "new_in_scan": false
-    },
     {
       "role_key": "f074273b2f4a9170e4f15796",
       "employer_id": "demivolt-lithuania",
