@@ -21,6 +21,13 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: current-main
+          sparse-checkout: data/aml339_http_cooldowns.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -53,7 +60,7 @@ jobs:
           SOURCE: ${{ matrix.source }}
         run: |
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" audit_manual_recovery.py --source "$SOURCE" --out "reviewed_$SOURCE.json"
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" audit_manual_recovery.py --source "$SOURCE" --out "reviewed_$SOURCE.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -84,5 +91,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: aml339-manual-recovery-summary
-          path: reviewed_summary.json
+          path: manual_summary.json
           retention-days: 30
