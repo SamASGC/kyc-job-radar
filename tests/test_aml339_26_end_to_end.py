@@ -110,6 +110,27 @@ class ExpandedFeedE2E(unittest.TestCase):
         })
         self.assertEqual(set(history["records"]), set(first["records"]))
 
+    def test_corpay_partial_listing_isolated_and_history_survives(self):
+        from scripts.aml339_source_manifest import STRICT_CORE
+        path = self.core / "source_corpay.json"
+        path.write_text(json.dumps(evidence("corpay", self.role)))
+        first, _, _, _, _ = self._run()
+        path.write_text(json.dumps(evidence("corpay", self.role, failed=True)))
+        (self.core / "source_payabl.json").unlink()
+        history, report, manifest, summary, out = self._run(prior=first)
+        self.assertEqual(summary["sources_complete"], 36)
+        self.assertEqual(summary["core_sources_complete"], 16)
+        self.assertEqual(summary["strict_core_sources_complete"], len(STRICT_CORE))
+        self.assertEqual(set(summary["missing_or_failed_core"]), {"payabl", "corpay"})
+        self.assertNotIn("corpay", manifest["verified_source_ids"])
+        self.assertEqual(set(first["records"]), set(history["records"]))
+        self.assertEqual(report["new_counts"], {"confirmed_recent": 0, "promising_date_unconfirmed": 0})
+        self.assertIn("Corpay, Payabl", (out / "index.html").read_text())
+        path.write_text(json.dumps(evidence("corpay", self.role)))
+        _, replay, _, restored, _ = self._run(prior=history)
+        self.assertEqual(restored["core_sources_complete"], 17)
+        self.assertEqual(replay["new_counts"], {"confirmed_recent": 0, "promising_date_unconfirmed": 0})
+
     def test_unverified_expansion_without_manifest_never_publishes(self):
         paths, ids, manifest = collect(self.core, self.extra)
         history, report = select_and_merge(read_evidence(paths), blank_history(),

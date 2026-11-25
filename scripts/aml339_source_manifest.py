@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Combine 18 mandatory with 20+50 optional catalog and 5 outside-catalog EMIs.
 
-The original 18 must ALL pass exactly as before. Newly added source failures
-are recorded honestly but cannot stop refreshing the original 18. No failed
-or unverified optional source may produce a vacancy or alter alert history.
+The 18 original sources remain configured. Payabl and Corpay may be
+quarantined per scan; the remaining core must pass. Failed or unverified
+quarantined and optional sources cannot contribute live roles or history.
 """
 from __future__ import annotations
 
@@ -38,10 +38,9 @@ REGULATED = (
 )
 REGULATOR50 = ("reg50-nomupay-europe", "reg50-mifinity-malta")
 REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
-# Workable sends multi-hour HTTP 429 throttles unrelated to source quality.
-# A quarantined provider cannot publish a role, but it cannot suppress the
-# remaining 17 complete mandatory providers and up to 129 optional providers.
-QUARANTINABLE_CORE = ("payabl",)
+# Payabl: provider throttling. Corpay: intermittent incomplete listing.
+# Both still scan under the existing schedule; quarantine only failed evidence.
+QUARANTINABLE_CORE = ("payabl", "corpay")
 STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
 from external_live_registry import ids as external_live_ids
 EXTERNAL50_LIVE = external_live_ids(catalog=False)
@@ -53,8 +52,8 @@ OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIV
 
 
 def collect(core_dir: Path, optional_dir: Path):
-    # A single throttled Workable employer must not stall the entire radar.
-    # Every other original core source remains mandatory and strictly checked.
+    # Isolate the two known intermittent core providers; other core evidence
+    # remains mandatory. Malformed or mismatched artifacts still fail closed.
     raw_core_paths = sorted(core_dir.rglob("source_*.json"))
     if len(raw_core_paths)>len(CORE):
         raise ValueError("Duplicate/unexpected original core evidence")
@@ -86,7 +85,9 @@ def collect(core_dir: Path, optional_dir: Path):
                 continue
             raise ValueError("Missing mandatory core evidence: "+sid)
         try:
-            verify_input_coverage([path],[sid],require_complete=True)
+            source = verify_input_coverage([path],[sid],require_complete=True)[sid]
+            if sid in QUARANTINABLE_CORE and source.get("unverified_in_scope", 0) != 0:
+                raise ValueError("Unverified in-scope role details: "+sid)
         except ValueError:
             if sid not in QUARANTINABLE_CORE:
                 raise
@@ -174,7 +175,7 @@ def collect(core_dir: Path, optional_dir: Path):
         "core_expected": len(CORE),
         "core_verified": len(core_ids),
         "strict_core_expected":len(STRICT_CORE),
-        "strict_core_verified":len(STRICT_CORE),
+        "strict_core_verified":len(set(STRICT_CORE) & set(core_ids)),
         "missing_or_failed_core":excluded_core,
         "expansion_expected": len(OPTIONAL),
         "expansion_verified": len(accepted),

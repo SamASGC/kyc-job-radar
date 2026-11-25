@@ -1,4 +1,4 @@
-"""Fail-closed per-source, fail-open publication for Payabl Workable HTTP429 only.
+"""Fail-closed per-source, fail-open publication for explicitly quarantinable Payabl and Corpay.
 
 This is the actual production blocker in run 45383138855. Source-specific
 errors must not suppress other employers, and must not generate/close jobs.
@@ -47,11 +47,11 @@ class CoreQuarantineTests(unittest.TestCase):
     def put(self,sid,d):
         (self.core/f"source_{sid}.json").write_text(json.dumps(d),encoding="utf-8")
 
-    def test_only_payabl_can_be_quarantined(self):
-        self.assertEqual(QUARANTINABLE_CORE,("payabl",))
+    def test_only_payabl_and_corpay_can_be_quarantined(self):
+        self.assertEqual(QUARANTINABLE_CORE,("payabl","corpay"))
         self.assertEqual(len(CORE),18)
-        self.assertEqual(len(STRICT_CORE),17)
-        self.assertEqual(set(CORE)-set(STRICT_CORE),{"payabl"})
+        self.assertEqual(len(STRICT_CORE),16)
+        self.assertEqual(set(CORE)-set(STRICT_CORE),{"payabl","corpay"})
 
     def test_429_payabl_does_not_block_17_source_publish(self):
         self.put("payabl",source("payabl",failed=True))
@@ -61,7 +61,7 @@ class CoreQuarantineTests(unittest.TestCase):
         self.assertNotIn("payabl",ids)
         self.assertEqual(m["core_expected"],18)
         self.assertEqual(m["core_verified"],17)
-        self.assertEqual(m["strict_core_verified"],17)
+        self.assertEqual(m["strict_core_verified"],16)
         self.assertEqual(m["missing_or_failed_core"],{"payabl":"incomplete_or_rate_limited_source"})
         self.assertEqual(m["expansion_verified"],0)
         prior=blank_history()
@@ -85,6 +85,20 @@ class CoreQuarantineTests(unittest.TestCase):
         self.assertEqual(len(paths),17)
         self.assertEqual(m["missing_or_failed_core"],{"payabl":"no_live_source_evidence"})
 
+    def test_corpay_unverified_details_are_quarantined(self):
+        d=source("corpay")
+        d["sources"][0]["unverified_in_scope"]=1
+        self.put("corpay",d)
+        paths,ids,m=collect(self.core,self.extra)
+        self.assertEqual(len(ids),17)
+        self.assertNotIn("corpay",ids)
+        self.assertEqual(m["missing_or_failed_core"],{"corpay":"incomplete_or_rate_limited_source"})
+
+    def test_corpay_identity_tamper_is_fatal(self):
+        self.put("corpay",source("wise",failed=True))
+        with self.assertRaisesRegex(ValueError,"identity"):
+            collect(self.core,self.extra)
+
     def test_any_other_original_core_missing_fails_hard(self):
         (self.core/"source_wise.json").unlink()
         self.put("payabl",source("payabl",failed=True))
@@ -106,7 +120,7 @@ class CoreQuarantineTests(unittest.TestCase):
 
     def test_workflow_retains_original_strict_core_and_marks_optional_failures_nonfatal(self):
         yaml=Path(".github/workflows/aml339_main18.yml").read_text()
-        self.assertIn("continue-on-error: ${{ matrix.source == 'payabl' }}",yaml)
+        self.assertIn("continue-on-error: ${{ matrix.source == 'payabl' || matrix.source == 'corpay' }}",yaml)
         self.assertIn("strict_core_verified",yaml)
         self.assertIn("needs.scan.result == 'success'",yaml)
         self.assertGreaterEqual(yaml.count("continue-on-error: true"),6)
