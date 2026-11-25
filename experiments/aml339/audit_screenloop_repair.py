@@ -73,6 +73,49 @@ def listed(page,url,provider,check_pause=lambda:None):
         page.wait_for_function("""prev => !prev.every(id=>Array.from(document.querySelectorAll('a[href]')).some(a=>a.href.includes('/job_posts/'+id+'?')||a.href.endsWith('/job_posts/'+id)))""",arg=list(rows),timeout=12000)
     raise ValueError("Pagination bound exceeded")
 
+
+def observed_application(page,job,check_pause):
+    """Read the rendered public detail and its explicit same-job application link.
+    Never submit, populate fields, invent a route, or retry a denied request."""
+    original=urlsplit(job["url"])
+    if original.scheme!="https" or original.hostname!="app.screenloop.com" or not re.fullmatch(r"/careers/[^/]+/job_posts/[0-9]+/?",original.path):
+        raise ValueError("Unexpected Screenloop detail identity")
+    def read(url):
+        check_pause()
+        resp=page.goto(url,wait_until="domcontentloaded",timeout=20000)
+        if not resp or resp.status!=200:raise ValueError("Application page HTTP unavailable")
+        page.wait_for_timeout(1500)
+        check_pause()
+        final=urlsplit(page.url)
+        if final.hostname!=original.hostname or final.path.rstrip("/")!=original.path.rstrip("/"):
+            raise ValueError("Application route changed job identity")
+        return page.evaluate("""() => ({
+            text:document.body.innerText,
+            links:Array.from(document.querySelectorAll('a[href]')).filter(a=>a.getClientRects().length>0).map(a=>({url:a.href,title:(a.innerText||a.getAttribute('aria-label')||'').trim()})),
+            fields:Array.from(document.querySelectorAll('input,textarea')).filter(a=>a.getClientRects().length>0).map(a=>({type:a.type,name:a.name,placeholder:a.placeholder}))
+        })""")
+    def form_proof(snapshot):
+        fields=snapshot["fields"]
+        return any(x["type"]=="file" for x in fields) or any(x["type"]=="email" for x in fields) and any(re.search(r"first.?name|last.?name|full.?name|resume|cv",x["name"]+" "+x["placeholder"],re.I) for x in fields)
+    def closed(snapshot):
+        return bool(re.search(r"no longer accepting applications|position has been filled|job not found|this (?:job|position) (?:is no longer|has expired)",snapshot["text"],re.I))
+    snapshot=read(job["url"])
+    if closed(snapshot) or job["title"].casefold() not in snapshot["text"].casefold():
+        raise ValueError("Rendered job title/active status not established")
+    if form_proof(snapshot):return page.url
+    options=set()
+    for link in snapshot["links"]:
+        u=urlsplit(link["url"])
+        if u.scheme=="https" and u.hostname==original.hostname and u.path.rstrip("/")==original.path.rstrip("/") and re.fullmatch(r"apply(?: now| for (?:this|the) (?:job|position))?|application",link["title"],re.I):
+            options.add(link["url"])
+    print("SCREENLOOP_RENDERED_APPLICATION_EVIDENCE",json.dumps({"job":original.path,"same_job_links":sorted(options),"field_types":[x["type"] for x in snapshot["fields"]]},ensure_ascii=False),flush=True)
+    if len(options)!=1:raise ValueError("No unique observed same-job application link")
+    app=next(iter(options))
+    application=read(app)
+    if closed(application) or not form_proof(application):
+        raise ValueError("Rendered application form not independently confirmed")
+    return app
+
 def run(sid):
     name,url,provider=SOURCES[sid]
     prior=Path(os.environ['AML339_PRIOR']); receipt=Path(os.environ['AML339_RECEIPT'])
@@ -107,17 +150,29 @@ def run(sid):
         check_pause()
         jobs,pages=listed(page,url,provider,check_pause)
         check_pause()
-        browser.close()
-    original=Board.listing
-    old=audit.candidate
-    def listing(board):
-        board.complete=True
-        return jobs
-    Board.listing=listing;audit.candidate=candidate
-    try:
-        result=audit_one({"id":sid,"name":name,"careers_url":url,"route":["site_jobs",urlsplit(url).hostname,r"^/careers/.+$"]},minutes=4)
-    finally:
-        Board.listing=original;audit.candidate=old
+        # Keep the normal browser session open for the JS-rendered public
+        # application proof, but only when standard HTTP detail verification
+        # reports the specific missing-link error (never an HTTP denial).
+        original=Board.listing
+        original_verify=Board.verify
+        old=audit.candidate
+        def listing(board):
+            board.complete=True
+            return jobs
+        def verify(board,job):
+            try:return original_verify(board,job)
+            except Exception as exc:
+                if type(exc).__name__!="SourceError" or str(exc)!="No se encontró acceso directo a candidatura":raise
+            check_pause()
+            job["apply_url"]=observed_application(page,job,check_pause)
+            # Preserve the ordinary verifier's closure and description checks.
+            return original_verify(board,job)
+        Board.listing=listing;Board.verify=verify;audit.candidate=candidate
+        try:
+            result=audit_one({"id":sid,"name":name,"careers_url":url,"route":["site_jobs",urlsplit(url).hostname,r"^/careers/.+$"],"skip_h1_title":True},minutes=4)
+        finally:
+            Board.listing=original;Board.verify=original_verify;audit.candidate=old
+            browser.close()
     ok=(result.get("state")=="listing_extracted" and result.get("list_complete") is True and result.get("total_listed")==len(jobs)
         and result.get("relevant_leads")==len(result.get("audited",[])) and result.get("unverified_in_scope")==0 and result.get("listing_untrackable_count")==0)
     return {"id":sid,"verified":ok,"pages":pages,"listing_count":len(jobs),"source":result}
