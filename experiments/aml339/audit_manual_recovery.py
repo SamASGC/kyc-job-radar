@@ -62,6 +62,7 @@ def empty_proof(p,t,marker,heading,url):
     if t.index(marker)<t.index(heading) or t.index(marker)-t.index(heading)>400:return False
     for href,title in p.anchors.links.items():
         u=urlsplit(urljoin(url,href)); path=u.path.casefold()
+        if re.search(r"(?:^|[&;])(?:page|offset|start|cursor)=",u.query,re.I) or re.fullmatch(r"\s*(?:next|load more|show more)\s*",title,re.I):return False
         if re.search(r"/(?:jobs|careers|career|vacancies|positions)/(?!$)[^/]+",path) and u.path.rstrip("/")!=urlsplit(url).path.rstrip("/"):return False
         if re.search(r"greenhouse|lever\.co|ashbyhq|bamboohr|screenloop|recruitee|personio|workable|teamtailor|rippling|join\.com",u.hostname or "",re.I):return False
     if any(re.search(r"greenhouse|lever\.co|ashbyhq|bamboohr|screenloop|recruitee|personio|workable|teamtailor|rippling",x,re.I) for x in p.embeds):return False
