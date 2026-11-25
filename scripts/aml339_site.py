@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments" / "aml339"))
 from two_lane_alert_preview import triage, read_evidence
 from alert_history import check_history
-from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE, STRICT_CORE, QUARANTINABLE_CORE
 
 ROOT = "https://samasgc.github.io/kyc-job-radar/aml339/"
 LANES = ("confirmed_recent", "promising_date_unconfirmed")
@@ -116,9 +116,9 @@ def render_html(roles, history, report, manifest=None):
     )
     excluded_core=(manifest or {}).get("missing_or_failed_core",{})
     core_warning=(
-        "<p><strong>Fuente temporalmente inaccesible: Payabl.</strong> "
-        "Sus anuncios no se han comprobado ni incorporado en esta ejecución; "
-        "las demás fuentes sí se han auditado. No debe interpretarse como "
+        "<p><strong>Fuentes del núcleo temporalmente no verificadas: "
+        + html.escape(", ".join(sorted(excluded_core))) + ".</strong> "
+        "Sus anuncios se excluyen de esta ejecución. No debe interpretarse como "
         "cierre de vacantes ni ausencia de contrataciones.</p>"
         if excluded_core else ""
     )
@@ -205,17 +205,17 @@ def render_rss(items, history, lane, checked, source_count=18):
 
 def build(evidence_paths, state, report, output, manifest=None):
     count = report.get("source_count")
-    if not isinstance(count, int) or not 17 <= count <= len(CORE+OPTIONAL):
+    if not isinstance(count, int) or not len(STRICT_CORE) <= count <= len(CORE+OPTIONAL):
         raise ValueError("Refuse to publish a partial core pilot scan or unexpected source count")
     if count != 18 and manifest is None:
         raise ValueError("Refuse partial or expanded source publication without a verified manifest")
     if manifest is not None and (
         manifest.get("core_expected") != 18
-        or manifest.get("strict_core_expected") != 17
-        or manifest.get("strict_core_verified") != 17
-        or manifest.get("core_verified") not in (17,18)
-        or set(manifest.get("missing_or_failed_core",{})) != (
-            {"payabl"} if manifest.get("core_verified")==17 else set())
+        or manifest.get("strict_core_expected") != len(STRICT_CORE)
+        or manifest.get("strict_core_verified") != len(STRICT_CORE)
+        or not set(manifest.get("missing_or_failed_core",{})) <= set(QUARANTINABLE_CORE)
+        or manifest.get("core_verified") != len(CORE) - len(manifest.get("missing_or_failed_core",{}))
+        or set(CORE) & set(manifest.get("verified_source_ids",[])) != set(CORE) - set(manifest.get("missing_or_failed_core",{}))
         or manifest.get("total_verified") != count
         or manifest.get("expansion_verified") != count - manifest.get("core_verified")
         or manifest.get("expansion_expected") != len(OPTIONAL)
@@ -296,7 +296,8 @@ def build(evidence_paths, state, report, output, manifest=None):
         "external_regulated_sources_verified": (manifest or {}).get("regulated_external_verified",0),
         "core_sources_complete": (manifest or {}).get("core_verified",18),
         "core_sources_expected":18,
-        "strict_core_sources_complete":(manifest or {}).get("strict_core_verified",17),
+        "strict_core_sources_complete":(manifest or {}).get("strict_core_verified",len(STRICT_CORE)),
+        "strict_core_sources_expected":len(STRICT_CORE),
         "missing_or_failed_core":(manifest or {}).get("missing_or_failed_core",{}),
         "expanded_sources_complete": count - (manifest or {}).get("core_verified",18),
         "missing_or_failed_expansion": (manifest or {}).get("missing_or_failed_expansion", {}),
@@ -313,7 +314,7 @@ def build(evidence_paths, state, report, output, manifest=None):
             "Date-unconfirmed roles are not claimed newly published",
             "New optional employer baseline and parser changes never generate false novelty alerts",
             "First-seen listing hashes indicate tracking coverage, NOT verified publication dates",
-            "18 mandatory sources, 20 previously audited optional catalog providers, 50 additional original-catalog fintech boards and 5 newly sourced regulated EMI sidecar providers; original catalog remains 339",
+            "18 core sources (two quarantinable on failure), 20 previously audited optional catalog providers, 50 additional original-catalog fintech boards and 5 newly sourced regulated EMI sidecar providers; original catalog remains 339",
             "Swiss roles require independent verification of work eligibility and permits",
         ],
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -368,8 +369,8 @@ def main():
     p.add_argument("--manifest-file")
     a = p.parse_args()
     paths = [Path(line.strip()) for line in Path(a.sources_file).read_text().splitlines() if line.strip()]
-    if not 17 <= len(paths) <= len(CORE+OPTIONAL):
-        raise ValueError("Expected 17-18 independently audited core sources and the configured complete optional source snapshots")
+    if not len(STRICT_CORE) <= len(paths) <= len(CORE+OPTIONAL):
+        raise ValueError("Expected complete strict core and verified remaining configured source snapshots")
     state = json.loads(Path(a.state_file).read_text(encoding="utf-8"))
     report = json.loads(Path(a.report_file).read_text(encoding="utf-8"))
     manifest = json.loads(Path(a.manifest_file).read_text(encoding="utf-8")) if a.manifest_file else None
