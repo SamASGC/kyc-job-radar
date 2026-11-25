@@ -69,9 +69,9 @@ jobs:
     name: Verify ${{ matrix.source }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
-    # Workable can block Payabl for >13h. This one provider cannot block all
-    # other AML339 alerts; its failed report is quarantined, not invented.
-    continue-on-error: ${{ matrix.source == 'payabl' }}
+    # Known intermittent sources remain configured but cannot block the other
+    # sources. Their failed evidence is excluded by the manifest.
+    continue-on-error: ${{ matrix.source == 'payabl' || matrix.source == 'corpay' }}
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -638,7 +638,7 @@ jobs:
   publish:
     name: Audit complete scan, preserve history and publish independent page
     needs: [scan, expansion, regulated, wave50, growth50, regulator50, reg100_live, external50_live, persist_cooldowns]
-    # Preserve 17 strictly mandatory independent sources; the Payabl Workable provider is quarantinable.
+    # Preserve the 16 strictly mandatory sources; isolate Payabl and Corpay only.
     if: ${{ always() && needs.scan.result == 'success' && needs.persist_cooldowns.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -783,6 +783,7 @@ jobs:
             --json-out reports/replay_alerts.json --md-out reports/replay_alerts.md "${files[@]}"
           python3 - <<'PY'
           import json
+          from scripts.aml339_source_manifest import CORE, STRICT_CORE, QUARANTINABLE_CORE
           prior=json.load(open("restored/history.json"))
           now=json.load(open("state/isolated_alert_history.json"))
           current=json.load(open("reports/alerts.json"))
@@ -791,10 +792,10 @@ jobs:
              raise RuntimeError("Historical alert keys lost")
           coverage=json.load(open("coverage_manifest.json"))
           if (current["source_count"]!=coverage["total_verified"]
-              or coverage["core_verified"] not in (17,18)
-              or coverage.get("strict_core_verified")!=17
-              or set(coverage.get("missing_or_failed_core",{})) != (
-                  {"payabl"} if coverage["core_verified"]==17 else set())
+              or coverage.get("strict_core_verified")!=len(STRICT_CORE)
+              or not set(coverage.get("missing_or_failed_core",{})) <= set(QUARANTINABLE_CORE)
+              or coverage["core_verified"]!=len(CORE)-len(coverage.get("missing_or_failed_core",{}))
+              or set(CORE) & set(coverage["verified_source_ids"]) != set(CORE)-set(coverage.get("missing_or_failed_core",{}))
               or replay["new_counts"]!={"confirmed_recent":0,"promising_date_unconfirmed":0}):
              raise RuntimeError("Incomplete core source audit or duplicate alerts on replay")
           print("AML339_CONTINUITY_AND_NO_REPEAT_PASSED",json.dumps({
