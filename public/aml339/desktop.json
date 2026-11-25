@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-25T23:16:30+00:00",
+  "checked_at_utc": "2026-11-25T23:48:48+00:00",
   "sources_expected": 269,
   "sources_complete": 265,
-  "roles_evaluated": 1246,
+  "roles_evaluated": 1264,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -77,10 +77,10 @@
     {
       "id": "corpay",
       "name": "corpay",
-      "status": "failed",
-      "reason": "incomplete_or_rate_limited_source",
-      "listed": null,
-      "relevant": null
+      "status": "verified",
+      "reason": null,
+      "listed": 163,
+      "relevant": 19
     },
     {
       "id": "openpayd",
@@ -1237,10 +1237,10 @@
     {
       "id": "reg100-de-allunity-gmbh",
       "name": "reg100-de-allunity-gmbh",
-      "status": "verified",
-      "reason": null,
-      "listed": 1,
-      "relevant": 1
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "reg100-cy-altery-eu-limited-formerly-named-heado-limited",
