@@ -1,0 +1,43 @@
+name: AML339 WH Partners public coverage diagnostic
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/audit_wh_coverage.py'
+      - '.github/workflows/aml339_wh_coverage.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: current-main
+          sparse-checkout: data/aml339_http_cooldowns.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned Chromium
+        run: |
+          python -m pip install playwright==1.51.0
+          python -m playwright install --with-deps chromium
+      - name: Compare public country tabs with official landing
+        run: |
+          python experiments/aml339/audit_wh_coverage.py --prior current-main/data/aml339_http_cooldowns.json --receipt http_pause_wh.json --out wh_coverage.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-wh-coverage
+          path: |
+            wh_coverage.json
+            http_pause_wh.json
+          if-no-files-found: error
+          retention-days: 30
