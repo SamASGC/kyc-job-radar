@@ -73,7 +73,46 @@ def audit_greenhouse(row):
     if not ok:result.update(state="listing_failed",list_complete=False)
     return result,ok
 
+def audit_smart_external(row):
+    """External SmartRecruiters: resolve the exact previously audited Wise
+    route schema from the immutable, repaired original catalog. Never guess a
+    provider route or accept an incomplete or duplicate listing."""
+    url=row["careers_url"]; route=row["route"]; u=urlsplit(url)
+    if (len(route)!=3 or route[:2]!=["smart_external","jobs.smartrecruiters.com"]
+        or not re.fullmatch(r"[A-Za-z0-9_-]+",route[2])
+        or u.scheme!="https" or u.netloc!="jobs.smartrecruiters.com"
+        or u.query or u.fragment or u.path.rstrip("/")!="/"+route[2]):
+        raise ValueError("Unapproved SmartRecruiters company route")
+    original=json.loads(Path("fuentes.json").read_text())["sources"]
+    if len(original)!=339 or len({x["id"] for x in original})!=339:
+        raise ValueError("Unexpected original catalog")
+    templates={tuple(r) for x in original for r in [x.get("route",[])]
+               if len(r)==3 and "smart" in str(r[0]).lower()
+               and sum(str(v).lower()=="wise" for v in r[1:])==1}
+    if len(templates)!=1:
+        raise ValueError("No unique known SmartRecruiters route")
+    parsed=[route[2] if str(v).lower()=="wise" else v for v in next(iter(templates))]
+    if any([str(v).lower() for v in x.get("route",[])]==[str(v).lower() for v in parsed] for x in original):
+        raise ValueError("Original SmartRecruiters company already catalogued")
+    previous=audit.candidate
+    audit.candidate=candidate
+    try:
+        result=audit_one({"id":row["id"],"name":row["name"],"careers_url":url,"route":parsed},minutes=4)
+    finally:
+        audit.candidate=previous
+    n=result.get("total_listed")
+    ok=(result.get("state")=="listing_extracted" and result.get("list_complete") is True
+        and type(n) is int and n>0
+        and result.get("relevant_leads")==len(result.get("audited",[]))
+        and result.get("unverified_in_scope")==0
+        and result.get("listing_untrackable_count")==0
+        and len(result.get("listing_role_keys",[]))==n)
+    if not ok:result.update(state="listing_failed",list_complete=False)
+    return result,ok
+
 def audit_config(row):
+    if row.get("route", [None])[0]=="smart_external":
+        return audit_smart_external(row)
     if row.get("route", [None])[0]=="greenhouse":
         return audit_greenhouse(row)
     if row.get("route", [None])[0]=="workday":
