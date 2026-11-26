@@ -10,18 +10,33 @@ class ExternalRegistryTests(unittest.TestCase):
         self.assertEqual(len(matrix()["include"]),len(DYNAMIC_LIVE))
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         self.assertEqual(len(rows),len(DYNAMIC_LIVE))
-    def test_fifty_new_verified_rows_require_no_code_or_workflow_edit(self):
+    def test_growth_within_capacity_requires_no_code_or_workflow_edit(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"registry.json"
             d=json.loads(REGISTRY.read_text())
-            for n in range(50):
+            remaining=200-len(d["sources"])
+            self.assertGreaterEqual(remaining,0)
+            increment=min(50,remaining)
+            for n in range(increment):
                 d["sources"].append({"id":f"synthetic-batch-test-{n}","driver":"generic","audit_run":1})
             p.write_text(json.dumps(d))
-            self.assertEqual(len(matrix(p)["include"]),len(DYNAMIC_LIVE)+50)
-            self.assertEqual(len(ids(p)),len(DYNAMIC_LIVE)+50)
-            d["sources"].append(d["sources"][0])
+            self.assertEqual(len(matrix(p)["include"]),len(DYNAMIC_LIVE)+increment)
+            self.assertEqual(len(ids(p)),len(DYNAMIC_LIVE)+increment)
+            # Replace, rather than append, so duplicate detection is tested even at capacity.
+            d["sources"][-1]=d["sources"][0]
             p.write_text(json.dumps(d))
             with self.assertRaisesRegex(ValueError,"Duplicate"):load_registry(p)
+    def test_exact_capacity_and_overflow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/"registry.json"
+            d=json.loads(REGISTRY.read_text())
+            for n in range(200-len(d["sources"])):
+                d["sources"].append({"id":f"synthetic-capacity-test-{n}","driver":"generic","audit_run":1})
+            p.write_text(json.dumps(d))
+            self.assertEqual(len(matrix(p)["include"]),200)
+            d["sources"].append({"id":"synthetic-overflow-test","driver":"generic","audit_run":1})
+            p.write_text(json.dumps(d))
+            with self.assertRaisesRegex(ValueError,"Invalid external source inventory"):load_registry(p)
     def test_invalid_driver_or_missing_evidence_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"registry.json"
