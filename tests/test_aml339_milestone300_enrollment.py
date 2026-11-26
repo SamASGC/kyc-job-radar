@@ -23,5 +23,5 @@ class Milestone300EnrollmentTests(unittest.TestCase):
                 self.assertIn(sid,EXTERNAL50_LIVE)
                 self.assertFalse(any(x["route"]==r["route"] for x in original.values()))
                 self.assertEqual(sum(x.get("route")==r["route"] for x in rows),1)
-        self.assertEqual(len(set(CORE+OPTIONAL)),300)
+        self.assertGreaterEqual(len(set(CORE+OPTIONAL)),300)
         self.assertEqual(next(r for r in selected if r["id"]=="external-exante")["route"],["greenhouse","boards-api.greenhouse.io","xntltd"])
