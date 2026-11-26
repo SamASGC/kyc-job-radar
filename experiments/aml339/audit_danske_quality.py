@@ -216,9 +216,35 @@ def run(source,prior_path,receipt):
                     if len(plain(desc))<200:raise ValueError("Insufficient description evidence")
                     loc=row.get("location","")
                     if not loc:raise ValueError("Missing explicit listing location")
-                    if loc.casefold() not in s.casefold():
-                        # Require exact location text or the location without a
-                        # clearly delimited work-mode suffix in job detail.
+                    # An abbreviated tile is not a complete geography claim.
+                    # Capture public detail labels and the exact job-info region
+                    # to establish how the UI exposes every location.
+                    abbreviated=re.fullmatch(r"(.+?)\s+and\s+(\d+)\s+more(?:\s*\((?:Hybrid|On-site|Remote)\))?",loc,re.I)
+                    if abbreviated:
+                        info=re.search(r"(?:^|\n)Job Info\s*\n(.+?)(?:\nApply Now\s*(?:\n|$)|\nSimilar Jobs\b|$)",s,re.I|re.S)
+                        if info:
+                            lines=[x.strip() for x in info.group(1).splitlines() if x.strip()]
+                            ev["public_job_info_lines"]=lines[:40]
+                        else:
+                            lines=[]
+                        ev["public_location_nodes"]=page.locator('[class*="location"],[itemprop="jobLocation"]').evaluate_all("""els => els.filter(e=>e.getClientRects().length && getComputedStyle(e).visibility!=='hidden').map(e=>({classes:String(e.className).slice(0,160),text:e.innerText.trim().slice(0,300)})).filter(e=>e.text).slice(0,30)""")
+                        # Parse only the explicit Locations field, bounded by the
+                        # next known Job Info label; no inference from prose.
+                        candidates=[]
+                        for i,line in enumerate(lines):
+                            if re.fullmatch(r"Locations?",line,re.I):
+                                vals=[]
+                                for value in lines[i+1:]:
+                                    if re.fullmatch(r"(?:Posting Date|Apply Before|Job Identification|Job Category|Job Schedule|Job Shift|Job Type|Job Function|Job Family|Job Level|Business Unit|Legal Employer|Degree Level|Job Grade|Work Mode|Remote|Job Description|Similar Jobs|Apply Now)",value,re.I):break
+                                    if not re.fullmatch(r"[^,\n]{2,90},\s*[^,\n]{2,90}",value):break
+                                    vals.append(value)
+                                if len(vals)==1+int(abbreviated.group(2)) and len({v.casefold() for v in vals})==len(vals) and abbreviated.group(1).casefold() in {v.casefold() for v in vals}:
+                                    candidates.append(vals)
+                        if len(candidates)!=1:raise ValueError("Complete multi-location detail field not established")
+                        loc=" / ".join(candidates[0])
+                        ev["location"]=loc
+                        ev["location_evidence"]="Explicit Job Info Locations field; count matches abbreviated tile"
+                    elif loc.casefold() not in s.casefold():
                         simple=re.sub(r"\s*\((?:Hybrid|On-site|Remote)\)$","",loc,flags=re.I)
                         if not simple or simple.casefold() not in s.casefold():raise ValueError("Listing/detail location mismatch")
                     # Posting Date does not prove first publication; leave date
@@ -247,4 +273,5 @@ def main():
     result=run(args.source,args.prior,args.receipt)
     args.out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
     print("ORACLE_UI_EVIDENCE",json.dumps({k:v for k,v in result.items() if k not in ("listing_ids","audited")},ensure_ascii=False),flush=True)
+    print("ORACLE_DETAIL_FAILURES",json.dumps([r for r in result["audited"] if not r["verified"]],ensure_ascii=False),flush=True)
 if __name__=="__main__":main()
