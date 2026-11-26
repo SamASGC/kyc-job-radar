@@ -42,13 +42,20 @@ REG100_LIVE = ("reg100-be-paynovate", "reg100-lu-pingpong-europe-s-a")
 # Both still scan under the existing schedule; quarantine only failed evidence.
 QUARANTINABLE_CORE = ("payabl", "corpay")
 STRICT_CORE = tuple(sid for sid in CORE if sid not in QUARANTINABLE_CORE)
-from external_live_registry import ids as external_live_ids
+from external_live_registry import ids as external_live_ids, MAX_DYNAMIC_SOURCES
+MAX_CONFIGURED_SOURCES = 350
 EXTERNAL50_LIVE = external_live_ids(catalog=False)
 CATALOG_LIVE = external_live_ids(catalog=True)
 DYNAMIC_LIVE = EXTERNAL50_LIVE + CATALOG_LIVE
 if set(DYNAMIC_LIVE)&set(CORE+EXPANSION+BATCH50+WAVE50_B+REGULATED+REGULATOR50+REG100_LIVE):
     raise ValueError("Duplicate live external employer identity")
 OPTIONAL = EXPANSION + BATCH50 + WAVE50_B + REGULATED + REGULATOR50 + REG100_LIVE + DYNAMIC_LIVE
+if len(CORE+OPTIONAL)!=len(set(CORE+OPTIONAL)):
+    raise ValueError("Duplicate configured source")
+if len(CORE+OPTIONAL)>MAX_CONFIGURED_SOURCES:
+    raise ValueError("Final configured source ceiling exceeded")
+if len(CORE+OPTIONAL)-len(DYNAMIC_LIVE)+MAX_DYNAMIC_SOURCES!=MAX_CONFIGURED_SOURCES:
+    raise ValueError("Fixed inventory and dynamic source ceiling disagree")
 
 
 def collect(core_dir: Path, optional_dir: Path):
