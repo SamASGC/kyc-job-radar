@@ -105,6 +105,14 @@ def run(source,prior_path,receipt):
                         const names=[...new Set(candidates)];
                         samples.push({tag:n.tagName,classes:String(n.className).slice(0,200),headings:names.slice(0,5),text:n.innerText.trim().slice(0,350)});
                         if(names.length===1)title=names[0];
+                        // Observed on Danske's public Oracle listing: the first
+                        // line of a job-tile is its title, followed by location
+                        // and the explicit posting date. Do not apply to a
+                        // generic ancestor or a tile with ambiguous IDs.
+                        if(!title && n.classList.contains('job-tile') && n.classList.contains('job-grid-item')){
+                            const lines=n.innerText.split(/\\n/).map(x=>x.trim()).filter(Boolean);
+                            if(lines.length>=2 && /Posting Date\\s*\\d{1,2}\\/\\d{1,2}\\/\\d{4}/i.test(lines[1]) && lines[0].length<=240 && !/Posting Date/i.test(lines[0]))title=lines[0];
+                        }
                     }
                     return {url:e.href,title,samples};
                 });
