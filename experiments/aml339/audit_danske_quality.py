@@ -220,41 +220,56 @@ def run(source,prior_path,receipt):
                     # Capture public detail labels and the exact job-info region
                     # to establish how the UI exposes every location.
                     abbreviated=re.fullmatch(r"(.+?)\s+and\s+(\d+)\s+more(?:\s*\((?:Hybrid|On-site|Remote)\))?",loc,re.I)
+                    geo_conflict=False
                     if abbreviated:
-                        info=re.search(r"(?:^|\n)Job Info\s*\n(.+?)(?:\nApply Now\s*(?:\n|$)|\nSimilar Jobs\b|$)",s,re.I|re.S)
-                        if info:
-                            lines=[x.strip() for x in info.group(1).splitlines() if x.strip()]
-                            ev["public_job_info_lines"]=lines[:40]
+                        nodes=page.locator(".job-meta__locations")
+                        vals=[x.inner_text().strip() for x in nodes.all() if x.is_visible() and x.inner_text().strip()]
+                        if len(set(vals))!=1:raise ValueError("Missing or conflicting explicit job location field")
+                        raw=[x.strip() for x in vals[0].splitlines() if x.strip()]
+                        ev["public_location_addresses"]=raw
+                        country={"PL":"Poland","LT":"Lithuania","DK":"Denmark","FI":"Finland","SE":"Sweden","NO":"Norway","EE":"Estonia","LV":"Latvia","LU":"Luxembourg","ES":"Spain","MT":"Malta","GB":"United Kingdom","DE":"Germany"}
+                        primary=abbreviated.group(1).strip()
+                        primary_country=primary.rsplit(",",1)[-1].strip()
+                        # Read the explicitly published terminal country code only.
+                        # Retain exact addresses; expand unambiguous ISO codes so
+                        # the original geography classifier can recognize countries.
+                        expanded=[]
+                        for addr in raw:
+                            parts=addr.rsplit(",",1)
+                            if len(parts)!=2 or parts[1].strip() not in country:
+                                raise ValueError("Unrecognized explicit address country code")
+                            expanded.append(parts[0].strip()+", "+country[parts[1].strip()])
+                        if len(set(expanded))!=len(expanded):raise ValueError("Duplicate location addresses")
+                        geo_conflict=(len(expanded)!=1+int(abbreviated.group(2)) or not any(a.endswith(", "+primary_country) for a in expanded))
+                        if geo_conflict:
+                            # Application can still be active. Geography remains
+                            # unknown and receives an explicit disqualifying barrier.
+                            # Never assert either missing or conflicting location.
+                            loc=""
+                            ev["location_evidence"]="Conflicting listing/detail geography; no target country asserted"
                         else:
-                            lines=[]
-                        ev["public_location_nodes"]=page.locator('[class*="location"],[itemprop="jobLocation"]').evaluate_all("""els => els.filter(e=>e.getClientRects().length && getComputedStyle(e).visibility!=='hidden').map(e=>({classes:String(e.className).slice(0,160),text:e.innerText.trim().slice(0,300)})).filter(e=>e.text).slice(0,30)""")
-                        # Parse only the explicit Locations field, bounded by the
-                        # next known Job Info label; no inference from prose.
-                        candidates=[]
-                        for i,line in enumerate(lines):
-                            if re.fullmatch(r"Locations?",line,re.I):
-                                vals=[]
-                                for value in lines[i+1:]:
-                                    if re.fullmatch(r"(?:Posting Date|Apply Before|Job Identification|Job Category|Job Schedule|Job Shift|Job Type|Job Function|Job Family|Job Level|Business Unit|Legal Employer|Degree Level|Job Grade|Work Mode|Remote|Job Description|Similar Jobs|Apply Now)",value,re.I):break
-                                    if not re.fullmatch(r"[^,\n]{2,90},\s*[^,\n]{2,90}",value):break
-                                    vals.append(value)
-                                if len(vals)==1+int(abbreviated.group(2)) and len({v.casefold() for v in vals})==len(vals) and abbreviated.group(1).casefold() in {v.casefold() for v in vals}:
-                                    candidates.append(vals)
-                        if len(candidates)!=1:raise ValueError("Complete multi-location detail field not established")
-                        loc=" / ".join(candidates[0])
+                            loc=" / ".join(expanded)
+                            ev["location_evidence"]="Explicit detail address field; count and primary country agree"
                         ev["location"]=loc
-                        ev["location_evidence"]="Explicit Job Info Locations field; count matches abbreviated tile"
                     elif loc.casefold() not in s.casefold():
                         simple=re.sub(r"\s*\((?:Hybrid|On-site|Remote)\)$","",loc,flags=re.I)
                         if not simple or simple.casefold() not in s.casefold():raise ValueError("Listing/detail location mismatch")
                     # Posting Date does not prove first publication; leave date
                     # unknown rather than promoting it to confirmed recent.
                     job={"title":row["title"],"url":row["url"],"apply_url":row["url"],"location":loc,"description":desc}
-                    ev.update(verified=True,application_control_count=len(controls),description_present=True,description_length=len(plain(desc)),evaluation=evaluate(job,True),apply_url=row["url"])
+                    evaluation=evaluate(job,True)
+                    if geo_conflict:
+                        evaluation["geography"]="unknown"
+                        evaluation["class"]="not_recommended"
+                        evaluation["barriers"].append("Ubicación contradictoria entre listado y ficha; excluida de alertas")
+                        evaluation["uncertainties"].append("No se confirma país objetivo")
+                    ev.update(verified=True,application_control_count=len(controls),description_present=True,description_length=len(plain(desc)),evaluation=evaluation,apply_url=row["url"],geography_conflict=geo_conflict)
                 except Exception as exc:
                     ev["error"]=type(exc).__name__+": "+str(exc)[:180]
                 result["audited"].append(ev)
             result["unverified"]=sum(not r["verified"] for r in result["audited"])
+            result["geography_conflicts"]=sum(bool(r.get("geography_conflict")) for r in result["audited"])
+            assert all(r["evaluation"]["geography"]=="unknown" and r["evaluation"]["barriers"] for r in result["audited"] if r.get("geography_conflict"))
             if result["unverified"] or len(result["audited"])!=len(relevant):raise ValueError("Relevant details incomplete")
             check()
             # This is explicitly experimental evidence, not the production verifier.
