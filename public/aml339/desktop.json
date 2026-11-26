@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-26T01:19:01+00:00",
-  "sources_expected": 277,
-  "sources_complete": 274,
-  "roles_evaluated": 1529,
+  "checked_at_utc": "2026-11-26T01:41:05+00:00",
+  "sources_expected": 296,
+  "sources_complete": 292,
+  "roles_evaluated": 1658,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -837,10 +837,10 @@
     {
       "id": "alter-domus",
       "name": "alter-domus",
-      "status": "verified",
-      "reason": null,
-      "listed": 216,
-      "relevant": 24
+      "status": "failed",
+      "reason": "unverified_in_scope_details",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "aps-bank",
@@ -1257,6 +1257,142 @@
       "reason": null,
       "listed": 4,
       "relevant": 1
+    },
+    {
+      "id": "external-saxo-bank",
+      "name": "external-saxo-bank",
+      "status": "verified",
+      "reason": null,
+      "listed": 57,
+      "relevant": 8
+    },
+    {
+      "id": "external-fidelity-international",
+      "name": "external-fidelity-international",
+      "status": "verified",
+      "reason": null,
+      "listed": 80,
+      "relevant": 2
+    },
+    {
+      "id": "external-invesco",
+      "name": "external-invesco",
+      "status": "verified",
+      "reason": null,
+      "listed": 211,
+      "relevant": 13
+    },
+    {
+      "id": "external-ares-management",
+      "name": "external-ares-management",
+      "status": "verified",
+      "reason": null,
+      "listed": 227,
+      "relevant": 6
+    },
+    {
+      "id": "external-blackstone",
+      "name": "external-blackstone",
+      "status": "verified",
+      "reason": null,
+      "listed": 136,
+      "relevant": 10
+    },
+    {
+      "id": "external-swiss-life-international",
+      "name": "external-swiss-life-international",
+      "status": "verified",
+      "reason": null,
+      "listed": 30,
+      "relevant": 0
+    },
+    {
+      "id": "external-pgim-prudential",
+      "name": "external-pgim-prudential",
+      "status": "verified",
+      "reason": null,
+      "listed": 179,
+      "relevant": 6
+    },
+    {
+      "id": "external-wellington-management",
+      "name": "external-wellington-management",
+      "status": "verified",
+      "reason": null,
+      "listed": 123,
+      "relevant": 10
+    },
+    {
+      "id": "external-gunvor",
+      "name": "external-gunvor",
+      "status": "verified",
+      "reason": null,
+      "listed": 32,
+      "relevant": 7
+    },
+    {
+      "id": "external-trafigura",
+      "name": "external-trafigura",
+      "status": "verified",
+      "reason": null,
+      "listed": 67,
+      "relevant": 6
+    },
+    {
+      "id": "external-flutter-international",
+      "name": "external-flutter-international",
+      "status": "verified",
+      "reason": null,
+      "listed": 73,
+      "relevant": 4
+    },
+    {
+      "id": "external-lgt-bank",
+      "name": "external-lgt-bank",
+      "status": "verified",
+      "reason": null,
+      "listed": 50,
+      "relevant": 7
+    },
+    {
+      "id": "external-mg",
+      "name": "external-mg",
+      "status": "verified",
+      "reason": null,
+      "listed": 129,
+      "relevant": 24
+    },
+    {
+      "id": "external-cibc",
+      "name": "external-cibc",
+      "status": "verified",
+      "reason": null,
+      "listed": 655,
+      "relevant": 30
+    },
+    {
+      "id": "external-ardian",
+      "name": "external-ardian",
+      "status": "verified",
+      "reason": null,
+      "listed": 67,
+      "relevant": 5
+    },
+    {
+      "id": "external-sei",
+      "name": "external-sei",
+      "status": "verified",
+      "reason": null,
+      "listed": 127,
+      "relevant": 5
+    },
+    {
+      "id": "external-arendt-group",
+      "name": "external-arendt-group",
+      "status": "verified",
+      "reason": null,
+      "listed": 62,
+      "relevant": 7
     },
     {
       "id": "allica-bank",
@@ -2225,6 +2361,22 @@
       "reason": null,
       "listed": 12,
       "relevant": 5
+    },
+    {
+      "id": "dinotech",
+      "name": "dinotech",
+      "status": "verified",
+      "reason": null,
+      "listed": 2,
+      "relevant": 0
+    },
+    {
+      "id": "betsson",
+      "name": "betsson",
+      "status": "verified",
+      "reason": null,
+      "listed": 76,
+      "relevant": 3
     }
   ],
   "jobs": [
