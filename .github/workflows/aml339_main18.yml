@@ -538,8 +538,8 @@ jobs:
   external50_live:
     needs: [prepare_external, prepare_cooldowns]
     name: Verify dynamically enrolled employer ${{ matrix.source }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 9
+    runs-on: ${{ matrix.driver == 'oracle' && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ matrix.driver == 'oracle' && 12 || 9 }}
     # Optional provider failure is recorded per-source; publication may proceed.
     continue-on-error: true
     strategy:
@@ -580,6 +580,11 @@ jobs:
           cd "$RUNNER_TEMP/aml339"
           python3 repair_sources_20261121.py
           python3 quality_audit.py --self-test
+      - name: Install pinned Chromium for reviewed Oracle source only
+        if: ${{ matrix.driver == 'oracle' }}
+        run: |
+          python -m pip install playwright==1.51.0
+          python -m playwright install --with-deps chromium
       - name: Audit official listings, positive baseline and relevant complete job applications
         shell: bash
         env:
@@ -594,6 +599,9 @@ jobs:
             python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_external50_wave02.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "generic" ]]; then
             python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_external_generic.py --source "$SOURCE" --production --out "candidate_${SOURCE}.json"
+          elif [[ "$DRIVER" == "oracle" ]]; then
+            cp "$GITHUB_WORKSPACE"/experiments/aml339/{audit_danske_quality.py,live_oracle.py,alert_history.py,hourly_http_guard.py} .
+            python3 live_oracle.py --source "$SOURCE" --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" --out "candidate_${SOURCE}.json"
           elif [[ "$DRIVER" == "catalog" ]]; then
             python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$RUNNER_TEMP/aml339-cooldown/prior.json" --receipt "$RUNNER_TEMP/aml339/http_pause_${SOURCE}.json" live_catalog_registry.py --source "$SOURCE" --out "candidate_${SOURCE}.json"
           else
