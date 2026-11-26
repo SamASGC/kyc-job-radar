@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-26T18:41:02+00:00",
-  "sources_expected": 308,
-  "sources_complete": 303,
-  "roles_evaluated": 1711,
+  "checked_at_utc": "2026-11-26T19:06:25+00:00",
+  "sources_expected": 313,
+  "sources_complete": 309,
+  "roles_evaluated": 1758,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -887,7 +887,7 @@
       "name": "adyen",
       "status": "verified",
       "reason": null,
-      "listed": 232,
+      "listed": 233,
       "relevant": 28
     },
     {
@@ -1365,10 +1365,10 @@
     {
       "id": "external-cibc",
       "name": "external-cibc",
-      "status": "failed",
-      "reason": "partial_or_failed_listing",
-      "listed": null,
-      "relevant": null
+      "status": "verified",
+      "reason": null,
+      "listed": 653,
+      "relevant": 31
     },
     {
       "id": "external-ardian",
@@ -1464,6 +1464,38 @@
       "status": "verified",
       "reason": null,
       "listed": 28,
+      "relevant": 1
+    },
+    {
+      "id": "external-betway",
+      "name": "external-betway",
+      "status": "verified",
+      "reason": null,
+      "listed": 28,
+      "relevant": 3
+    },
+    {
+      "id": "external-casumo",
+      "name": "external-casumo",
+      "status": "verified",
+      "reason": null,
+      "listed": 1,
+      "relevant": 0
+    },
+    {
+      "id": "external-lcky",
+      "name": "external-lcky",
+      "status": "verified",
+      "reason": null,
+      "listed": 6,
+      "relevant": 3
+    },
+    {
+      "id": "external-amusnet",
+      "name": "external-amusnet",
+      "status": "verified",
+      "reason": null,
+      "listed": 2,
       "relevant": 1
     },
     {
@@ -2295,7 +2327,7 @@
       "name": "wolt",
       "status": "verified",
       "reason": null,
-      "listed": 186,
+      "listed": 187,
       "relevant": 7
     },
     {
@@ -2423,7 +2455,7 @@
       "name": "capco",
       "status": "verified",
       "reason": null,
-      "listed": 712,
+      "listed": 716,
       "relevant": 35
     },
     {
@@ -2473,6 +2505,14 @@
       "reason": null,
       "listed": 8,
       "relevant": 2
+    },
+    {
+      "id": "banque-de-luxembourg",
+      "name": "banque-de-luxembourg",
+      "status": "verified",
+      "reason": null,
+      "listed": 35,
+      "relevant": 9
     }
   ],
   "jobs": [
