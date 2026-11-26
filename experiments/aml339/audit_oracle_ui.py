@@ -103,7 +103,16 @@ def run(source,prior_path,receipt):
             return rows
         try:
             page.goto(root+"/jobs",wait_until="domcontentloaded")
-            page.wait_for_function(r"() => /Job search results\s+\d|[\d,]+\s+Open Jobs/i.test(document.body.innerText)",timeout=25000)
+            # Oracle initially renders zero while results are being loaded.
+            # Wait for a positive total and separately retain only public DOM evidence.
+            try:
+                page.wait_for_function(r"() => /Job search results\s+[1-9][\d,]*|[1-9][\d,]*\s+Open Jobs/i.test(document.body.innerText)",timeout=25000)
+            except Exception:
+                pass
+            check()
+            result["visible_link_samples"]=page.locator("a[href]").evaluate_all("""els => els.filter(e=>e.getClientRects().length).slice(0,100).map(e=>({path:new URL(e.href).pathname,label:(e.innerText||e.getAttribute('aria-label')||'').trim().slice(0,120)}))""")
+            result["visible_button_labels"]=page.get_by_role("button").all_inner_texts()[:40]
+            result["visible_headings"]=page.get_by_role("heading").all_inner_texts()[:40]
             expected=declared_total(body());result["declared_total"]=expected
             if not 0<expected<=1500:raise ValueError("Public count outside positive bounded inventory")
             all_rows={}
