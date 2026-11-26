@@ -1396,7 +1396,7 @@
       "aliases": [
         "playtech"
       ],
-      "hiring_reference": "https://jobs.smartrecruiters.com/Playtech/744000154361759-compliance-manager-",
+      "hiring_reference": "https://jobs.smartrecruiters.com/Playtech/744000159097219-compliance-manager-",
       "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=eb130853-a273-458f-89c4-0e8c4556d29e&details=1&lang=EN",
       "review_note": "MGA Playtech PLC licensed B2B critical supply; official Malta Compliance Manager reference, primarily regulatory compliance, not a bank or dedicated AML claim."
     },
@@ -1419,6 +1419,92 @@
       "hiring_reference": "https://everymatrix.teamtailor.com/locations/sliema",
       "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=511b41e0-82c7-49b8-8b9c-51a0cbf3e157&details=1&lang=EN",
       "review_note": "MGA individual B2B licence Licensed; official employer describes Malta Compliance team, historical employer-posted Compliance & KYC Officer at https://mt.linkedin.com/jobs/view/compliance-kyc-officer-at-everymatrix-3094170898; no current relevant opening claim."
+    },
+    {
+      "id": "external-betway",
+      "name": "Betway / Super Group",
+      "careers_url": "https://myhcm.wd3.myworkdayjobs.com/betway",
+      "route": [
+        "workday",
+        "myhcm.wd3.myworkdayjobs.com",
+        "betway"
+      ],
+      "aliases": [
+        "betway",
+        "super group"
+      ],
+      "audit_artifact": 15143649108,
+      "hiring_reference": "https://myhcm.wd3.myworkdayjobs.com/Betway/job/Gzira-Malta/Regulatory-Compliance-Officer_JR13713",
+      "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=a78672d4-f566-4daf-adb8-24d0fcc30e7c&details=1&lang=EN",
+      "review_note": "Betway Limited individual MGA B2C licence Licensed; audit verified regulatory compliance roles in Malta/Madrid; dedicated AML posts on other group boards do not establish current target-board AML vacancies. Not banking.",
+      "driver": "generic",
+      "audit_run": 45875826449
+    },
+    {
+      "id": "external-casumo",
+      "name": "Casumo",
+      "careers_url": "https://www.casumocareers.com/jobs",
+      "route": [
+        "teamtailor",
+        "www.casumocareers.com",
+        ""
+      ],
+      "job_pattern": "^/jobs/[0-9]+-[^/]+/?$",
+      "aliases": [
+        "casumo"
+      ],
+      "audit_artifact": 15143693942,
+      "hiring_reference": "https://www.casumocareers.com/jobs/8634435-mlro",
+      "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=ecbeb1ee-b3c0-4ba5-883a-509c765ec697&details=1&lang=EN",
+      "review_note": "Casumo Services Limited MGA individual licence Licensed. Prior official Malta/Gibraltar MLRO posting establishes AML hiring. Current board independently showed one Senior Accountant vacancy matching positive technical listing count; no current AML claim.",
+      "driver": "generic",
+      "audit_run": 45875826449
+    },
+    {
+      "id": "external-lcky",
+      "name": "LCKY / Glitnor Group",
+      "careers_url": "https://careers.lckygroup.com/jobs",
+      "route": [
+        "teamtailor",
+        "careers.lckygroup.com",
+        ""
+      ],
+      "job_pattern": "^/jobs/[0-9]+-[^/]+/?$",
+      "aliases": [
+        "lcky group",
+        "lckygroup",
+        "glitnor",
+        "swintt",
+        "onecasino"
+      ],
+      "audit_artifact": 15143749017,
+      "hiring_reference": "https://careers.lckygroup.com/jobs/8757360-regulatory-affairs-officer-spain",
+      "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=0b2d2299-f969-4440-a062-8bbd90c3fb89&details=1&lang=EN",
+      "employer_reference": "https://www.lckygroup.com/news/whats-in-a-name",
+      "review_note": "Glitnor Services Limited MGA licence Licensed; official employer confirms LCKY rebrand. Current Regulatory Affairs Officer in Melilla and Malta responsible gaming roles establish compliance hiring, not necessarily suitable AML vacancies. Third-party Malta compliance officer posting mentions AML policies. Existing geographic filters remain unchanged.",
+      "driver": "generic",
+      "audit_run": 45875826449
+    },
+    {
+      "id": "external-amusnet",
+      "name": "Amusnet Gaming",
+      "careers_url": "https://amusnetgaming.com/careers",
+      "route": [
+        "site_jobs",
+        "amusnetgaming.com",
+        "^/careers/[^/]+/?$"
+      ],
+      "job_pattern": "^/careers/[^/]+/?$",
+      "aliases": [
+        "amusnet",
+        "amusnetgaming"
+      ],
+      "audit_artifact": 15143888897,
+      "hiring_reference": "https://amusnetgaming.com/careers/compliance-executive",
+      "regulatory_reference": "https://authorisation.mga.org.mt/verification.aspx?company=58a851f7-089d-4ac2-bea0-8239c72dd135&details=1&lang=EN",
+      "review_note": "Amusnet Gaming Limited individual MGA licence Licensed. Official Malta Compliance Executive recruitment reference; current employer listing independently showed two non-compliance roles matching technical audit. Not a current compliance vacancy claim; no bypass of access restrictions.",
+      "driver": "generic",
+      "audit_run": 45875826449
     }
   ]
 }
