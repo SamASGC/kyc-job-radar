@@ -1,8 +1,8 @@
 import json,unittest
 from zipfile import ZipFile
-from scripts.aml339_source_manifest import CORE,OPTIONAL,EXTERNAL50_LIVE
+from scripts.aml339_source_manifest import CORE,OPTIONAL,EXTERNAL50_LIVE,CATALOG_LIVE
 from external_live_registry import load_registry
-IDS=set(["external-mufg","external-mobilize-rci","external-light-wonder"])
+IDS=set(["external-light-wonder","external-us-bank","fdj-united"])
 class ResidualWorkdayEnrollmentTests(unittest.TestCase):
     def test_exact_reviewed_routes(self):
         with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
@@ -12,6 +12,10 @@ class ResidualWorkdayEnrollmentTests(unittest.TestCase):
         self.assertEqual({r["id"] for r in selected},IDS)
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         for r in selected:
+            if r["driver"]=="catalog":
+                self.assertIn(r["id"],CATALOG_LIVE)
+                self.assertEqual(sum(x["id"]==r["id"] for x in old),1)
+                continue
             self.assertIn(r["id"],EXTERNAL50_LIVE)
             self.assertEqual(r["driver"],"generic")
             self.assertEqual(r["route"][0],"workday")
