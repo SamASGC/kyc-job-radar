@@ -1,0 +1,65 @@
+name: AML339 priority four portal evidence
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/audit_priority_four.py'
+      - '.github/workflows/aml339_priority_four.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        source: [banque-de-luxembourg, advanzia, csc, danske-bank]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: current-main
+          sparse-checkout: data/aml339_http_cooldowns.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe public listing evidence only
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          python3 -m py_compile experiments/aml339/audit_priority_four.py
+          python3 experiments/aml339/hourly_http_guard.py run --prior current-main/data/aml339_http_cooldowns.json --receipt "http_pause_$SOURCE.json" experiments/aml339/audit_priority_four.py --source "$SOURCE" --out "priority_$SOURCE.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-priority-${{ matrix.source }}
+          path: |
+            priority_*.json
+            http_pause_*.json
+          if-no-files-found: error
+          retention-days: 30
+  report:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-priority-*
+          path: evidence
+      - run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rows=[json.loads(p.read_text()) for p in Path("evidence").rglob("priority_*.json")]
+          assert {r["id"] for r in rows}=={"banque-de-luxembourg","advanzia","csc","danske-bank"}
+          assert len(rows)==4 and all(r["verified"] is False for r in rows)
+          print("PRIORITY_FOUR",json.dumps(rows,ensure_ascii=False))
+          PY
