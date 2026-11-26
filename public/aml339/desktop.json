@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-26T17:56:45+00:00",
-  "sources_expected": 300,
-  "sources_complete": 297,
-  "roles_evaluated": 1701,
+  "checked_at_utc": "2026-11-26T18:27:16+00:00",
+  "sources_expected": 303,
+  "sources_complete": 299,
+  "roles_evaluated": 1734,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -71,7 +71,7 @@
       "name": "wise",
       "status": "verified",
       "reason": null,
-      "listed": 412,
+      "listed": 413,
       "relevant": 83
     },
     {
@@ -125,10 +125,10 @@
     {
       "id": "payabl",
       "name": "payabl",
-      "status": "verified",
-      "reason": null,
-      "listed": 18,
-      "relevant": 2
+      "status": "failed",
+      "reason": "no_live_source_evidence",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "airwallex",
@@ -1367,7 +1367,7 @@
       "name": "external-cibc",
       "status": "verified",
       "reason": null,
-      "listed": 650,
+      "listed": 652,
       "relevant": 31
     },
     {
@@ -1409,6 +1409,22 @@
       "reason": null,
       "listed": 10,
       "relevant": 0
+    },
+    {
+      "id": "external-light-wonder",
+      "name": "external-light-wonder",
+      "status": "verified",
+      "reason": null,
+      "listed": 130,
+      "relevant": 0
+    },
+    {
+      "id": "external-us-bank",
+      "name": "external-us-bank",
+      "status": "verified",
+      "reason": null,
+      "listed": 1272,
+      "relevant": 32
     },
     {
       "id": "allica-bank",
@@ -2223,7 +2239,7 @@
       "name": "stripe",
       "status": "verified",
       "reason": null,
-      "listed": 769,
+      "listed": 768,
       "relevant": 34
     },
     {
@@ -2231,7 +2247,7 @@
       "name": "swissquote",
       "status": "verified",
       "reason": null,
-      "listed": 32,
+      "listed": 31,
       "relevant": 2
     },
     {
@@ -2239,7 +2255,7 @@
       "name": "wolt",
       "status": "verified",
       "reason": null,
-      "listed": 184,
+      "listed": 186,
       "relevant": 7
     },
     {
@@ -2351,8 +2367,8 @@
       "name": "pwc-experienced",
       "status": "verified",
       "reason": null,
-      "listed": 139,
-      "relevant": 93
+      "listed": 140,
+      "relevant": 94
     },
     {
       "id": "guidehouse",
@@ -2367,7 +2383,7 @@
       "name": "capco",
       "status": "verified",
       "reason": null,
-      "listed": 711,
+      "listed": 712,
       "relevant": 35
     },
     {
@@ -2409,6 +2425,14 @@
       "reason": null,
       "listed": 21,
       "relevant": 1
+    },
+    {
+      "id": "fdj-united",
+      "name": "fdj-united",
+      "status": "verified",
+      "reason": null,
+      "listed": 8,
+      "relevant": 2
     }
   ],
   "jobs": [
