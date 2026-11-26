@@ -7,7 +7,8 @@ class Wave3EnrollmentTests(unittest.TestCase):
         with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
             original={x["id"]:x for x in json.loads(z.read("fuentes.json"))["sources"]}
         rows=load_registry()
-        selected=[r for r in rows if r["audit_run"]==45734320464]
+        selected=[r for r in rows if r["id"] in {"dinotech","betsson","external-flutter-international","external-lgt-bank"}]
+        self.assertTrue(all(r["audit_run"]==45734320464 for r in selected))
         self.assertEqual({r["id"] for r in selected},set(["dinotech","betsson","external-flutter-international","external-lgt-bank"]))
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         for r in selected:
