@@ -10,7 +10,33 @@ from live_e2e18_full import audit_one
 import live_e2e18_full as audit
 from amlradar.sources import Board
 
+def audit_workday(row):
+    """Use the same bounded, fail-closed Workday parser as original catalog.
+    Only exact, independently reviewed Workday tenant/site routes are admitted.
+    No fallback requests, guessed pages or zero-listing acceptance.
+    """
+    sid=row["id"]; url=row["careers_url"]; route=row["route"]
+    u=urlsplit(url)
+    if (len(route)!=3 or route[0]!="workday" or u.scheme!="https"
+        or not re.fullmatch(r"[a-z0-9][a-z0-9-]*\\.wd[0-9]+\\.myworkdayjobs\\.com",route[1])
+        or u.hostname!=route[1] or u.netloc!=route[1] or u.query or u.fragment
+        or not re.fullmatch(r"[A-Za-z0-9_-]+",route[2])
+        or u.path.rstrip("/")!="/"+route[2]):
+        raise ValueError("Unapproved Workday tenant/site route")
+    result=audit_one({"id":sid,"name":row["name"],"careers_url":url,"route":route},minutes=4)
+    n=result.get("total_listed")
+    ok=(result.get("state")=="listing_extracted" and result.get("list_complete") is True
+        and type(n) is int and n>0
+        and result.get("relevant_leads")==len(result.get("audited",[]))
+        and result.get("unverified_in_scope")==0
+        and result.get("listing_untrackable_count")==0
+        and len(result.get("listing_role_keys",[]))==n)
+    if not ok:result.update(state="listing_failed",list_complete=False)
+    return result,ok
+
 def audit_config(row):
+    if row.get("route", [None])[0]=="workday":
+        return audit_workday(row)
     sid=row["id"]; name=row["name"]; url=row["careers_url"]; route=row["route"]
     host=urlsplit(url).hostname
     if urlsplit(url).scheme!="https" or route[0] not in ("site_jobs","teamtailor") or route[1]!=host:
