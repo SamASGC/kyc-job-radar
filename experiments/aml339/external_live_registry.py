@@ -5,11 +5,13 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 REGISTRY=ROOT/"external_live_registry.json"
 DRIVERS={"wave02","next","generic","catalog","oracle"}
+# 147 fixed configured sources + at most 203 dynamic sources = 350.
+MAX_DYNAMIC_SOURCES=203
 def load_registry(path=REGISTRY):
     d=json.loads(Path(path).read_text(encoding="utf-8"))
     if d.get("schema")!="aml339_external_live_registry_v1":raise ValueError("Unexpected external registry schema")
     rows=d.get("sources")
-    if not isinstance(rows,list) or not rows or len(rows)>200:raise ValueError("Invalid external source inventory")
+    if not isinstance(rows,list) or not rows or len(rows)>MAX_DYNAMIC_SOURCES:raise ValueError("Invalid external source inventory")
     seen=set()
     for row in rows:
         sid=row.get("id")

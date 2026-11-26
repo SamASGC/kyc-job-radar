@@ -19,6 +19,9 @@ STATE_VERSION=1
 LANES=("confirmed_recent","promising_date_unconfirmed")
 RUN_MODE="E2E_DRY_RUN_NO_NOTIFICATIONS"
 MAX_RECORDS=100000
+# Historical baseline is append-only. The configured inventory ceiling lives
+# in the manifest; retain extra retired IDs without resetting novelty.
+MAX_BASELINED_SOURCES=512
 HEX_KEY=re.compile(r"^[0-9a-f]{24}$")
 
 def iso_utc() -> str:
@@ -52,7 +55,7 @@ def check_history(state):
         hashes=novelty.get("observed_listing_keys")
         if not isinstance(sources,list) or not isinstance(hashes,list):
             raise ValueError("Missing novelty baseline data")
-        if (len(sources)>339 or len(sources)!=len(set(sources))
+        if (len(sources)>MAX_BASELINED_SOURCES or len(sources)!=len(set(sources))
                 or any(not isinstance(x,str) or not x for x in sources)):
             raise ValueError("Invalid source baseline")
         if (len(hashes)>MAX_RECORDS or len(hashes)!=len(set(hashes))

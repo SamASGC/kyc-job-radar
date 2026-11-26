@@ -1,7 +1,7 @@
 import json,tempfile,unittest
 from pathlib import Path
 from scripts.aml339_source_manifest import DYNAMIC_LIVE,CORE,OPTIONAL
-from external_live_registry import load_registry,matrix,ids,REGISTRY
+from external_live_registry import load_registry,matrix,ids,REGISTRY,MAX_DYNAMIC_SOURCES
 
 class ExternalRegistryTests(unittest.TestCase):
     def test_matrix_and_manifest_share_one_inventory(self):
@@ -14,7 +14,7 @@ class ExternalRegistryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"registry.json"
             d=json.loads(REGISTRY.read_text())
-            remaining=200-len(d["sources"])
+            remaining=MAX_DYNAMIC_SOURCES-len(d["sources"])
             self.assertGreaterEqual(remaining,0)
             increment=min(50,remaining)
             for n in range(increment):
@@ -30,10 +30,10 @@ class ExternalRegistryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/"registry.json"
             d=json.loads(REGISTRY.read_text())
-            for n in range(200-len(d["sources"])):
+            for n in range(MAX_DYNAMIC_SOURCES-len(d["sources"])):
                 d["sources"].append({"id":f"synthetic-capacity-test-{n}","driver":"generic","audit_run":1})
             p.write_text(json.dumps(d))
-            self.assertEqual(len(matrix(p)["include"]),200)
+            self.assertEqual(len(matrix(p)["include"]),MAX_DYNAMIC_SOURCES)
             d["sources"].append({"id":"synthetic-overflow-test","driver":"generic","audit_run":1})
             p.write_text(json.dumps(d))
             with self.assertRaisesRegex(ValueError,"Invalid external source inventory"):load_registry(p)
