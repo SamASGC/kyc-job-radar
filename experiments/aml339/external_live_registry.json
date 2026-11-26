@@ -1526,6 +1526,27 @@
       "regulatory_reference": "https://www.emta.ee/en/business-client/registration-business/gambling-operators/list-legal-gambling-operators",
       "employer_reference": "https://www.sisugroup.com/",
       "review_note": "Estonian tax and customs board list, updated 25 Nov 2026, individually identifies Ducks In A Row OÜ as licensed operator of Respin, Epicbet and Shokker. Sisu's official corporate site identifies Respin as its brand. Group-level linkage, not a financial-services or direct Sisu corporate licence claim. Audit confirmed Tallinn payments operations/fraud vacancy; Finnish requirement makes this specific role unsuitable, no change to eligibility filter. Production canary required."
+    },
+    {
+      "id": "external-bearingpoint-lu",
+      "name": "BearingPoint Luxembourg",
+      "driver": "generic",
+      "careers_url": "https://carrieresluxembourg.bearingpoint.com/jobs",
+      "route": [
+        "teamtailor",
+        "carrieresluxembourg.bearingpoint.com",
+        ""
+      ],
+      "job_pattern": "^/jobs/[0-9]+-[^/]+/?$",
+      "aliases": [
+        "bearingpoint",
+        "bearing point"
+      ],
+      "audit_run": 45884819642,
+      "audit_artifact": 15149145886,
+      "hiring_reference": "https://carrieresluxembourg.bearingpoint.com/jobs/8384168-consultant-senior-consultant-in-aml-kyc-compliance-financial-crime-m-f",
+      "employer_reference": "https://www.bearingpoint.com/en-lu/company-information/",
+      "review_note": "Management and technology consulting firm, local SARL identified in corporate legal notice; no financial institution licence claimed or required for admission as advisory employer (same category as Capco, Guidehouse and PwC). Official public board declares seven jobs, matching isolated extraction; two relevant verified. AML consultant position requires master's and fluent French/English; existing filters unchanged. Production canary mandatory."
     }
   ]
 }
