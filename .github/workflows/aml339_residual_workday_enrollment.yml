@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        source: [external-mufg, external-mobilize-rci, external-light-wonder]
+        source: [external-light-wonder, external-us-bank, fdj-united]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,7 +62,11 @@ jobs:
           SOURCE: ${{ matrix.source }}
         run: |
           cd "$RUNNER_TEMP/aml339"
-          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" live_external_generic.py --production --source "$SOURCE" --out "candidate_$SOURCE.json"
+          if [[ "$SOURCE" == external-* ]]; then
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" live_external_generic.py --production --source "$SOURCE" --out "candidate_$SOURCE.json"
+          else
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" live_catalog_registry.py --source "$SOURCE" --out "candidate_$SOURCE.json"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
