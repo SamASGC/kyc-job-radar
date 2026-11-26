@@ -18,7 +18,7 @@ def audit_workday(row):
     sid=row["id"]; url=row["careers_url"]; route=row["route"]
     u=urlsplit(url)
     if (len(route)!=3 or route[0]!="workday" or u.scheme!="https"
-        or not re.fullmatch(r"[a-z0-9][a-z0-9-]*\\.wd[0-9]+\\.myworkdayjobs\\.com",route[1])
+        or not re.fullmatch(r"[a-z0-9][a-z0-9-]*\.wd[0-9]+\.myworkdayjobs\.com",route[1])
         or u.hostname!=route[1] or u.netloc!=route[1] or u.query or u.fragment
         or not re.fullmatch(r"[A-Za-z0-9_-]+",route[2])
         or u.path.rstrip("/")!="/"+route[2]):
