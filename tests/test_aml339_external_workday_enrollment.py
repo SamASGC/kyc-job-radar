@@ -1,5 +1,6 @@
 """Fail-closed validation for reviewed external Workday tenants."""
 import ast,json,re,unittest
+from types import SimpleNamespace
 from pathlib import Path
 from urllib.parse import urlsplit
 from zipfile import ZipFile
@@ -36,7 +37,11 @@ class ExternalWorkdayEnrollmentTests(unittest.TestCase):
         def mock_audit(row,minutes):
             calls.append((row,minutes))
             return dict(response)
-        env={"re":re,"urlsplit":urlsplit,"audit_one":mock_audit}
+        original_candidate=lambda job: False
+        worker=SimpleNamespace(candidate=original_candidate)
+        env={"re":re,"urlsplit":urlsplit,"audit_one":mock_audit,"audit":worker,"candidate":original_candidate}
+        selector=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="ssc_candidate")
+        exec(compile(ast.Module(body=[selector],type_ignores=[]),str(path),"exec"),env)
         exec(compile(ast.Module(body=[func],type_ignores=[]),str(path),"exec"),env)
         run=env["audit_workday"]
         row={"id":"test","name":"Test","careers_url":"https://test.wd1.myworkdayjobs.com/Careers",
@@ -49,6 +54,7 @@ class ExternalWorkdayEnrollmentTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"Unapproved Workday"):
                 run(dict(row,careers_url=url))
         self.assertEqual(len(calls),1)
+        self.assertIs(worker.candidate,original_candidate)
         for k,bad in (("total_listed",0),("list_complete",False),("unverified_in_scope",1),
                       ("listing_untrackable_count",1),("listing_role_keys",["a"]),("relevant_leads",1)):
             original=response[k];response[k]=bad
@@ -56,3 +62,15 @@ class ExternalWorkdayEnrollmentTests(unittest.TestCase):
             self.assertFalse(ok)
             self.assertFalse(result["list_complete"])
             response[k]=original
+        self.assertIs(worker.candidate,original_candidate)
+        ssc=dict(row,id="external-ssctech",careers_url="https://ssctech.wd1.myworkdayjobs.com/SSCTechnologies",route=["workday","ssctech.wd1.myworkdayjobs.com","SSCTechnologies"])
+        def scoped(row,minutes):
+            self.assertTrue(worker.candidate({"title":"Registration Team Analyst"}))
+            self.assertFalse(worker.candidate({"title":"Software Engineer"}))
+            return dict(response)
+        env["audit_one"]=scoped
+        self.assertTrue(run(ssc)[1])
+        self.assertIs(worker.candidate,original_candidate)
+        with self.assertRaisesRegex(ValueError,"Unreviewed SS&C"):
+            run(dict(row,id="external-ssctech"))
+        self.assertIs(worker.candidate,original_candidate)

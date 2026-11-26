@@ -10,6 +10,11 @@ from live_e2e18_full import audit_one
 import live_e2e18_full as audit
 from amlradar.sources import Board
 
+def ssc_candidate(job):
+    """Include actual investor registration job titles on SS&C only.
+    Duties and eligibility remain governed by the unchanged evaluator."""
+    return candidate(job) or bool(re.search(r"\b(?:registration (?:team )?(?:analyst|associate|officer)|registration team\b|ongoing due diligence)\b",str(job.get("title","")),re.I))
+
 def audit_workday(row):
     """Use the same bounded, fail-closed Workday parser as original catalog.
     Only exact, independently reviewed Workday tenant/site routes are admitted.
@@ -23,7 +28,14 @@ def audit_workday(row):
         or not re.fullmatch(r"[A-Za-z0-9_-]+",route[2])
         or u.path.rstrip("/")!="/"+route[2]):
         raise ValueError("Unapproved Workday tenant/site route")
-    result=audit_one({"id":sid,"name":row["name"],"careers_url":url,"route":route},minutes=4)
+    previous=audit.candidate
+    try:
+        if sid=="external-ssctech":
+            if route!=["workday","ssctech.wd1.myworkdayjobs.com","SSCTechnologies"]:raise ValueError("Unreviewed SS&C route")
+            audit.candidate=ssc_candidate
+        result=audit_one({"id":sid,"name":row["name"],"careers_url":url,"route":route},minutes=4)
+    finally:
+        audit.candidate=previous
     n=result.get("total_listed")
     ok=(result.get("state")=="listing_extracted" and result.get("list_complete") is True
         and type(n) is int and n>0
