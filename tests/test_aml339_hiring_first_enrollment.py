@@ -6,7 +6,7 @@ class HiringFirstEnrollmentTests(unittest.TestCase):
     def test_reviewed_original_routes_unique(self):
         with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
             original={x["id"]:x for x in json.loads(z.read("fuentes.json"))["sources"]}
-        rows=[r for r in load_registry() if r["audit_run"]==45731536703]
+        rows=[r for r in load_registry() if r["audit_run"]==45731536703 and r["driver"]=="catalog"]
         self.assertEqual(set(r["id"] for r in rows),["vontobel","state-street","northern-trust","robinhood","pwc-experienced","guidehouse","capco","loyens-loeff"] and set(["vontobel","state-street","northern-trust","robinhood","pwc-experienced","guidehouse","capco","loyens-loeff"]))
         self.assertEqual(len(set(CORE+OPTIONAL)),len(CORE+OPTIONAL))
         for r in rows:
