@@ -32,9 +32,9 @@ EXTERNAL = {
     "Square Management",
     "https://squaremanagement.flatchr.io/en/company/squaremanagement/",
     [
-      "diagnostic",
+      "site_jobs",
       "squaremanagement.flatchr.io",
-      "/en/company/squaremanagement/vacancy/"
+      "^/en/company/squaremanagement/vacancy/[a-z0-9]+-[^/]+/?$"
     ],
     "https://squaremanagement.flatchr.io/en/company/squaremanagement/vacancy/xzbpjpoz1qq9y51y-consultant-senior-ta-aml-kyc-analyst-onboarding-recertification-h-f/",
     [
@@ -159,9 +159,30 @@ def main():
             print("HIRING_FIRST_AUDIT",json.dumps({k:v for k,v in result.items() if k!="config"},ensure_ascii=False),flush=True)
             return
         old=audit.candidate
-        audit.candidate=candidate
+        from amlradar.sources import Board
+        original_listing=Board.listing
+        def scoped_candidate(job):
+            return candidate(job) or (sid=="external-ssctech" and bool(re.search(r"\b(?:registration (?:team )?(?:analyst|associate|officer)|ongoing due diligence)\b",str(job.get("title","")),re.I)))
+        def observed_listing(board):
+            jobs=original_listing(board)
+            if sid=="external-ssctech":
+                result["registration_title_evidence"]=[{"title":j.get("title"),"location":j.get("location"),"url":j.get("url")} for j in jobs if re.search(r"\bregistration\b",str(j.get("title","")),re.I)]
+                print("SSC_REGISTRATION_TITLES",json.dumps(result["registration_title_evidence"],ensure_ascii=False),flush=True)
+            elif sid=="external-square-management":
+                page=Anchors();page.feed(read_page(row["careers_url"]))
+                pattern=re.compile(row["job_pattern"])
+                anchors={urlsplit(urljoin(row["careers_url"],h)).path.rstrip("/") for h,t in page.links.items() if t and urlsplit(urljoin(row["careers_url"],h)).hostname==row["route"][1] and pattern.fullmatch(urlsplit(urljoin(row["careers_url"],h)).path)}
+                actual={urlsplit(str(j.get("url",""))).path.rstrip("/") for j in jobs}
+                result["independent_anchor_count"]=len(anchors)
+                if not anchors or len(actual)!=len(jobs) or anchors!=actual:raise ValueError("Square public anchors and extracted identities disagree")
+                print("SQUARE_ANCHOR_CONTROL",json.dumps({"anchors":len(anchors),"actual":len(actual)}),flush=True)
+            return jobs
+        audit.candidate=scoped_candidate
+        Board.listing=observed_listing
         try:report=audit_one(row,minutes=4)
-        finally:audit.candidate=old
+        finally:
+            audit.candidate=old
+            Board.listing=original_listing
         n=report.get("total_listed")
         ok=(report.get("state")=="listing_extracted" and report.get("list_complete") is True
             and type(n) is int and n>0
