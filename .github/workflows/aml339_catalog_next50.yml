@@ -1,0 +1,133 @@
+name: AML339 next 50 original official source audit
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/select_catalog_next50.py'
+      - 'experiments/aml339/audit_catalog_next50.py'
+      - '.github/workflows/aml339_catalog_next50.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - run: python3 experiments/aml339/select_catalog_next50.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: catalog-next50-selection
+          path: catalog_next50.json
+          retention-days: 30
+  audit:
+    needs: select
+    name: Audit catalog five-source shard ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9]
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original 339 archive and unpack isolated, read-only parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json,live_catalog_registry.py,audit_catalog_next50.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - uses: actions/download-artifact@v4
+        with:
+          name: catalog-next50-selection
+          path: ${{ runner.temp }}/aml339
+      - name: Audit each source independently
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/aml339"
+          python3 - <<'PY'
+          import json,os,subprocess,sys
+          from pathlib import Path
+          shard=int(os.environ["SHARD"])
+          rows=json.loads(Path("catalog_next50.json").read_text())["candidates"]
+          assert len(rows)==50
+          for row in rows[shard*5:shard*5+5]:
+              sid=row["id"]
+              out=Path(f"candidate_{sid}.json")
+              try:
+                  subprocess.run([sys.executable,"audit_catalog_next50.py","--source",sid,"--selection","catalog_next50.json","--out",str(out)],check=False,timeout=270)
+              except subprocess.TimeoutExpired:
+                  print("SOURCE_TIMEOUT",sid,flush=True)
+              if not out.exists():
+                  out.write_text(json.dumps({"sources_requested":[sid],"verified":False,"sources":[{"source_id":sid,"errors":["Missing complete audit evidence"]}]}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-next50-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/aml339/candidate_*.json
+          if-no-files-found: error
+          retention-days: 30
+  report:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: catalog-next50-selection
+          path: selection
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: catalog-next50-shard-*
+          path: reports
+      - run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          selected=json.loads(Path("selection/catalog_next50.json").read_text())["candidates"]
+          expected={x["id"] for x in selected}
+          results={}
+          for p in Path("reports").rglob("candidate_*.json"):
+              d=json.loads(p.read_text()); r=d["sources"][0];sid=r["source_id"]
+              assert sid in expected and sid not in results
+              ok=(d.get("verified") is True and r.get("state")=="listing_extracted" and r.get("list_complete") is True and type(r.get("total_listed")) is int and r["total_listed"]>0 and r.get("unverified_in_scope")==0 and r.get("listing_untrackable_count")==0 and r.get("relevant_leads")==len(r.get("audited",[])))
+              results[sid]={"verified":ok,"listed":r.get("total_listed"),"errors":r.get("errors"),"qualifying":d.get("qualifying",[]) if ok else []}
+          summary={"count":50,"received":len(results),"verified":sorted(k for k,v in results.items() if v["verified"]),"failed":sorted(k for k,v in results.items() if not v["verified"]),"missing":sorted(expected-set(results)),"sources":results}
+          Path("catalog_next50_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2)+"\n")
+          print("CATALOG_NEXT50_SUMMARY",json.dumps(summary,ensure_ascii=False),flush=True)
+          assert len(results)==50
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-next50-summary
+          path: catalog_next50_summary.json
+          if-no-files-found: error
+          retention-days: 30
