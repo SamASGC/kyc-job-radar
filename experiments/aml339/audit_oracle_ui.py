@@ -90,7 +90,27 @@ def run(source,prior_path,receipt):
             if BLOCKED.search(s):raise RuntimeError("Public page blocked")
             return s
         def links():
-            entries=page.locator("a[href]").evaluate_all("""els => els.filter(e=>e.getClientRects().length).map(e=>({url:e.href,title:(e.innerText||e.getAttribute('aria-label')||'').trim()}))""")
+            # Oracle can render an empty overlay anchor alongside the actual
+            # job title. Only associate a title within the nearest visible
+            # ancestor that contains exactly one distinct job identity.
+            entries=page.locator("a[href]").evaluate_all("""els => {
+                const visible=e=>e.getClientRects().length>0 && getComputedStyle(e).visibility!=='hidden';
+                const key=e=>{try {const u=new URL(e.href);return u.origin===location.origin && /\\/job\\/\\d+\\/?$/.test(u.pathname)?u.pathname.replace(/\\/$/,''):null;} catch {return null;}};
+                return els.filter(e=>visible(e)&&key(e)).map(e=>{
+                    let title=(e.innerText||e.getAttribute('aria-label')||'').trim(), samples=[];
+                    for(let n=e.parentElement, depth=0;!title&&n&&depth<6;n=n.parentElement,depth++){
+                        const ids=new Set([...n.querySelectorAll('a[href]')].filter(visible).map(key).filter(Boolean));
+                        if(ids.size!==1||!ids.has(key(e))) break;
+                        const candidates=[...n.querySelectorAll('h2,h3,h4,[role=heading],[class*="job-title"],[class*="jobTitle"]')].filter(visible).map(x=>x.innerText.trim()).filter(Boolean);
+                        const names=[...new Set(candidates)];
+                        samples.push({tag:n.tagName,classes:String(n.className).slice(0,200),headings:names.slice(0,5),text:n.innerText.trim().slice(0,350)});
+                        if(names.length===1)title=names[0];
+                    }
+                    return {url:e.href,title,samples};
+                });
+            }""")
+            result["visible_card_samples"]=[{"url":e["url"],"title":e["title"],"ancestors":e["samples"]} for e in entries[:5]]
+            result["visible_job_id_count"]=len({job_identity(e["url"],host,site) for e in entries if job_identity(e["url"],host,site)})
             rows={}
             for e in entries:
                 key=job_identity(e["url"],host,site)
@@ -103,6 +123,9 @@ def run(source,prior_path,receipt):
             return rows
         try:
             page.goto(root+"/jobs",wait_until="domcontentloaded")
+            # Dismiss optional cookies via the explicitly offered decline control.
+            decline=page.get_by_role("button",name=re.compile(r"^(?:I DECLINE|DECLINE)$",re.I))
+            if decline.count()==1 and decline.is_visible() and decline.is_enabled():decline.click(timeout=5000)
             # Oracle initially renders zero while results are being loaded.
             # Wait for a positive total and separately retain only public DOM evidence.
             try:
@@ -125,6 +148,8 @@ def run(source,prior_path,receipt):
                     all_rows[k]=r
                 result["listed"]=len(all_rows)
                 if len(all_rows)==expected:break
+                if result.get("visible_job_id_count",0)>0 and not links():
+                    raise ValueError("Visible job IDs found but no unambiguous card title")
                 if len(all_rows)>expected:raise ValueError("More job IDs than declared count")
                 controls=page.get_by_role("button",name=MORE).or_(page.get_by_role("link",name=MORE))
                 visible=[x for x in controls.all() if x.is_visible() and x.is_enabled()]
