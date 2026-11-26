@@ -4,7 +4,7 @@ import json,re
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 REGISTRY=ROOT/"external_live_registry.json"
-DRIVERS={"wave02","next","generic","catalog"}
+DRIVERS={"wave02","next","generic","catalog","oracle"}
 def load_registry(path=REGISTRY):
     d=json.loads(Path(path).read_text(encoding="utf-8"))
     if d.get("schema")!="aml339_external_live_registry_v1":raise ValueError("Unexpected external registry schema")
@@ -15,6 +15,8 @@ def load_registry(path=REGISTRY):
         sid=row.get("id")
         if not isinstance(sid,str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,100}",sid) or sid in seen:raise ValueError("Duplicate or invalid external ID")
         if row.get("driver") not in DRIVERS or type(row.get("audit_run")) is not int or row["audit_run"]<=0:raise ValueError("Missing audited driver or run")
+        if row["driver"]=="oracle" and (sid!="external-danske-bank" or row.get("route")!=["oracle","ejqi.fa.ocs.oraclecloud.eu","CX_1001"] or row.get("careers_url")!="https://ejqi.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1001/jobs"):
+            raise ValueError("Unreviewed Oracle source route")
         seen.add(sid)
     return rows
 def ids(path=REGISTRY,*,catalog=None):
