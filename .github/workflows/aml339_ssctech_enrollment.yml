@@ -1,0 +1,105 @@
+name: AML339 ssctech enrollment canary
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/external_live_registry.json'
+      - 'experiments/aml339/live_external_generic.py'
+      - 'tests/test_aml339_ssctech_enrollment.py'
+      - 'experiments/aml339/live_catalog_registry.py'
+      - '.github/workflows/aml339_ssctech_enrollment.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    name: Verify production driver ${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        source: [external-ssctech]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: current-main
+          sparse-checkout: data/aml339_http_cooldowns.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify original 339 archive and unpack isolated, read-only parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_external50_wave02.py,live_external50_next.py,live_external_generic.py,external_live_registry.py,external_live_registry.json,live_catalog_registry.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/external_regulated50_wave02.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Run production external driver on exact HEAD
+        env:
+          SOURCE: ${{ matrix.source }}
+        run: |
+          cd "$RUNNER_TEMP/aml339"
+          if [[ "$SOURCE" == external-* ]]; then
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" live_external_generic.py --production --source "$SOURCE" --out "candidate_$SOURCE.json"
+          else
+            python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/current-main/data/aml339_http_cooldowns.json" --receipt "http_pause_$SOURCE.json" live_catalog_registry.py --source "$SOURCE" --out "candidate_$SOURCE.json"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-ssctech-enroll-${{ matrix.source }}
+          path: |
+            ${{ runner.temp }}/aml339/candidate_*.json
+            ${{ runner.temp }}/aml339/http_pause_*.json
+          if-no-files-found: error
+          retention-days: 30
+  report:
+    needs: audit
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aml339-ssctech-enroll-*
+          path: evidence
+      - run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rows=[json.loads(p.read_text()) for p in Path("evidence").rglob("candidate_*.json")]
+          assert len(rows)==len({r["sources"][0]["source_id"] for r in rows})==1
+          assert {r["sources"][0]["source_id"] for r in rows}=={"external-ssctech"}
+          assert all(r["verified"] is True for r in rows)
+          assert all(len(r["sources"][0]["listing_role_keys"])==r["sources"][0]["total_listed"] for r in rows)
+          print("SSCTECH_CANARY_PASS",json.dumps([{"id":r["sources"][0]["source_id"],"verified":r["verified"],"listed":r["sources"][0]["total_listed"],"unverified":r["sources"][0]["unverified_in_scope"]} for r in rows]),flush=True)
+          Path("ssctech_summary.json").write_text(json.dumps(rows,ensure_ascii=False,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aml339-ssctech-enroll-summary
+          path: ssctech_summary.json
+          retention-days: 30
