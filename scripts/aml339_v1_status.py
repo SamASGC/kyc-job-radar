@@ -15,14 +15,17 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, EXTERNAL50_LIVE, CATALOG_LIVE, OPTIONAL
+from scripts.aml339_source_manifest import CORE, EXPANSION, REGULATED, REGULATOR50, REG100_LIVE, EXTERNAL50_LIVE, CATALOG_LIVE, OPTIONAL, STRICT_CORE, QUARANTINABLE_CORE
 from scripts.aml339_site import FEED_FILES, ROOT as PUBLIC_URL
+
+
+RELEASE_FILES=("summary.json", "index.html", "desktop.json", *FEED_FILES.values())
 
 
 def check_pages(summary_path: Path) -> dict:
     """Check the exact release files delivered to an anonymous Pages reader."""
     results = {}
-    for name in ("summary.json", "index.html", *FEED_FILES.values()):
+    for name in RELEASE_FILES:
         path = summary_path if name == "summary.json" else summary_path.with_name(name)
         try:
             expected = path.read_bytes()
@@ -72,14 +75,17 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
     age=(now-scan).total_seconds()/3600
     history_guard=summary.get("novelty_guard_enabled") is True
     quarantined=summary.get("missing_or_failed_core",{})
-    # One known Workable provider's HTTP429 may be omitted, but no other
-    # original core can fail silently. Never count the blocked source as live.
+    # Keep readiness consistent with the production manifest: only explicitly
+    # quarantinable sources may be missing, and all mandatory sources must pass.
+    # A missing optional core source is never counted as verified.
     valid_quarantine=isinstance(quarantined,dict) and (
-        (core==18 and not quarantined)
-        or (core==17 and set(quarantined)=={"payabl"})
+        set(quarantined)<=set(QUARANTINABLE_CORE)
+        and core==len(CORE)-len(quarantined)
+        and all(isinstance(reason,str) and reason for reason in quarantined.values())
     )
-    complete_core=(summary.get("core_sources_expected")==18
-                   and summary.get("strict_core_sources_complete")==17
+    complete_core=(summary.get("core_sources_expected")==len(CORE)
+                   and summary.get("strict_core_sources_expected")==len(STRICT_CORE)
+                   and summary.get("strict_core_sources_complete")==len(STRICT_CORE)
                    and valid_quarantine)
     recent=0<=age<=36
     has_new_source_metadata=(
@@ -107,11 +113,11 @@ def evaluate(summary: dict, candidates: dict, *, now: dt.datetime | None=None) -
         "configured_maximum_live_sources":len(CORE+OPTIONAL),
         "minimum_live_sources_for_stable_v1":minimum_live_sources,
         "sufficient_live_coverage":sufficient_coverage,
-        "mandatory_core_expected":17,
+        "mandatory_core_expected":len(STRICT_CORE),
         "original_core_expected":len(CORE),
         "quarantined_core_source_ids":sorted(quarantined) if isinstance(quarantined,dict) else [],
         "degraded_core_but_safe":bool(quarantined) if isinstance(quarantined,dict) else False,
-        "mandatory_core_verified":17 if complete_core else 0,
+        "mandatory_core_verified":len(STRICT_CORE) if complete_core else 0,
         "original_core_verified":core,
         "novelty_history_guard_confirmed":history_guard,
         "100_extra_regulated_company_leads_imported":100,
@@ -145,7 +151,8 @@ def main():
                json.loads(Path(args.candidates).read_text(encoding="utf-8")))
     if args.require_live:
         v["public_files"] = check_pages(Path(args.summary))
-        if any(result != "match" for result in v["public_files"].values()):
+        if (set(v["public_files"])!=set(RELEASE_FILES)
+                or any(result != "match" for result in v["public_files"].values())):
             v["status"] = "PENDING_PRODUCTION_VALIDATION"
             v["v1_published_verified"] = False
     elif v["v1_published_verified"]:
