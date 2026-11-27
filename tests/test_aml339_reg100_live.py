@@ -111,6 +111,28 @@ class Reg100LiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"regulator100 official ATS"):
             collect(self.core,self.extra)
 
+    def test_paynovate_current_listing_contract(self):
+        # Load the pure HTML contract without the isolated original parser.
+        import ast, re
+        from html.parser import HTMLParser
+        from urllib.parse import urljoin, urlsplit, parse_qs
+        path=Path("experiments/aml339/live_reg100_active.py")
+        module=ast.parse(path.read_text())
+        names={"PaynovateLinks","paynovate_expected","paynovate_compare","paynovate_self_test"}
+        nodes=[n for n in module.body if isinstance(n,(ast.ClassDef,ast.FunctionDef)) and n.name in names
+               or isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id in {"PAYNOVATE_URL","PAYNOVATE_PATH"} for t in n.targets)]
+        scope={"re":re,"HTMLParser":HTMLParser,"urljoin":urljoin,"urlsplit":urlsplit,"parse_qs":parse_qs,
+               "json":json,"candidate":lambda job:"aml" in job.get("title","").lower()}
+        exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),"exec"),scope)
+        scope["paynovate_self_test"]()
+        html='<a href="/p/abc-aml-analyst">AML Analyst<button>Apply</button></a>'
+        expected=scope["paynovate_expected"](html)
+        self.assertEqual(set(expected),{"/p/abc-aml-analyst"})
+        with self.assertRaises(ValueError):
+            scope["paynovate_expected"](html+'<link rel="next" href="?page=2">')
+        with self.assertRaises(ValueError):
+            scope["paynovate_compare"](expected,[{"url":"https://other.example/p/abc-aml-analyst","title":"AML Analyst"}])
+
     def test_old_18_core_still_mandatory(self):
         (self.core/f"source_{CORE[0]}.json").unlink()
         with self.assertRaisesRegex(ValueError,"core evidence"):

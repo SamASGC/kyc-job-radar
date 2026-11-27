@@ -1,0 +1,98 @@
+name: AML339 maintenance source debugging
+on:
+  pull_request:
+    paths:
+      - 'experiments/aml339/live_reg100_active.py'
+      - '.github/workflows/aml339_maintenance_debug.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paynovate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify original 339 archive and unpack isolated, read-only parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'e8a08263115c4bbbaf02d4a4ae59431a7e4b16a0a7c79e339ff2f53ef9aadc02  experiments/aml339/full_original_339_sources.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/aml339/experiments/aml339"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile("experiments/aml339/full_original_339_sources.zip") as z:
+              allowed={"amlradar/__init__.py","amlradar/model.py","amlradar/net.py",
+                       "amlradar/employer_links.py","amlradar/sources.py","fuentes.json",
+                       "VALIDAR_REAL_SIN_TOCAR_DATOS.py"}
+              assert set(z.namelist())==allowed
+              assert sum(f.file_size for f in z.infolist())<800_000
+              assert all(not x.filename.startswith("/") and ".." not in Path(x.filename).parts for x in z.infolist())
+              z.extractall(Path(os.environ["RUNNER_TEMP"])/"aml339")
+          PY
+          cp experiments/aml339/{repair_sources_20261121.py,quality_audit.py,live_e2e18_full.py,two_lane_alert_preview.py,live_reg100_pilot.py,live_reg100_active.py} "$RUNNER_TEMP/aml339/"
+          cp experiments/aml339/regulator100_discovery_queue.json "$RUNNER_TEMP/aml339/experiments/aml339/"
+          cd "$RUNNER_TEMP/aml339"
+          python3 repair_sources_20261121.py
+          python3 quality_audit.py --self-test
+      - name: Check exact current official Paynovate listing and relevant details
+        run: |
+          cd "$RUNNER_TEMP/aml339"
+          python3 -c 'from live_reg100_active import paynovate_self_test; paynovate_self_test()'
+          python3 "$GITHUB_WORKSPACE/experiments/aml339/hourly_http_guard.py" run --prior "$GITHUB_WORKSPACE/data/aml339_http_cooldowns.json" --receipt http_pause_paynovate.json live_reg100_active.py --source reg100-be-paynovate --minutes 4 --out candidate_reg100-be-paynovate.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aml339-maintenance-paynovate
+          path: |
+            ${{ runner.temp }}/aml339/candidate_reg100-be-paynovate.json
+            ${{ runner.temp }}/aml339/http_pause_paynovate.json
+          if-no-files-found: warn
+  replay-existing-failures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-expansion-source-genome
+          run-id: 45918045381
+          github-token: ${{ github.token }}
+          path: evidence/genome
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-wave50-source-mangopay
+          run-id: 45918045381
+          github-token: ${{ github.token }}
+          path: evidence/mangopay
+      - uses: actions/download-artifact@v4
+        with:
+          name: aml339-external50-live-external-cibc
+          run-id: 45918045381
+          github-token: ${{ github.token }}
+          path: evidence/external-cibc
+      - name: Extract exact verification errors from existing scan (no employer requests)
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          reports=[]
+          for sid in ("genome","mangopay","external-cibc"):
+              files=list(Path("evidence",sid).rglob("candidate_"+sid+".json"))
+              assert len(files)==1
+              e=json.loads(files[0].read_text())
+              assert len(e["sources"])==1 and e["sources"][0]["source_id"]==sid
+              r=e["sources"][0]
+              row={"source":sid,"listed":r.get("total_listed"),"list_complete":r.get("list_complete"),"warnings":r.get("warnings"),"errors":r.get("errors"),"unverified":r.get("unverified_in_scope"),"failed_details":[{k:j.get(k) for k in ("title","url","location","verification_error","description_length")} for j in r.get("audited",[]) if j.get("verification_error") and not j.get("detail_skipped_outside_geo")]}
+              print("MAINTENANCE_REPLAY",json.dumps(row,ensure_ascii=False),flush=True)
+              reports.append(row)
+          Path("maintenance-replay.json").write_text(json.dumps(reports,ensure_ascii=False,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aml339-maintenance-replay
+          path: maintenance-replay.json
