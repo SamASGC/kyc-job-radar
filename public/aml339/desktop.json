@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-27T05:12:27+00:00",
+  "checked_at_utc": "2026-11-27T07:20:43+00:00",
   "sources_expected": 317,
-  "sources_complete": 313,
-  "roles_evaluated": 1762,
+  "sources_complete": 312,
+  "roles_evaluated": 1746,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -47,7 +47,7 @@
       "name": "swedbank",
       "status": "verified",
       "reason": null,
-      "listed": 61,
+      "listed": 63,
       "relevant": 2
     },
     {
@@ -55,8 +55,8 @@
       "name": "luminor",
       "status": "verified",
       "reason": null,
-      "listed": 70,
-      "relevant": 1
+      "listed": 73,
+      "relevant": 4
     },
     {
       "id": "n26",
@@ -135,7 +135,7 @@
       "name": "airwallex",
       "status": "verified",
       "reason": null,
-      "listed": 511,
+      "listed": 507,
       "relevant": 50
     },
     {
@@ -159,8 +159,8 @@
       "name": "iq-eq",
       "status": "verified",
       "reason": null,
-      "listed": 120,
-      "relevant": 5
+      "listed": 117,
+      "relevant": 4
     },
     {
       "id": "aztec-group",
@@ -303,7 +303,7 @@
       "name": "bybit",
       "status": "verified",
       "reason": null,
-      "listed": 167,
+      "listed": 165,
       "relevant": 22
     },
     {
@@ -767,7 +767,7 @@
       "name": "xtb",
       "status": "verified",
       "reason": null,
-      "listed": 44,
+      "listed": 43,
       "relevant": 2
     },
     {
@@ -1047,8 +1047,8 @@
       "name": "tide",
       "status": "verified",
       "reason": null,
-      "listed": 92,
-      "relevant": 15
+      "listed": 91,
+      "relevant": 14
     },
     {
       "id": "finoa",
@@ -1263,7 +1263,7 @@
       "name": "external-saxo-bank",
       "status": "verified",
       "reason": null,
-      "listed": 58,
+      "listed": 59,
       "relevant": 8
     },
     {
@@ -1271,7 +1271,7 @@
       "name": "external-fidelity-international",
       "status": "verified",
       "reason": null,
-      "listed": 78,
+      "listed": 79,
       "relevant": 2
     },
     {
@@ -1319,7 +1319,7 @@
       "name": "external-wellington-management",
       "status": "verified",
       "reason": null,
-      "listed": 122,
+      "listed": 123,
       "relevant": 10
     },
     {
@@ -1423,8 +1423,8 @@
       "name": "external-us-bank",
       "status": "verified",
       "reason": null,
-      "listed": 1256,
-      "relevant": 32
+      "listed": 1222,
+      "relevant": 31
     },
     {
       "id": "external-bank-of-china",
@@ -1519,7 +1519,7 @@
       "name": "external-ssctech",
       "status": "verified",
       "reason": null,
-      "listed": 403,
+      "listed": 404,
       "relevant": 11
     },
     {
@@ -1535,7 +1535,7 @@
       "name": "aspora",
       "status": "verified",
       "reason": null,
-      "listed": 13,
+      "listed": 12,
       "relevant": 3
     },
     {
@@ -1679,7 +1679,7 @@
       "name": "luno",
       "status": "verified",
       "reason": null,
-      "listed": 7,
+      "listed": 6,
       "relevant": 1
     },
     {
@@ -1911,7 +1911,7 @@
       "name": "deutsche-bank",
       "status": "verified",
       "reason": null,
-      "listed": 433,
+      "listed": 434,
       "relevant": 75
     },
     {
@@ -1943,7 +1943,7 @@
       "name": "rbc",
       "status": "verified",
       "reason": null,
-      "listed": 60,
+      "listed": 59,
       "relevant": 7
     },
     {
@@ -1983,7 +1983,7 @@
       "name": "blackrock",
       "status": "verified",
       "reason": null,
-      "listed": 289,
+      "listed": 288,
       "relevant": 15
     },
     {
@@ -2063,7 +2063,7 @@
       "name": "amadeus-fincrime",
       "status": "verified",
       "reason": null,
-      "listed": 122,
+      "listed": 125,
       "relevant": 1
     },
     {
@@ -2071,7 +2071,7 @@
       "name": "apex-group",
       "status": "verified",
       "reason": null,
-      "listed": 1064,
+      "listed": 1067,
       "relevant": 70
     },
     {
@@ -2111,7 +2111,7 @@
       "name": "experian",
       "status": "verified",
       "reason": null,
-      "listed": 419,
+      "listed": 418,
       "relevant": 14
     },
     {
@@ -2184,7 +2184,7 @@
       "status": "verified",
       "reason": null,
       "listed": 294,
-      "relevant": 36
+      "relevant": 37
     },
     {
       "id": "julius-baer",
@@ -2245,10 +2245,10 @@
     {
       "id": "mastercard",
       "name": "mastercard",
-      "status": "verified",
-      "reason": null,
-      "listed": 283,
-      "relevant": 19
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "nasdaq",
@@ -2271,7 +2271,7 @@
       "name": "okx",
       "status": "verified",
       "reason": null,
-      "listed": 388,
+      "listed": 389,
       "relevant": 41
     },
     {
@@ -2295,8 +2295,8 @@
       "name": "paytm",
       "status": "verified",
       "reason": null,
-      "listed": 197,
-      "relevant": 14
+      "listed": 198,
+      "relevant": 15
     },
     {
       "id": "western-union",
@@ -2327,7 +2327,7 @@
       "name": "santander",
       "status": "verified",
       "reason": null,
-      "listed": 18,
+      "listed": 19,
       "relevant": 7
     },
     {
@@ -2463,15 +2463,15 @@
       "name": "pwc-experienced",
       "status": "verified",
       "reason": null,
-      "listed": 140,
-      "relevant": 94
+      "listed": 141,
+      "relevant": 95
     },
     {
       "id": "guidehouse",
       "name": "guidehouse",
       "status": "verified",
       "reason": null,
-      "listed": 415,
+      "listed": 417,
       "relevant": 43
     },
     {
@@ -2479,7 +2479,7 @@
       "name": "capco",
       "status": "verified",
       "reason": null,
-      "listed": 715,
+      "listed": 714,
       "relevant": 35
     },
     {
