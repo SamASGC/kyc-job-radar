@@ -1,20 +1,7 @@
 name: AML339 autonomous regulated employer growth
+# Expansion closed: no scheduled, push, or PR discovery. Manual recovery only.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '3-58/5 * * * *'
-  pull_request:
-    paths:
-      - 'experiments/aml339/growth_*.py'
-      - 'tests/test_aml339_autonomous_growth.py'
-      - '.github/workflows/aml339_autonomous_growth.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'experiments/aml339/growth_discovery.py'
-      - 'experiments/aml339/growth_worker.py'
-      - 'experiments/aml339/growth_report.py'
-      - '.github/workflows/aml339_autonomous_growth.yml'
 permissions:
   contents: read
 concurrency:

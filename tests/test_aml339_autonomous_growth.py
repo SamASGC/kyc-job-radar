@@ -46,7 +46,10 @@ class AutonomousGrowthTests(unittest.TestCase):
         self.assertEqual(summary["selected"],0)
     def test_workflow_write_separation(self):
         text=Path(".github/workflows/aml339_autonomous_growth.yml").read_text()
-        self.assertIn("cron: '3-58/5 * * * *'",text)
+        self.assertIn("on:\n  workflow_dispatch:\npermissions:",text)
+        self.assertNotIn("\n  schedule:",text)
+        self.assertNotIn("\n  push:",text)
+        self.assertNotIn("\n  pull_request:",text)
         self.assertIn("fromJSON(needs.select.outputs.shards)",text)
         self.assertIn("needs.select.outputs.count != '0'",text)
         self.assertIn("git push origin HEAD:refs/heads/aml339-growth-evidence",text)

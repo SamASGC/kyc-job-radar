@@ -11,7 +11,6 @@ from pathlib import Path
 UTC=dt.timezone.utc
 TARGETS={
     "aml339_main18.yml": (60,"public/aml339/summary.json","checked_at_utc"),
-    "aml339_autonomous_growth.yml": (15,None,None),
 }
 BUSY={"queued","in_progress","requested","waiting","pending"}
 def timestamp(s):
