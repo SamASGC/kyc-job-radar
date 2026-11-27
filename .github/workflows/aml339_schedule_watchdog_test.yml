@@ -24,8 +24,12 @@ jobs:
           assert d["permissions"]=={"contents":"read","actions":"write"}
           assert d[True]["workflow_run"]["workflows"]==["Hourly KYC job radar"]
           assert d["concurrency"]["cancel-in-progress"] is False
+          growth=yaml.safe_load(Path(".github/workflows/aml339_autonomous_growth.yml").read_text())
+          assert set(growth[True])=={"workflow_dispatch"}
+          from scripts.aml339_schedule_watchdog import TARGETS
+          assert set(TARGETS)=={"aml339_main18.yml"}
           PY
-      - name: Verify read-only live access to both target workflow run lists
+      - name: Verify read-only live access to remaining production workflow run list
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

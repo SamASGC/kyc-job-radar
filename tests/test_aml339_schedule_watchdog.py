@@ -1,11 +1,13 @@
 import datetime as dt
 import unittest
-from scripts.aml339_schedule_watchdog import decide
+from scripts.aml339_schedule_watchdog import decide, TARGETS
 
 NOW=dt.datetime(2026,11,25,1,20,tzinfo=dt.timezone.utc)
 def run(mins,status="completed",branch="main",event="schedule"):
     return {"created_at":(NOW-dt.timedelta(minutes=mins)).isoformat(),"status":status,"head_branch":branch,"event":event}
 class ScheduleWatchdogTests(unittest.TestCase):
+    def test_growth_frozen(self):
+        self.assertEqual(set(TARGETS), {"aml339_main18.yml"})
     def test_stale_and_missing(self):
         self.assertEqual(decide([run(300)],NOW,60),"dispatch")
         self.assertEqual(decide([],NOW,15),"dispatch")
