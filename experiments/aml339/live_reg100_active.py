@@ -35,31 +35,38 @@ class PaynovateLinks(HTMLParser):
     def __init__(self):
         super().__init__()
         self.links={}
-        self.current=None
-        self.paginated=False
+        self.controls=[]
+        self.pagination=[]
+        self.observed=[]
     def handle_starttag(self,tag,attrs):
         a=dict(attrs)
-        if tag in ("a","button"):
+        if tag in ("a","button","link"):
             u=urlsplit(urljoin(PAYNOVATE_URL,a.get("href") or ""))
             if "next" in (a.get("rel") or "").lower().split() or (
                 u.hostname=="paynovate.breezy.hr" and any(k.lower() in ("page","offset","cursor") for k in parse_qs(u.query))):
-                self.paginated=True
-            self.current=(tag,u,[])
+                self.pagination.append({"tag":tag,"path":u.path,"reason":"pagination href or rel"})
+            if tag=="a" and u.hostname=="paynovate.breezy.hr" and "/p/" in u.path:
+                self.observed.append(u.path)
+            if tag in ("a","button"):
+                self.controls.append((tag,u,[]))
     def handle_data(self,data):
-        if self.current is not None:self.current[2].append(data)
+        for c in self.controls:c[2].append(data)
     def handle_endtag(self,tag):
-        if self.current is None or self.current[0]!=tag:return
-        _,u,parts=self.current
-        self.current=None
+        if tag not in ("a","button"):return
+        for i in range(len(self.controls)-1,-1,-1):
+            if self.controls[i][0]==tag:break
+        else:return
+        _,u,parts=self.controls.pop(i)
         label=" ".join(" ".join(parts).split())
         if re.fullmatch(r"(?:next(?: page)?|(?:load|show|view) more(?: jobs| positions)?)",label,re.I):
-            self.paginated=True
+            self.pagination.append({"tag":tag,"path":u.path,"label":label})
         if tag=="a" and u.scheme=="https" and u.netloc=="paynovate.breezy.hr" and PAYNOVATE_PATH.fullmatch(u.path):
             self.links.setdefault(u.path.rstrip("/"),[]).append(label)
 
 def paynovate_expected(html):
     p=PaynovateLinks();p.feed(html);p.close()
-    if not p.links or p.paginated:
+    if not p.links or p.pagination:
+        print("PAYNOVATE_PUBLIC_SHAPE",json.dumps({"matched_paths":sorted(p.links),"observed_job_paths":p.observed[:25],"pagination_controls":p.pagination[:15]}),flush=True)
         raise ValueError("Paynovate public listing empty or pagination not accounted for")
     if any(not any(t and t.lower() not in ("apply","apply now","%button_apply%") for t in labels) for labels in p.links.values()):
         raise ValueError("Paynovate public listing missing independent job titles")
