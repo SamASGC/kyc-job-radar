@@ -9,8 +9,8 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.error import URLError
 
-from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE
-from scripts.aml339_v1_status import check_pages, evaluate, main
+from scripts.aml339_source_manifest import CORE, OPTIONAL, EXTERNAL50_LIVE, CATALOG_LIVE, STRICT_CORE
+from scripts.aml339_v1_status import check_pages, evaluate, main, RELEASE_FILES
 
 
 class V1ReleaseHealthTests(unittest.TestCase):
@@ -27,7 +27,8 @@ class V1ReleaseHealthTests(unittest.TestCase):
            "sources_expected":len(CORE+OPTIONAL),
            "core_sources_complete":len(CORE),
            "core_sources_expected":18,
-           "strict_core_sources_complete":17,
+           "strict_core_sources_complete":len(STRICT_CORE),
+           "strict_core_sources_expected":len(STRICT_CORE),
            "missing_or_failed_core":{},
            "novelty_guard_enabled":True,
            "regulator50_discovered":50,
@@ -82,7 +83,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
     def test_public_dashboard_summary_and_both_feeds_must_match(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            for name in ("summary.json", "index.html", "confirmed.xml", "review.xml"):
+            for name in RELEASE_FILES:
                 (root / name).write_bytes(name.encode())
 
             def read(request, timeout):
@@ -98,6 +99,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
                 results = check_pages(root / "summary.json")
         self.assertEqual(results["summary.json"], "match")
         self.assertEqual(results["index.html"], "match")
+        self.assertEqual(results["desktop.json"], "match")
         self.assertIn("service unavailable", results["confirmed.xml"])
         self.assertIn("different", results["review.xml"])
 
@@ -117,7 +119,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
                 with self.subTest(status=status), patch("sys.argv", [
                     "health", "--summary", str(path), "--out", str(out), *options,
                 ]), patch("scripts.aml339_v1_status.check_pages",
-                          return_value={"review.xml": remote}) as check, redirect_stdout(io.StringIO()):
+                          return_value={name:remote for name in RELEASE_FILES}) as check, redirect_stdout(io.StringIO()):
                     if status == "PENDING_PRODUCTION_VALIDATION":
                         with self.assertRaises(SystemExit):
                             main()
@@ -140,7 +142,7 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertFalse(health["fresh_publish"])
         self.assertFalse(health["v1_published_verified"])
 
-    def test_only_payabl_http429_can_be_quarantined_without_blocking_v1(self):
+    def test_payabl_http429_can_be_quarantined_without_blocking_v1(self):
         summary=self.summary(source_count=146)
         summary["core_sources_complete"]=17
         summary["missing_or_failed_core"]={"payabl":"incomplete_or_rate_limited_source"}
@@ -148,8 +150,23 @@ class V1ReleaseHealthTests(unittest.TestCase):
         self.assertTrue(health["v1_published_verified"])
         self.assertTrue(health["degraded_core_but_safe"])
         self.assertEqual(health["quarantined_core_source_ids"],["payabl"])
-        self.assertEqual(health["mandatory_core_verified"],17)
+        self.assertEqual(health["mandatory_core_verified"],len(STRICT_CORE))
 
+    def test_both_allowed_quarantines_match_live_manifest(self):
+        for missing in ({"corpay":"unverified_in_scope_details"},
+                        {"payabl":"no_live_source_evidence","corpay":"unverified_in_scope_details"}):
+            summary=self.summary()
+            summary["core_sources_complete"]=len(CORE)-len(missing)
+            summary["missing_or_failed_core"]=missing
+            h=evaluate(summary,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))
+            self.assertTrue(h["v1_published_verified"])
+            self.assertEqual(h["mandatory_core_verified"],len(STRICT_CORE))
+            self.assertEqual(h["original_core_verified"],len(CORE)-len(missing))
+    def test_inconsistent_strict_core_count_fails(self):
+        summary=self.summary()
+        for key in ("strict_core_sources_expected","strict_core_sources_complete"):
+            broken=dict(summary,**{key:len(STRICT_CORE)+1})
+            self.assertFalse(evaluate(broken,self.discovery,now=dt.datetime(2026,11,24,3,tzinfo=dt.timezone.utc))["v1_published_verified"])
     def test_another_missing_original_core_disables_release(self):
         summary=self.summary(source_count=146)
         summary["core_sources_complete"]=17

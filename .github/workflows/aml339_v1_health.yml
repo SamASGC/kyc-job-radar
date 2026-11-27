@@ -1,6 +1,11 @@
 name: AML339 V1 read-only production release health
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/aml339_v1_status.py'
+      - 'tests/test_aml339_v1_release.py'
+      - '.github/workflows/aml339_v1_health.yml'
   push:
     branches: [main]
     paths:
@@ -20,13 +25,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Check 100 discovery entries and current PUBLISHED V1 readiness
-        run: python3 scripts/aml339_v1_status.py --out v1_status.json --require-live
+      - name: Validate release health contract
+        run: python3 -m unittest discover -s tests -p test_aml339_v1_release.py -v
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          ref: main
+          path: published-main
+          persist-credentials: false
+          sparse-checkout: public/aml339
+          sparse-checkout-cone-mode: false
+      - name: Check current public release including Windows desktop and both RSS feeds
+        run: |
+          summary=public/aml339/summary.json
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            summary=published-main/public/aml339/summary.json
+          fi
+          python3 scripts/aml339_v1_status.py --summary "$summary" --out v1_status.json --require-live
       - name: Retain honest status even on an incomplete or stale scan
         if: always()
         uses: actions/upload-artifact@v4
