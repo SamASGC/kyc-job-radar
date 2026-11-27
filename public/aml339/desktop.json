@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-27T19:21:01+00:00",
+  "checked_at_utc": "2026-11-27T20:15:31+00:00",
   "sources_expected": 317,
-  "sources_complete": 314,
-  "roles_evaluated": 1755,
+  "sources_complete": 313,
+  "roles_evaluated": 1723,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -71,7 +71,7 @@
       "name": "wise",
       "status": "verified",
       "reason": null,
-      "listed": 417,
+      "listed": 418,
       "relevant": 88
     },
     {
@@ -887,7 +887,7 @@
       "name": "adyen",
       "status": "verified",
       "reason": null,
-      "listed": 232,
+      "listed": 233,
       "relevant": 28
     },
     {
@@ -1421,10 +1421,10 @@
     {
       "id": "external-us-bank",
       "name": "external-us-bank",
-      "status": "verified",
-      "reason": null,
-      "listed": 1217,
-      "relevant": 31
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-bank-of-china",
@@ -1831,7 +1831,7 @@
       "name": "trm-labs",
       "status": "verified",
       "reason": null,
-      "listed": 115,
+      "listed": 114,
       "relevant": 3
     },
     {
@@ -1927,7 +1927,7 @@
       "name": "paypal",
       "status": "verified",
       "reason": null,
-      "listed": 31,
+      "listed": 30,
       "relevant": 7
     },
     {
@@ -2327,15 +2327,15 @@
       "name": "santander",
       "status": "verified",
       "reason": null,
-      "listed": 20,
-      "relevant": 8
+      "listed": 19,
+      "relevant": 7
     },
     {
       "id": "stripe",
       "name": "stripe",
       "status": "verified",
       "reason": null,
-      "listed": 768,
+      "listed": 770,
       "relevant": 34
     },
     {
