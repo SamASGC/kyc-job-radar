@@ -39,12 +39,19 @@ def mangopay_detail_outside(source,listed_title,listed_url,job):
     expected=identity(listed_url)
     if not expected or identity(job.get("url"))!=expected or identity(job.get("_page",{}).get("final_url"))!=expected:
         return False
-    if not listed_title or clean(job.get("title")).casefold()!=listed_title.casefold():
+    detail_title=clean(job.get("title"))
+    norm=lambda value:" ".join(str(value or "").split()).casefold()
+    title=norm(detail_title)
+    listing=norm(listed_title)
+    # Teamtailor cards concatenate title, department, office and hybrid status.
+    # Accept only the observed explicit Paris card suffix, not arbitrary prefixes.
+    paris_suffix=" legal, risk and compliance · mangopay france - paris · hybrid"
+    if not title or listing not in (title,title+paris_suffix):
         return False
     parser=job.get("_parser")
     if parser is None:return False
     posts=parser.posts()
-    matches=[post for post in posts if clean(post.get("title")).casefold()==listed_title.casefold()]
+    matches=[post for post in posts if norm(clean(post.get("title")))==title]
     if len(matches)!=1:return False
     post=matches[0]
     if post.get("applicantLocationRequirements") or post.get("jobLocationType"):
@@ -98,9 +105,6 @@ def audit_one(source,minutes=4):
                 try:
                     board.hydrate(job)
                     if "_page" not in job:board.read_post(job)
-                    if source.get("id")=="mangopay":
-                        p=job.get("_parser")
-                        print("MANGOPAY_GEOGRAPHY_EVIDENCE",json.dumps({"listed_title":listed_title,"listed_url":listed_url,"detail_title":job.get("title"),"detail_url":job.get("url"),"final_url":job.get("_page",{}).get("final_url"),"location":job.get("location"),"remote":job.get("remote"),"posts":[{k:v.get(k) for k in ("title","jobLocation","jobLocationType","applicantLocationRequirements")} for v in (p.posts() if p else [])]},ensure_ascii=False),flush=True)
                     if mangopay_detail_outside(source,listed_title,listed_url,job):
                         excluded_after_detail=True
                         result["skipped_application_after_detail_geo"]+=1
