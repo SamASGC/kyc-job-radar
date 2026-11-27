@@ -7,7 +7,8 @@ application route is checked, and requirements are re-evaluated. No alert ever
 sent by this script; no production state touched.
 """
 from __future__ import annotations
-import argparse,datetime as dt,json,time
+import argparse,datetime as dt,json,time,re
+from urllib.parse import urlsplit
 from pathlib import Path
 from amlradar.net import Client
 from amlradar.sources import Board
@@ -22,6 +23,45 @@ SOURCES={
  "bnf-bank-malta","medirect-bank-malta","payabl","airwallex","mollie","truelayer"
 }
 
+def mangopay_detail_outside(source,listed_title,listed_url,job):
+    """Only explicit same-job French location on the official Teamtailor detail.
+    Never treat an uncertain or remote location as outside scope, or mark the
+    application verified. No additional HTTP request.
+    """
+    if source.get("id")!="mangopay" or source.get("route",[])[:2]!=["teamtailor","career.mangopay.com"]:
+        return False
+    if role_geography(job.get("location"))!="outside_scope" or job.get("remote") is True:
+        return False
+    def identity(url):
+        u=urlsplit(str(url or ""))
+        m=re.fullmatch(r"/jobs/(\d+)(?:-[^/]+)?/?",u.path)
+        return m[1] if u.scheme=="https" and u.netloc=="career.mangopay.com" and m else None
+    expected=identity(listed_url)
+    if not expected or identity(job.get("url"))!=expected or identity(job.get("_page",{}).get("final_url"))!=expected:
+        return False
+    if not listed_title or clean(job.get("title")).casefold()!=listed_title.casefold():
+        return False
+    parser=job.get("_parser")
+    if parser is None:return False
+    posts=parser.posts()
+    matches=[post for post in posts if clean(post.get("title")).casefold()==listed_title.casefold()]
+    if len(matches)!=1:return False
+    post=matches[0]
+    if post.get("applicantLocationRequirements") or post.get("jobLocationType"):
+        return False
+    locations=post.get("jobLocation")
+    if isinstance(locations,dict):locations=[locations]
+    if not isinstance(locations,list) or not locations:return False
+    for place in locations:
+        address=place.get("address") if isinstance(place,dict) else None
+        if not isinstance(address,dict):return False
+        country=address.get("addressCountry")
+        if isinstance(country,dict):country=country.get("name")
+        city=clean(address.get("addressLocality"))
+        if clean(country).casefold() not in ("fr","fra","france") or not city:return False
+        if role_geography(city+", France")!="outside_scope":return False
+    return True
+
 def audit_one(source,minutes=4):
     client=Client(timeout=12,deadline=time.monotonic()+minutes*60)
     board=Board(source,client,max_minutes=minutes)
@@ -29,6 +69,7 @@ def audit_one(source,minutes=4):
         "list_complete":False,"relevant_leads":None,"total_listed":None,
         "audited_offset":0,"audited":[],"warnings":[],"errors":[],
         "skipped_details_outside_geo":0,"attempted_in_scope_details":0,
+        "skipped_application_after_detail_geo":0,
         "unverified_in_scope":0,"listing_role_keys":[],"listing_untrackable_count":0}
     try:
         full=board.listing()
@@ -46,6 +87,9 @@ def audit_one(source,minutes=4):
             loc=role_geography(job.get("location"))
             verified=False
             error=None
+            excluded_after_detail=False
+            listed_title=clean(job.get("title"))
+            listed_url=job.get("url")
             if loc in OUTSIDE:
                 result["skipped_details_outside_geo"]+=1
                 error="LOCATION_OUTSIDE_SCOPE: detail not fetched; source listing location used"
@@ -54,8 +98,13 @@ def audit_one(source,minutes=4):
                 try:
                     board.hydrate(job)
                     if "_page" not in job:board.read_post(job)
-                    board.verify(job)
-                    verified=True
+                    if mangopay_detail_outside(source,listed_title,listed_url,job):
+                        excluded_after_detail=True
+                        result["skipped_application_after_detail_geo"]+=1
+                        error="LOCATION_OUTSIDE_SCOPE: same-job French detail; application not checked"
+                    else:
+                        board.verify(job)
+                        verified=True
                 except Exception as exc:
                     error=type(exc).__name__+": "+str(exc)[:190]
                     result["unverified_in_scope"]+=1
@@ -66,7 +115,8 @@ def audit_one(source,minutes=4):
                 "hiring_organization":clean(job.get("hiring_organization")),
                 "description_length":len(plain(job.get("description"))),
                 "verification_error":error or "",
-                "detail_skipped_outside_geo":loc in OUTSIDE,"evaluation":evaluation})
+                "detail_skipped_outside_geo":loc in OUTSIDE,
+                "application_skipped_after_detail_geo":excluded_after_detail,"evaluation":evaluation})
         result["warnings"]=board.warnings[:8]
         if not board.complete or len(result["audited"])!=result["relevant_leads"]:
             raise ValueError("Incomplete detail coverage")
@@ -78,6 +128,7 @@ def audit_one(source,minutes=4):
         "matched":result["relevant_leads"],"covered":len(result["audited"]),
         "skipped_outside":result["skipped_details_outside_geo"],
         "details_attempted":result["attempted_in_scope_details"],
+        "skipped_application_after_detail_geo":result["skipped_application_after_detail_geo"],
         "unverified_in_scope":result["unverified_in_scope"],
         "errors":result["errors"]},ensure_ascii=False),flush=True)
     return result
