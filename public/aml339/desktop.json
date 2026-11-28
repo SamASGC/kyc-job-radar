@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-28T06:21:46+00:00",
+  "checked_at_utc": "2026-11-28T07:52:19+00:00",
   "sources_expected": 317,
-  "sources_complete": 315,
-  "roles_evaluated": 1776,
+  "sources_complete": 264,
+  "roles_evaluated": 1002,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -933,10 +933,10 @@
     {
       "id": "remitly",
       "name": "remitly",
-      "status": "verified",
-      "reason": null,
-      "listed": 149,
-      "relevant": 18
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "avarda-bank",
@@ -1261,114 +1261,114 @@
     {
       "id": "external-saxo-bank",
       "name": "external-saxo-bank",
-      "status": "verified",
-      "reason": null,
-      "listed": 59,
-      "relevant": 8
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-fidelity-international",
       "name": "external-fidelity-international",
-      "status": "verified",
-      "reason": null,
-      "listed": 82,
-      "relevant": 2
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-invesco",
       "name": "external-invesco",
-      "status": "verified",
-      "reason": null,
-      "listed": 208,
-      "relevant": 13
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-ares-management",
       "name": "external-ares-management",
-      "status": "verified",
-      "reason": null,
-      "listed": 225,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-blackstone",
       "name": "external-blackstone",
-      "status": "verified",
-      "reason": null,
-      "listed": 136,
-      "relevant": 10
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-swiss-life-international",
       "name": "external-swiss-life-international",
-      "status": "verified",
-      "reason": null,
-      "listed": 27,
-      "relevant": 0
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-pgim-prudential",
       "name": "external-pgim-prudential",
-      "status": "verified",
-      "reason": null,
-      "listed": 175,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-wellington-management",
       "name": "external-wellington-management",
-      "status": "verified",
-      "reason": null,
-      "listed": 123,
-      "relevant": 10
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-gunvor",
       "name": "external-gunvor",
-      "status": "verified",
-      "reason": null,
-      "listed": 33,
-      "relevant": 7
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-trafigura",
       "name": "external-trafigura",
-      "status": "verified",
-      "reason": null,
-      "listed": 69,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-flutter-international",
       "name": "external-flutter-international",
-      "status": "verified",
-      "reason": null,
-      "listed": 78,
-      "relevant": 4
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-lgt-bank",
       "name": "external-lgt-bank",
-      "status": "verified",
-      "reason": null,
-      "listed": 50,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-mg",
       "name": "external-mg",
-      "status": "verified",
-      "reason": null,
-      "listed": 130,
-      "relevant": 25
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-cibc",
       "name": "external-cibc",
-      "status": "verified",
-      "reason": null,
-      "listed": 622,
-      "relevant": 26
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-ardian",
@@ -1381,26 +1381,26 @@
     {
       "id": "external-sei",
       "name": "external-sei",
-      "status": "verified",
-      "reason": null,
-      "listed": 126,
-      "relevant": 5
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-arendt-group",
       "name": "external-arendt-group",
-      "status": "verified",
-      "reason": null,
-      "listed": 64,
-      "relevant": 7
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-rothschild-co",
       "name": "external-rothschild-co",
-      "status": "verified",
-      "reason": null,
-      "listed": 111,
-      "relevant": 9
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-exante",
@@ -1413,18 +1413,18 @@
     {
       "id": "external-light-wonder",
       "name": "external-light-wonder",
-      "status": "verified",
-      "reason": null,
-      "listed": 135,
-      "relevant": 0
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-us-bank",
       "name": "external-us-bank",
-      "status": "verified",
-      "reason": null,
-      "listed": 1202,
-      "relevant": 30
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-bank-of-china",
@@ -1469,10 +1469,10 @@
     {
       "id": "external-betway",
       "name": "external-betway",
-      "status": "verified",
-      "reason": null,
-      "listed": 30,
-      "relevant": 3
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "external-casumo",
@@ -1517,10 +1517,10 @@
     {
       "id": "external-ssctech",
       "name": "external-ssctech",
-      "status": "verified",
-      "reason": null,
-      "listed": 404,
-      "relevant": 11
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "allica-bank",
@@ -1741,10 +1741,10 @@
     {
       "id": "planet",
       "name": "planet",
-      "status": "verified",
-      "reason": null,
-      "listed": 61,
-      "relevant": 4
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "primer",
@@ -1869,10 +1869,10 @@
     {
       "id": "tsys-global-payments",
       "name": "tsys-global-payments",
-      "status": "verified",
-      "reason": null,
-      "listed": 28,
-      "relevant": 13
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "veriff",
@@ -1909,10 +1909,10 @@
     {
       "id": "deutsche-bank",
       "name": "deutsche-bank",
-      "status": "verified",
-      "reason": null,
-      "listed": 442,
-      "relevant": 74
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "gate",
@@ -1925,10 +1925,10 @@
     {
       "id": "paypal",
       "name": "paypal",
-      "status": "verified",
-      "reason": null,
-      "listed": 30,
-      "relevant": 7
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "pennylane",
@@ -1941,10 +1941,10 @@
     {
       "id": "rbc",
       "name": "rbc",
-      "status": "verified",
-      "reason": null,
-      "listed": 61,
-      "relevant": 6
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "riskified",
@@ -1965,26 +1965,26 @@
     {
       "id": "alantra",
       "name": "alantra",
-      "status": "verified",
-      "reason": null,
-      "listed": 49,
-      "relevant": 1
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "bbva",
       "name": "bbva",
-      "status": "verified",
-      "reason": null,
-      "listed": 61,
-      "relevant": 8
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "blackrock",
       "name": "blackrock",
-      "status": "verified",
-      "reason": null,
-      "listed": 279,
-      "relevant": 15
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "blockchain-com",
@@ -1997,10 +1997,10 @@
     {
       "id": "brown-brothers-harriman",
       "name": "brown-brothers-harriman",
-      "status": "verified",
-      "reason": null,
-      "listed": 15,
-      "relevant": 3
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "bunch",
@@ -2013,10 +2013,10 @@
     {
       "id": "carlyle",
       "name": "carlyle",
-      "status": "verified",
-      "reason": null,
-      "listed": 33,
-      "relevant": 4
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "carta",
@@ -2045,10 +2045,10 @@
     {
       "id": "forvis-mazars",
       "name": "forvis-mazars",
-      "status": "verified",
-      "reason": null,
-      "listed": 13,
-      "relevant": 3
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "alpaca",
@@ -2069,10 +2069,10 @@
     {
       "id": "apex-group",
       "name": "apex-group",
-      "status": "verified",
-      "reason": null,
-      "listed": 1031,
-      "relevant": 67
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "atdomco",
@@ -2085,10 +2085,10 @@
     {
       "id": "dws",
       "name": "dws",
-      "status": "verified",
-      "reason": null,
-      "listed": 94,
-      "relevant": 14
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "eneba",
@@ -2117,18 +2117,18 @@
     {
       "id": "fis",
       "name": "fis",
-      "status": "verified",
-      "reason": null,
-      "listed": 17,
-      "relevant": 4
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "fiserv",
       "name": "fiserv",
-      "status": "verified",
-      "reason": null,
-      "listed": 22,
-      "relevant": 9
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "flowtraders",
@@ -2149,10 +2149,10 @@
     {
       "id": "gam",
       "name": "gam",
-      "status": "verified",
-      "reason": null,
-      "listed": 1,
-      "relevant": 0
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "getground",
@@ -2181,18 +2181,18 @@
     {
       "id": "ing",
       "name": "ing",
-      "status": "verified",
-      "reason": null,
-      "listed": 294,
-      "relevant": 37
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "julius-baer",
       "name": "julius-baer",
-      "status": "verified",
-      "reason": null,
-      "listed": 194,
-      "relevant": 27
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "jumio",
@@ -2237,26 +2237,26 @@
     {
       "id": "lombard-odier",
       "name": "lombard-odier",
-      "status": "verified",
-      "reason": null,
-      "listed": 67,
-      "relevant": 5
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "mastercard",
       "name": "mastercard",
-      "status": "verified",
-      "reason": null,
-      "listed": 263,
-      "relevant": 17
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "nasdaq",
       "name": "nasdaq",
-      "status": "verified",
-      "reason": null,
-      "listed": 52,
-      "relevant": 5
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "nelly",
@@ -2301,10 +2301,10 @@
     {
       "id": "western-union",
       "name": "western-union",
-      "status": "verified",
-      "reason": null,
-      "listed": 66,
-      "relevant": 14
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "sonata-one",
@@ -2325,10 +2325,10 @@
     {
       "id": "santander",
       "name": "santander",
-      "status": "verified",
-      "reason": null,
-      "listed": 19,
-      "relevant": 7
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "stripe",
@@ -2351,7 +2351,7 @@
       "name": "wolt",
       "status": "verified",
       "reason": null,
-      "listed": 183,
+      "listed": 185,
       "relevant": 6
     },
     {
@@ -2429,26 +2429,26 @@
     {
       "id": "vontobel",
       "name": "vontobel",
-      "status": "verified",
-      "reason": null,
-      "listed": 41,
-      "relevant": 4
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "state-street",
       "name": "state-street",
-      "status": "verified",
-      "reason": null,
-      "listed": 116,
-      "relevant": 25
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "northern-trust",
       "name": "northern-trust",
-      "status": "verified",
-      "reason": null,
-      "listed": 331,
-      "relevant": 43
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "robinhood",
@@ -2461,18 +2461,18 @@
     {
       "id": "pwc-experienced",
       "name": "pwc-experienced",
-      "status": "verified",
-      "reason": null,
-      "listed": 147,
-      "relevant": 98
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "guidehouse",
       "name": "guidehouse",
-      "status": "verified",
-      "reason": null,
-      "listed": 417,
-      "relevant": 43
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "capco",
@@ -2485,10 +2485,10 @@
     {
       "id": "loyens-loeff",
       "name": "loyens-loeff",
-      "status": "verified",
-      "reason": null,
-      "listed": 10,
-      "relevant": 5
+      "status": "failed",
+      "reason": "partial_or_failed_listing",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "dinotech",
