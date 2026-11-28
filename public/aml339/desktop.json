@@ -1,9 +1,9 @@
 {
   "schema": "aml339_desktop_v1",
-  "checked_at_utc": "2026-11-28T16:28:38+00:00",
+  "checked_at_utc": "2026-11-28T17:51:21+00:00",
   "sources_expected": 317,
   "sources_complete": 315,
-  "roles_evaluated": 1778,
+  "roles_evaluated": 1776,
   "novelty_guard_enabled": true,
   "new_counts": {
     "confirmed_recent": 0,
@@ -125,10 +125,10 @@
     {
       "id": "payabl",
       "name": "payabl",
-      "status": "verified",
-      "reason": null,
-      "listed": 18,
-      "relevant": 2
+      "status": "failed",
+      "reason": "no_live_source_evidence",
+      "listed": null,
+      "relevant": null
     },
     {
       "id": "airwallex",
@@ -893,10 +893,10 @@
     {
       "id": "fimbank-malta",
       "name": "fimbank-malta",
-      "status": "failed",
-      "reason": "partial_or_failed_listing",
-      "listed": null,
-      "relevant": null
+      "status": "verified",
+      "reason": null,
+      "listed": 3,
+      "relevant": 0
     },
     {
       "id": "lt-nikulipe-official",
@@ -2183,7 +2183,7 @@
       "name": "ing",
       "status": "verified",
       "reason": null,
-      "listed": 294,
+      "listed": 293,
       "relevant": 37
     },
     {
